@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Rev - Formant Lead" schemaVersion="1">
+  <PARAM id="polymode" value="2.0" />
+  <PARAM id="glide_time" value="80.0" />
+  <PARAM id="r1_center" value="0.66" />
+  <PARAM id="r1_cyl" value="2.0" />
+  <PARAM id="r1_detune" value="8.0" />
+  <PARAM id="r1_volume" value="-7.0" />
+  <PARAM id="r1_att" value="10.0" />
+  <PARAM id="r1_rel" value="300.0" />
+  <PARAM id="r1_f1_on" value="1.0" />
+  <PARAM id="r1_f1_type" value="9.0" />
+  <PARAM id="r1_f1_vowela" value="0.0" />
+  <PARAM id="r1_f1_vowelb" value="3.0" />
+  <PARAM id="r1_f1_res" value="0.45" />
+  <PARAM id="mod1_rate" value="0.8" />
+  <PARAM id="mod1_delay" value="300.0" />
+  <PARAM id="mod1_fade" value="500.0" />
+  <PARAM id="r1_send2" value="0.3" />
+  <PARAM id="aux2_fx0_type" value="1.0" />
+  <PARAM id="aux2_return" value="-6.0" />
+  <Structure>
+    <Routes>
+      <Route i="0" src="mod1" dst="r1_f1_vowelpos" via="none" />
+      <Route i="1" src="modwheel" dst="r1_fine" via="none" />
+    </Routes>
+    <Belt />
+    <Curves />
+  </Structure>
+  <PARAM id="route1_depth" value="0.5" />
+  <PARAM id="route2_depth" value="0.08" />
+</Parameters>

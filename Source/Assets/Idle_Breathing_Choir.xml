@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Idle - Breathing Choir" schemaVersion="1">
+  <PARAM id="r1_center" value="0.68" />
+  <PARAM id="r1_cyl" value="3.0" />
+  <PARAM id="r1_detune" value="14.0" />
+  <PARAM id="r1_spread" value="0.7" />
+  <PARAM id="r1_att" value="600.0" />
+  <PARAM id="r1_rel" value="2000.0" />
+  <PARAM id="r1_volume" value="-8.0" />
+  <PARAM id="r1_f1_on" value="1.0" />
+  <PARAM id="r1_f1_type" value="9.0" />
+  <PARAM id="r1_f1_vowela" value="0.0" />
+  <PARAM id="r1_f1_vowelb" value="3.0" />
+  <PARAM id="r1_f1_res" value="0.35" />
+  <PARAM id="mod3_type" value="2.0" />
+  <PARAM id="mod3_dur" value="4.0" />
+  <PARAM id="r1_send1" value="0.3" />
+  <PARAM id="aux1_fx0_type" value="10.0" />
+  <PARAM id="aux1_fx1_type" value="9.0" />
+  <PARAM id="aux1_return" value="-3.0" />
+  <Structure>
+    <Routes>
+      <Route i="0" src="mod3" dst="r1_f1_vowelpos" via="none" />
+    </Routes>
+    <Belt />
+    <Curves>
+      <Curve mod="2" points="0,0,-0.4;0.3,1,0.3;0.6,0.35,0;1,0.8,0" sustain="1" sStart="1" sEnd="3" loop="1" release="0" />
+    </Curves>
+  </Structure>
+  <PARAM id="route1_depth" value="1.0" />
+</Parameters>

@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Rev - Sync Sweep" schemaVersion="1">
+  <PARAM id="r1_center" value="0.9" />
+  <PARAM id="r1_width" value="1024.0" />
+  <PARAM id="r1_volume" value="-8.0" />
+  <PARAM id="r1_att" value="5.0" />
+  <PARAM id="r1_rel" value="250.0" />
+  <PARAM id="r1_cyl" value="3.0" />
+  <PARAM id="r1_detune" value="10.0" />
+  <PARAM id="mod1_type" value="1.0" />
+  <PARAM id="mod1_att" value="5.0" />
+  <PARAM id="mod1_dec" value="900.0" />
+  <PARAM id="mod1_sus" value="0.2" />
+  <PARAM id="mod1_rel" value="300.0" />
+  <PARAM id="r1_send2" value="0.25" />
+  <PARAM id="aux2_fx0_type" value="1.0" />
+  <PARAM id="aux2_return" value="-8.0" />
+  <Structure>
+    <Routes>
+      <Route i="0" src="mod1" dst="r1_width" via="none" />
+      <Route i="1" src="velocity" dst="r1_center" via="none" />
+    </Routes>
+    <Belt />
+    <Curves />
+  </Structure>
+  <PARAM id="route1_depth" value="-0.25" />
+  <PARAM id="route2_depth" value="-0.1" />
+</Parameters>

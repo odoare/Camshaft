@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Backfire - Gravel Pluck" schemaVersion="1">
+  <PARAM id="r1_center" value="0.5" />
+  <PARAM id="r1_width" value="600.0" />
+  <PARAM id="r1_snap" value="1.0" />
+  <PARAM id="r1_att" value="0.0" />
+  <PARAM id="r1_dec" value="250.0" />
+  <PARAM id="r1_sus" value="0.0" />
+  <PARAM id="r1_rel" value="200.0" />
+  <PARAM id="r1_volume" value="-7.0" />
+  <PARAM id="r1_f1_on" value="1.0" />
+  <PARAM id="r1_f1_type" value="4.0" />
+  <PARAM id="r1_f1_cutoff" value="2200.0" />
+  <PARAM id="r1_f1_res" value="0.5" />
+  <PARAM id="r1_f1_envamt" value="0.6" />
+  <PARAM id="r1_xm1_lift" value="0.35" />
+  <PARAM id="master_fx0_type" value="7.0" />
+  <PARAM id="master_fx1_type" value="1.0" />
+  <Structure>
+    <Routes>
+      <Route i="0" src="random" dst="r1_center" via="none" />
+      <Route i="1" src="keytrack" dst="r1_width" via="none" />
+    </Routes>
+    <Belt>
+      <Link src="0" dst="0" type="FM" />
+    </Belt>
+    <Curves />
+  </Structure>
+  <PARAM id="route1_depth" value="0.2" />
+  <PARAM id="route2_depth" value="-0.3" />
+</Parameters>

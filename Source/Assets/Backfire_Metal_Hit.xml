@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Backfire - Metal Hit" schemaVersion="1">
+  <PARAM id="r1_center" value="0.81" />
+  <PARAM id="r1_att" value="0.0" />
+  <PARAM id="r1_dec" value="350.0" />
+  <PARAM id="r1_sus" value="0.0" />
+  <PARAM id="r1_rel" value="300.0" />
+  <PARAM id="r1_dcurve" value="-0.8" />
+  <PARAM id="r1_volume" value="-6.0" />
+  <PARAM id="r1_f1_on" value="1.0" />
+  <PARAM id="r1_f1_type" value="2.0" />
+  <PARAM id="r1_f1_cutoff" value="300.0" />
+  <PARAM id="r2_center" value="0.05" />
+  <PARAM id="r2_coarse" value="19.0" />
+  <PARAM id="r1_xm2_lift" value="0.6" />
+  <PARAM id="mod2_type" value="1.0" />
+  <PARAM id="mod2_att" value="0.0" />
+  <PARAM id="mod2_dec" value="200.0" />
+  <PARAM id="mod2_sus" value="0.0" />
+  <PARAM id="mod2_rel" value="200.0" />
+  <PARAM id="r1_send1" value="0.25" />
+  <PARAM id="aux1_fx0_type" value="9.0" />
+  <Structure>
+    <Routes>
+      <Route i="0" src="mod2" dst="r1_xm2_lift" via="none" />
+    </Routes>
+    <Belt>
+      <Link src="1" dst="0" type="FM" />
+    </Belt>
+    <Curves />
+  </Structure>
+  <PARAM id="route1_depth" value="0.4" />
+</Parameters>
