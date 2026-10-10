@@ -34,14 +34,18 @@ SourceChip::SourceChip (CamshaftAudioProcessor& p, int s, juce::Colour c)
 
 void SourceChip::timerCallback()
 {
-    const float v = processor.getEngine().getDisplay().source[(size_t) source].load (std::memory_order_relaxed);
+    const auto& display = processor.getEngine().getDisplay();
+    const int m = source - srcModFirst;
+    const bool used = m < 0 || m >= numModulators || display.modUsed[(size_t) m].load (std::memory_order_relaxed);
+    const float v = used ? display.source[(size_t) source].load (std::memory_order_relaxed) : 0.0f;
     const auto n = sourceName (processor.getAPVTS(), source);
     const bool bi = sourceIsBipolar (processor.getAPVTS(), source);
-    if (std::abs (v - level) > 0.002f || n != name || bi != bipolar)
+    if (std::abs (v - level) > 0.002f || n != name || bi != bipolar || used != inUse)
     {
         level = v;
         name = n;
         bipolar = bi;
+        inUse = used;
         repaint();
     }
 }
@@ -60,7 +64,11 @@ void SourceChip::paint (juce::Graphics& g)
     // continuously as the value.
     const auto bar = b.removeFromBottom (3.0f).reduced (3.0f, 0.0f);
     g.setColour (colour.withAlpha (0.9f));
-    if (bipolar)
+    if (! inUse)
+    {
+        // Off, or feeding nothing: not computed, nothing to show.
+    }
+    else if (bipolar)
     {
         const float v = juce::jlimit (-1.0f, 1.0f, level);
         const float x0 = bar.getCentreX(), x1 = bar.getCentreX() + 0.5f * bar.getWidth() * v;
@@ -71,7 +79,7 @@ void SourceChip::paint (juce::Graphics& g)
     else
         g.fillRect (bar.withWidth (bar.getWidth() * juce::jlimit (0.0f, 1.0f, level)));
 
-    g.setColour (theme::text);
+    g.setColour (inUse ? theme::text : theme::dimText);
     g.setFont (theme::labelFont (10.5f));
     g.drawText (name, b, juce::Justification::centred, true);
 }
@@ -137,6 +145,11 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     curveEditor.setTooltip (tips::mods::curveEditor);
     curveEditor.setShape (processor.getStructure().getCurve (slot));
     curveEditor.onChange = [this] (const fxme::CurveShape& shape) { curveChanged (shape); };
+    curveEditor.onPointHeld = [this] (int point, float value)
+    {
+        if (onCurveProbe)
+            onCurveProbe (point >= 0 ? slot : -1, value);
+    };
     addChildComponent (curveEditor);
 
     for (auto* t : { &sustainToggle, &loopToggle, &releaseToggle })
@@ -164,6 +177,8 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
 ModulatorEditor::~ModulatorEditor()
 {
     stopTimer();
+    if (onCurveProbe)
+        onCurveProbe (-1, 0.0f);
 }
 
 CamKnob& ModulatorEditor::knob (int field, const char* tooltip, bool bipolarKnob)
@@ -216,7 +231,7 @@ void ModulatorEditor::timerCallback()
         layoutForType();
     }
 
-    if (type == 0)
+    if (type == mtLfo)
     {
         const bool synced = apvts.getRawParameterValue (ids::mod (slot, mfSync))->load() > 0.5f;
         rate->setVisible (! synced);
@@ -225,7 +240,7 @@ void ModulatorEditor::timerCallback()
         delay->setEnabled (! global);
         fade->setEnabled (! global);
     }
-    else if (type == 2)
+    else if (type == mtCurve)
     {
         const bool beatsMode = apvts.getRawParameterValue (ids::mod (slot, mfDurationMode))->load() > 0.5f;
         duration->setVisible (! beatsMode);
@@ -260,14 +275,14 @@ void ModulatorEditor::layoutForType()
         t->setVisible (false);
 
     typeBox->setVisible (true);
-    level->setVisible (true);
+    level->setVisible (shownType != mtOff);
 
     std::vector<juce::Component*> visible;
-    if (shownType == 0)
+    if (shownType == mtLfo)
         visible = { bipolar, shapeBox, rate, sync, phase, delay, fade, modeBox };
-    else if (shownType == 1)
+    else if (shownType == mtAdsr)
         visible = { attack, decay, sustain, release, attackCurve, decayCurve, releaseCurve, velocity };
-    else
+    else if (shownType == mtCurve)
         visible = { bipolar, &curveEditor, duration, speed, durationMode, dawSync, &sustainToggle, &loopToggle, &releaseToggle };
     for (auto* c : visible)
         c->setVisible (true);
@@ -283,6 +298,10 @@ void ModulatorEditor::paint (juce::Graphics& g)
     g.setColour (theme::text);
     g.setFont (theme::labelFont (13.0f));
     g.drawText (sourceName (processor.getAPVTS(), srcModFirst + slot), header.removeFromLeft (80), juce::Justification::centredLeft);
+
+    if (shownType == mtOff)
+        theme::paintEngraved (g, "This slot is off. Choose a type, or drag its chip onto a knob (it becomes an LFO).",
+                              getLocalBounds().withTrimmedTop (28), juce::Justification::centred, 12.0f);
 }
 
 void ModulatorEditor::resized()
@@ -309,13 +328,16 @@ void ModulatorEditor::resized()
         area.removeFromTop (4);
     };
 
-    if (shownType == 0)
+    if (shownType == mtOff)
+    {
+    }
+    else if (shownType == mtLfo)
     {
         row ({ shapeBox, modeBox, sync, nullptr }, 22);
         row ({ rate, phase, delay, fade }, 72);
         divisionBox->setBounds (rate->getBounds().withSizeKeepingCentre (rate->getWidth(), 22));
     }
-    else if (shownType == 1)
+    else if (shownType == mtAdsr)
     {
         row ({ attack, decay, sustain, release }, 72);
         row ({ attackCurve, decayCurve, releaseCurve, velocity }, 64);
@@ -377,6 +399,11 @@ void ModulatorPanel::select (int slot)
     for (int m = 0; m < (int) slotChips.size(); ++m)
         slotChips[(size_t) m]->setSelected (m == slot);
     editor = std::make_unique<ModulatorEditor> (processor, slot);
+    editor->onCurveProbe = [this] (int s, float v)
+    {
+        if (onCurveProbe)
+            onCurveProbe (s, v);
+    };
     addAndMakeVisible (*editor);
     resized();
 }

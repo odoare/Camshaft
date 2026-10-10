@@ -6,7 +6,7 @@
     child of the APVTS state so that it travels with presets and sessions:
 
       <Structure>
-        <Routes>     <Route i="0" src="mod1" dst="r1_center" via="none"/> ...
+        <Routes>     <Route i="0" src="mod1" dst="r1_start" via="none"/> ...
         <Belt>       <Link src="1" dst="0" type="FM"/> ...       (cross-mod)
         <Curves>     <Curve mod="0" points="x,y,c;..." sustain= sStart= sEnd= loop= release=/>
         <CcSources   cc1="20" cc2="21" cc3="22" cc4="23"/>
@@ -51,7 +51,7 @@ class StructureState : public juce::ChangeBroadcaster,
                        private juce::ValueTree::Listener
 {
 public:
-    static constexpr int schemaVersion = 1;
+    static constexpr int schemaVersion = 2;
 
     StructureState (juce::AudioProcessorValueTreeState& apvts, cam::CamEngine& engine, const Destinations& destinations);
     ~StructureState() override;

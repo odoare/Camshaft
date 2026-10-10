@@ -96,9 +96,9 @@ public:
     // For the displays (read by the engine for the newest voice).
     const float* getSourceValues() const noexcept { return src; }
     float getCamValue (int c, int field) const noexcept { return cams[c].cur[field]; }
-    /** Phase of the first cylinder in the original cycle (the table's
-        phase alignment undone), for the waveform's playhead. */
-    double getCamPhase (int c) const noexcept;
+    /** The range cam c reads now, in source samples, and its first
+        cylinder's phase in the cycle; false when it reads none. */
+    bool getCamRange (int c, double& start, double& cycle, double& overlap, double& phase) const noexcept;
     float getCurvePosition (int m) const noexcept;
 
 private:

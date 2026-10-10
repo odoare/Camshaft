@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Idle - Glass Drift" schemaVersion="1">
-  <PARAM id="r1_center" value="0.3" />
-  <PARAM id="r1_width" value="2048.0" />
+<Parameters presetName="Idle - Glass Drift" schemaVersion="2">
+  <PARAM id="r1_start" value="0.2921875" />
+  <PARAM id="r1_length" value="2048.0" />
   <PARAM id="r1_cyl" value="4.0" />
   <PARAM id="r1_detune" value="18.0" />
   <PARAM id="r1_spread" value="0.8" />
@@ -16,8 +16,8 @@
   <PARAM id="r1_f1_res" value="0.2" />
   <PARAM id="r1_send1" value="0.35" />
   <PARAM id="r2_audible" value="1.0" />
-  <PARAM id="r2_center" value="0.72" />
-  <PARAM id="r2_width" value="2048.0" />
+  <PARAM id="r2_start" value="0.7121875" />
+  <PARAM id="r2_length" value="2048.0" />
   <PARAM id="r2_coarse" value="12.0" />
   <PARAM id="r2_volume" value="-15.0" />
   <PARAM id="r2_cyl" value="2.0" />
@@ -31,10 +31,12 @@
   <PARAM id="mod2_shape" value="6.0" />
   <PARAM id="aux1_fx0_type" value="9.0" />
   <PARAM id="aux1_return" value="-4.0" />
+  <PARAM id="mod1_type" value="0.0" />
+  <PARAM id="mod2_type" value="0.0" />
   <Structure>
     <Routes>
-      <Route i="0" src="mod1" dst="r1_center" via="none" />
-      <Route i="1" src="mod2" dst="r2_center" via="none" />
+      <Route i="0" src="mod1" dst="r1_start" via="none" />
+      <Route i="1" src="mod2" dst="r2_start" via="none" />
     </Routes>
     <Belt />
     <Curves />

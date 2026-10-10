@@ -7,7 +7,8 @@ tested; the plugin itself has passed a CMake configure and a per-file syntax
 check, but has **not been built or run yet** (see `todo.md`, item 1).
 
 Camshaft is a polyphonic synth: the user imports an audio file, four cams each
-take a range of it (centre and lobe, its width) as one cycle of a wave and play
+take a range of it (its opening and duration: where it starts and how long it
+lasts) as one cycle of a wave and play
 it as a band-limited wavetable at the note's pitch. Each cam has its own
 cylinders (unison), two filters, amp envelope, mix and sends; 16 modulators and
 the MIDI sources drive any parameter through a 64-route matrix; cams modulate
@@ -112,7 +113,10 @@ at worst). A DC blocker (8 Hz) follows, since a range of real audio rarely
 averages to zero.
 
 Moving ranges: each control block the voice computes its cam's range from the
-(modulated) centre, lobe, overlap and snap, smooths it with a one-pole of 4 ms
+(modulated) opening, duration, overlap and snap (`cam::camRange`: the range
+starts at the opening and lasts the duration, cut short at the end of the
+recording, at least 16 samples; the editor's displays use the same function),
+smooths it with a one-pole of 4 ms
 (this absorbs stepped automation and the jumps of a snapped range), and ramps
 start, cycle and overlap per sample towards it. A moving range is therefore a
 continuous scan of the source. Per-voice modulation of the range costs nothing
@@ -120,9 +124,14 @@ extra: there is no cache, no worker and no build latency. A new note starts on
 its range directly; a new recording too (no glide across files).
 
 Snap: zero crossing moves both edges to the nearest rising zero crossings
-(within a quarter of the lobe, at most 2048 samples); period sets the lobe to a
-whole number of the periods detected at the centre and starts it on a zero
-crossing. Both are lookups in the precomputed analysis.
+(within a quarter of the duration, at most 2048 samples); period moves the
+opening to the nearest rising zero crossing and makes the duration a whole
+number of the periods detected in the middle of the range. Both are lookups in
+the precomputed analysis.
+
+The engine publishes every voice's range as it reads it (start, cycle, overlap,
+phase, per cam: `Display::ranges`), so the waveform shows what each voice plays,
+modulation, snapping and smoothing included.
 
 The source reaches the audio thread through an atomic pointer with a hazard
 pointer (`CamEngine::setSource` / `beginBlock`): a replaced source is freed only
@@ -145,7 +154,16 @@ aftertouch (channel and poly), pitch bend, mod wheel, 4 assignable CCs (CC 20 to
 Slots: LFO (per voice or global free-running, locked to the host while it
 plays: its phase is the host position, taken at the end of each control span
 like every modulator value, and kept exact whatever the host's block size), ADSR (per voice), curve (per voice, or global when "stick to DAW time":
-its position comes from the host's PPQ). Each has an output level.
+its position comes from the host's PPQ), or Off (the default: an empty slot).
+Each has an output level.
+
+Only the slots that feed something are computed (`CamEngine::updateUsage`, each
+block): a slot is used when a route from it (or through it, as the via) reaches
+a cam or a global destination, or reaches another slot that is itself used. The
+others output 0, their curves do not hold a voice in release, and their chips
+are drawn dimmed. A slot that starts being used mid-note starts from its
+note-on state (the LFO from its start phase, the envelope from its attack).
+Routing from an Off slot makes it an LFO (`StructureState::setRoute`).
 
 Destinations: one flat index space (`CamParams.h`): cam fields and modulator
 fields marked `modulatable` in the spec tables (applied by the engine, per
@@ -233,7 +251,8 @@ Header (`fxme::TopBar`): name, icon (clickable: about box), a small master view
 browser), the gear (settings callout) and help. Then two tabs:
 
 - Synth: file band (import / export / built-in, channels, normalise, waveform
-  view with the four ranges, playheads, zoom, drag and drop), scope rows (cam
+  view with the four ranges, every voice's live range and read position, the
+  curve probe, zoom, drag and drop), scope rows (cam
   profile turning in polar form with a follower, oscilloscope), cam strips
   (pages Cam, Filters, Amp, Mix), bottom band (Modulators with draggable chips
   and per-type editors, Matrix, Timing belt). Dice in the section headers.

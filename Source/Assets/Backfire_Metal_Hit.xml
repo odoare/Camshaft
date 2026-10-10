@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Backfire - Metal Hit" schemaVersion="1">
-  <PARAM id="r1_center" value="0.81" />
+<Parameters presetName="Backfire - Metal Hit" schemaVersion="2">
+  <PARAM id="r1_start" value="0.8021875" />
   <PARAM id="r1_att" value="0.0" />
   <PARAM id="r1_dec" value="350.0" />
   <PARAM id="r1_sus" value="0.0" />
@@ -10,7 +10,7 @@
   <PARAM id="r1_f1_on" value="1.0" />
   <PARAM id="r1_f1_type" value="2.0" />
   <PARAM id="r1_f1_cutoff" value="300.0" />
-  <PARAM id="r2_center" value="0.05" />
+  <PARAM id="r2_start" value="0.0421875" />
   <PARAM id="r2_coarse" value="19.0" />
   <PARAM id="r1_xm2_lift" value="0.6" />
   <PARAM id="mod2_type" value="1.0" />

@@ -193,20 +193,30 @@ bool CamVoice::hasFinished() const noexcept
     for (const auto& k : cams)
         if (k.env.isActive())
             return false;
+    // A curve still playing its release region keeps the voice, if it
+    // modulates something.
     for (int m = 0; m < numModulators; ++m)
-        if ((int) state->modValue[m][mfType] == 2 && ! state->modIsGlobal[m] && curves[m].isReleasing())
+        if ((int) state->modValue[m][mfType] == mtCurve && state->modUsed[m] && ! state->modIsGlobal[m]
+            && curves[m].isReleasing())
             return false;
     return true;
 }
 
-double CamVoice::getCamPhase (int c) const noexcept
+bool CamVoice::getCamRange (int c, double& start, double& cycle, double& overlap, double& phase) const noexcept
 {
-    return cams[c].phase[0];
+    const auto& k = cams[c];
+    if (! k.rangeValid || k.cylinders <= 0)
+        return false;
+    start = k.start;
+    cycle = k.cycle;
+    overlap = k.overlap;
+    phase = k.phase[0];
+    return true;
 }
 
 float CamVoice::getCurvePosition (int m) const noexcept
 {
-    if (! active || (int) state->modValue[m][mfType] != 2 || state->modIsGlobal[m])
+    if (! active || (int) state->modValue[m][mfType] != mtCurve || state->modIsGlobal[m] || ! state->modUsed[m])
         return -1.0f;
     return (float) curves[m].getPosition();
 }
@@ -241,6 +251,11 @@ void CamVoice::updateModulators()
     {
         if (state->modIsGlobal[m])
             continue;   // the engine evaluated it; its value is already in src
+        if (! state->modUsed[m])
+        {
+            src[srcModFirst + m] = 0.0f;   // feeds nothing (or is off): not computed
+            continue;
+        }
 
         const float* mv = state->modValue[m];
         float off[numModFields] {};
@@ -263,7 +278,7 @@ void CamVoice::updateModulators()
 
         float out = 0.0f;
         const int type = (int) mv[mfType];
-        if (type == 0)
+        if (type == mtLfo)
         {
             fxme::ModulationLfo::Parameters p;
             p.shape = (int) mv[mfShape];
@@ -278,7 +293,7 @@ void CamVoice::updateModulators()
             lfos[m].setParameters (p);
             out = lfos[m].advance (controlBlock);
         }
-        else if (type == 1)
+        else if (type == mtAdsr)
         {
             fxme::CurveAdsr::Parameters p;
             p.attack = value (mfAttack) * 0.001f;
@@ -292,7 +307,7 @@ void CamVoice::updateModulators()
             const float velAmount = mv[mfVelocity];
             out = adsrs[m].advance (controlBlock) * (1.0f - velAmount + velAmount * velocity);
         }
-        else
+        else if (type == mtCurve)
         {
             const double duration = mv[mfDurationMode] > 0.5f ? (double) mv[mfBeats] * 60.0 / state->bpm
                                                               : (double) mv[mfDuration];
@@ -496,9 +511,8 @@ void CamVoice::updateRange (int c, bool snap)
 
     const float* v = k.cur;
     const double n = (double) source->numSamples();
-    const double centre = (double) fxme::jlimit (0.0f, 1.0f, v[cfCentre]) * n;
-    double len = fxme::jlimit (16.0, n, (double) v[cfWidth]);
-    double start = fxme::jlimit (0.0, n - len, centre - 0.5 * len);
+    double start, len;
+    camRange (v[cfStart], v[cfLength], n, start, len);
 
     const int snapMode = (int) v[cfSnap];
     if (snapMode == 1)
@@ -515,14 +529,16 @@ void CamVoice::updateRange (int c, bool snap)
     }
     else if (snapMode == 2)
     {
-        // A whole number of the periods detected around the centre, starting
-        // on a rising zero crossing.
-        const double period = source->analysis.periodAt (centre);
+        // Opening on a rising zero crossing, for a whole number of the
+        // periods detected around the middle of the range.
+        const double period = source->analysis.periodAt (start + 0.5 * len);
         if (period > 0.0)
         {
-            len = fxme::jlimit (16.0, n, fxme::jmax (1.0, std::round (len / period)) * period);
-            start = fxme::jlimit (0.0, n - len, centre - 0.5 * len);
-            start = fxme::jlimit (0.0, n - len, source->analysis.nearestRisingZeroCrossing (start, 0.5 * period));
+            start = fxme::jlimit (0.0, n - 16.0, source->analysis.nearestRisingZeroCrossing (start, 0.5 * period));
+            len = fxme::jmax (1.0, std::round (len / period)) * period;
+            while (len > n - start && len - period >= 16.0)
+                len -= period;
+            len = fxme::jlimit (16.0, n - start, len);
         }
     }
 

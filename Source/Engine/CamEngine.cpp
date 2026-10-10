@@ -150,8 +150,8 @@ void CamEngine::beginBlock (const BlockSettings& s)
         }
         const int type = (int) state.modValue[m][mfType];
         const bool wasGlobal = state.modIsGlobal[m];
-        state.modIsGlobal[m] = (type == 0 && state.modValue[m][mfMode] > 0.5f)
-                            || (type == 2 && state.modValue[m][mfDawSync] > 0.5f);
+        state.modIsGlobal[m] = (type == mtLfo && state.modValue[m][mfMode] > 0.5f)
+                            || (type == mtCurve && state.modValue[m][mfDawSync] > 0.5f);
         if (state.modIsGlobal[m] && ! wasGlobal)
             globalLfos[(size_t) m].noteOn();
     }
@@ -161,6 +161,7 @@ void CamEngine::beginBlock (const BlockSettings& s)
 
     if (s.routeDepths != nullptr)
         updateRoutes (s.routeDepths);
+    updateUsage();
     updateGraph();
 
     // The source for this block. Hazard pointer: announce it, then check it
@@ -222,6 +223,51 @@ void CamEngine::updateRoutes (const float* depths)
             state.globalRoutes.add (a);
         }
     }
+}
+
+void CamEngine::updateUsage()
+{
+    // Which modulators feed something: the sources (and vias) of the routes
+    // to cams and global destinations, then, until nothing changes, the
+    // modulators feeding a used one. An "Off" modulator feeds nothing.
+    bool used[numModulators] {};
+    auto isOff = [this] (int m) { return (int) state.modValue[m][mfType] == mtOff; };
+    auto mark = [&] (int s)
+    {
+        const int m = s - srcModFirst;
+        if (m >= 0 && m < numModulators && ! used[m] && ! isOff (m))
+        {
+            used[m] = true;
+            return true;
+        }
+        return false;
+    };
+
+    for (const auto* list : { &state.camRoutes, &state.globalRoutes })
+        for (int i = 0; i < list->size; ++i)
+        {
+            mark (list->items[(size_t) i].source);
+            mark (list->items[(size_t) i].via);
+        }
+
+    for (bool grew = true; grew;)
+    {
+        grew = false;
+        for (int m = 0; m < numModulators; ++m)
+        {
+            if (! used[m])
+                continue;
+            const auto& list = state.modRoutes[(size_t) m];
+            for (int i = 0; i < list.size; ++i)
+            {
+                grew = mark (list.items[(size_t) i].source) || grew;
+                grew = mark (list.items[(size_t) i].via) || grew;
+            }
+        }
+    }
+
+    for (int m = 0; m < numModulators; ++m)
+        state.modUsed[m] = used[m];
 }
 
 void CamEngine::updateGraph()
@@ -352,6 +398,11 @@ void CamEngine::updateGlobalModulators()
     {
         if (! state.modIsGlobal[m])
             continue;
+        if (! state.modUsed[m])
+        {
+            state.globalSources[srcModFirst + m] = 0.0f;
+            continue;
+        }
 
         const float* mv = state.modValue[m];
         float off[numModFields] {};
@@ -370,7 +421,7 @@ void CamEngine::updateGlobalModulators()
         };
 
         float out = 0.0f;
-        if ((int) mv[mfType] == 0)
+        if ((int) mv[mfType] == mtLfo)
         {
             fxme::ModulationLfo::Parameters p;
             p.shape = (int) mv[mfShape];
@@ -538,12 +589,34 @@ void CamEngine::publishDisplay (int newest)
         count += v.isActive() ? 1 : 0;
     display.voicesActive.store (count, std::memory_order_relaxed);
 
+    display.newestVoice.store (newest, std::memory_order_relaxed);
+    for (int m = 0; m < numModulators; ++m)
+        display.modUsed[(size_t) m].store (state.modUsed[m], std::memory_order_relaxed);
+
+    for (int vi = 0; vi < maxVoices; ++vi)
+    {
+        const auto& v = voices[(size_t) vi];
+        for (int c = 0; c < numCams; ++c)
+        {
+            auto& out = display.ranges[(size_t) vi][(size_t) c];
+            double start, cycle, overlap, phase;
+            if (v.isActive() && state.camNeeded[c] && v.getCamRange (c, start, cycle, overlap, phase))
+            {
+                out.start.store ((float) start, std::memory_order_relaxed);
+                out.cycle.store ((float) cycle, std::memory_order_relaxed);
+                out.overlap.store ((float) overlap, std::memory_order_relaxed);
+                out.phase.store ((float) phase, std::memory_order_relaxed);
+            }
+            else
+                out.phase.store (-1.0f, std::memory_order_relaxed);
+        }
+    }
+
     if (newest >= 0)
     {
         const auto& v = voices[(size_t) newest];
         for (int c = 0; c < numCams; ++c)
         {
-            display.phase[(size_t) c].store ((float) v.getCamPhase (c), std::memory_order_relaxed);
             display.active[(size_t) c].store (state.camNeeded[c], std::memory_order_relaxed);
             for (int f = 0; f < numCamFields; ++f)
                 display.camValue[(size_t) c][(size_t) f].store (camSpecs[f].toNorm (v.getCamValue (c, f)),
@@ -568,7 +641,7 @@ void CamEngine::publishDisplay (int newest)
     for (int m = 0; m < numModulators; ++m)
     {
         auto& row = display.curvePos[(size_t) m];
-        if (state.modIsGlobal[m] && (int) state.modValue[m][mfType] == 2)
+        if (state.modIsGlobal[m] && state.modUsed[m] && (int) state.modValue[m][mfType] == mtCurve)
         {
             row[0].store ((float) globalCurvePos[(size_t) m], std::memory_order_relaxed);
             for (int v = 1; v < maxVoices; ++v)

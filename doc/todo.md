@@ -10,7 +10,7 @@ Numbered for reference; numbers are never reused (finished items move to
    syntax-only check of every translation unit, nothing more: it has never been
    linked, loaded or heard. Build the VST3 and the standalone, then check in a
    host: sound on the first note (built-in source), import a file, drag the
-   ranges, per-voice modulation of a centre (velocity -> centre), the timing
+   ranges, per-voice modulation of an opening (velocity -> opening), the timing
    belt, the effects tab, preset save / load, a session round trip with
    embedded audio, MIDI learn. Expect a round of fixes.
 
@@ -26,13 +26,21 @@ Numbered for reference; numbers are never reused (finished items move to
 ## Decisions to confirm
 
 4. **Source rate** (decision). The plan resamples the file to the session rate on
-   import; Camshaft keeps the original rate so that a width in samples means the
+   import; Camshaft keeps the original rate so that a duration in samples means the
    same sound at any session rate (see architecture.md, "Wavetables"). Confirm,
-   or switch to resampling and store the width in milliseconds instead.
+   or switch to resampling and store the duration in milliseconds instead.
 
 5. **Dry mute** (decision). Implemented per Turbo: cams sending to that Turbo
    lose their dry signal. The plan lists it under the aux chains without saying
    whose dry path it mutes.
+
+25. **Ranges by opening and duration** (decision, made 2026-10-10 on request;
+   confirm the names). The plan's centre and width (lobe) became `r<n>_start`
+   ("Opening") and `r<n>_length` ("Duration"): dragging an edge moves that edge
+   alone, and a duration past the end of the file is cut short there. Schema 2
+   migrates older sessions and presets, approximately (the old centre becomes
+   the opening, so a range moves right by half its width: the recording's
+   length is not known when the state is read).
 
 24. **Live reading instead of the table cache** (decision, made 2026-10-09 to
    stop the glitches; confirm). The plan's "When the range moves" section (table
@@ -86,9 +94,6 @@ Numbered for reference; numbers are never reused (finished items move to
 14. **Snap points on the waveform** (medium). The plan draws the snap points
     (zero crossings, detected periods) when zoomed in; only the overlap zone is
     drawn.
-
-15. **Modulated range on the waveform** (medium). Show the newest voice's
-    modulated range (dashed) next to the base one.
 
 16. **Dyno curve** (low). The plan's visual design puts a smoothed spectrum behind
     the tachometer.

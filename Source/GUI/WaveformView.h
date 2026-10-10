@@ -5,10 +5,19 @@
     The imported audio and the four cams' ranges on it.
 
       - Overview from the source's min / max pyramid, any zoom.
-      - Each cam's range in its colour: drag inside it to move the centre,
-        drag an edge to change the lobe (width), both symmetric around the
-        centre; the overlap (loop crossfade) zone is hatched at its end.
-      - A playhead per cam while a note plays (the newest voice's phase).
+      - Each cam's range in its colour, as set by its opening and duration:
+        drag inside it, or its numbered flag (always grabbable, even on a
+        narrow range), to move it; drag an edge to move that edge only (the
+        opening and the duration adapt, the other edge stays). The overlap
+        (loop crossfade) zone is hatched at its end.
+      - While notes play, what every voice reads: one lane per cam along the
+        bottom with a bar per voice (its range, modulation, snapping and
+        smoothing included) and a tick where it reads; the newest voice's
+        read position also runs across the whole height.
+      - While a point of a curve modulator is held (setProbe), where its
+        value puts the range of each cam whose opening or duration that
+        curve modulates (the curve's contribution alone, on the knobs'
+        values): the edge it moves as a marker, the range as a ghost.
       - Wheel zooms around the mouse, shift+wheel or a drag on empty space
         scrolls, double-click on empty space shows the whole file.
       - Drop an audio file anywhere on it to import it.
@@ -28,6 +37,7 @@
 
 #include <JuceHeader.h>
 #include "Shell/SourceManager.h"
+#include "Engine/CamParams.h"
 
 class CamshaftAudioProcessor;
 
@@ -57,6 +67,10 @@ public:
     void mouseDoubleClick (const juce::MouseEvent&) override;
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
 
+    /** A curve modulator's point is held at `value` (0 to 1): mark where it
+        puts the ranges it modulates. slot -1: none. */
+    void setProbe (int slot, float value);
+
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void fileDragEnter (const juce::StringArray&, int, int) override { dragHover = true; repaint(); }
     void fileDragExit (const juce::StringArray&) override              { dragHover = false; repaint(); }
@@ -70,7 +84,13 @@ private:
         bool audible = false;
     };
 
-    enum class Hit { none, body, leftEdge, rightEdge };
+    enum class Hit { none, body, flag, leftEdge, rightEdge };
+
+    /** What one voice reads on one cam (Display::VoiceRange); phase < 0: nothing. */
+    struct Live
+    {
+        float start = 0.0f, cycle = 0.0f, overlap = 0.0f, phase = -1.0f;
+    };
 
     void timerCallback() override;
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
@@ -80,6 +100,10 @@ private:
     double xToSample (float x) const;
     float sampleToX (double s) const;
     std::pair<int, Hit> hitTest (juce::Point<float> p) const;
+    juce::Rectangle<float> flagArea (int cam) const;
+    float laneTop (int cam) const;
+    void paintLive (juce::Graphics& g, int cam) const;
+    void paintProbe (juce::Graphics& g) const;
     void setParameter (int cam, int field, float value);
     void beginGesture (int cam, Hit hit);
     void endGesture();
@@ -92,13 +116,17 @@ private:
     double viewStart = 0.0, viewLength = 1.0;   // in source samples
     int dragCam = -1;
     Hit dragHit = Hit::none;
-    double dragStartCentre = 0.0, dragStartWidth = 0.0, dragStartView = 0.0;
+    double dragStartStart = 0.0, dragStartLength = 0.0, dragStartView = 0.0;   // range in samples
     bool panning = false, dragHover = false;
     int hoverCam = -1;
     Hit hoverHit = Hit::none;
 
-    std::array<float, 4> playhead {};   // normalised phase, -1 when silent
-    std::array<Range, 4> shown {};
+    std::array<Range, cam::numCams> shown {};
+    std::array<std::array<Live, cam::numCams>, cam::maxVoices> live {};
+    int newestVoice = -1;
+
+    int probeSlot = -1;
+    float probeValue = 0.0f;
 };
 
 } // namespace camshaft

@@ -18,8 +18,9 @@
                          globalDestOffset (g)     after render(): modulation
                                                   of the shell's parameters
 
-    Display data (the newest voice's phases, live values, curve playheads,
-    the per-cam scope taps) is published through atomics and lock-free taps.
+    Display data (every voice's live ranges, the newest voice's values, the
+    modulators in use, curve playheads, the per-cam scope taps) is published
+    through atomics and lock-free taps.
 
     Author: Olivier Doaré, github.com/odoare
     Licenced under the GNU LGPL Version 3.0
@@ -135,10 +136,23 @@ public:
     //==========================================================================
     // Displays (any thread)
 
+    /** One voice's range on one cam, as it is read now (modulation and
+        snapping applied, smoothing included), in source samples; `phase`
+        is the first cylinder's position in the cycle, negative when the
+        voice is not playing this cam. The fields are stored one by one: a
+        reader may see them from two neighbouring blocks, harmless for a
+        display. */
+    struct VoiceRange
+    {
+        std::atomic<float> start { 0.0f }, cycle { 0.0f }, overlap { 0.0f }, phase { -1.0f };
+    };
+
     struct Display
     {
-        std::array<std::atomic<float>, numCams> phase {};
         std::array<std::atomic<bool>, numCams> active {};
+        std::array<std::array<VoiceRange, numCams>, maxVoices> ranges;
+        std::atomic<int> newestVoice { -1 };
+        std::array<std::atomic<bool>, numModulators> modUsed {};
         std::array<std::array<std::atomic<float>, numCamFields>, numCams> camValue {};
         std::array<std::atomic<float>, numSources> source {};
         std::array<std::array<std::atomic<float>, maxVoices>, numModulators> curvePos {};
@@ -157,6 +171,7 @@ private:
     void applyAction (const fxme::VoiceAllocator::Action& a);
     void updateRoutes (const float* depths);
     void updateGraph();
+    void updateUsage();
     void computeGlobalOffsets (int newest);
     void publishDisplay (int newest);
     double beatsPerSample() const noexcept { return state.bpm / 60.0 / state.sampleRate; }

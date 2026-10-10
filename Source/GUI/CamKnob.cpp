@@ -27,7 +27,7 @@ juce::String sourceName (juce::AudioProcessorValueTreeState& apvts, int s)
     {
         const int m = s - srcModFirst;
         const auto* type = apvts.getRawParameterValue (ids::mod (m, mfType));
-        const int t = type != nullptr ? juce::jlimit (0, 2, (int) type->load()) : 0;
+        const int t = type != nullptr ? juce::jlimit (0, countOf (modTypes) - 1, (int) type->load()) : 0;
         return juce::String (modTypes[t]) + " " + juce::String (m + 1);
     }
     return ids::fixedSourceName (s);
@@ -67,7 +67,7 @@ bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int s)
         {
             const int m = s - srcModFirst;
             const int type = (int) apvts.getRawParameterValue (ids::mod (m, mfType))->load();
-            return type != 1 && apvts.getRawParameterValue (ids::mod (m, mfBipolar))->load() > 0.5f;
+            return (type == mtLfo || type == mtCurve) && apvts.getRawParameterValue (ids::mod (m, mfBipolar))->load() > 0.5f;
         }
         return s == srcPitchBend || s == srcKeyTrack || s == srcRandom;
 }

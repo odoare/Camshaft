@@ -128,6 +128,15 @@ CamshaftAudioProcessor::CamshaftAudioProcessor()
                     section.appendChild (child.createCopy(), nullptr);
         }
         structure.refreshFromState();
+
+        // A preset older than schema 2 had its range parameters renamed by
+        // the migration after the parameters were read: read them again.
+        for (int c = 0; c < cam::numCams; ++c)
+            for (int f : { (int) cam::cfStart, (int) cam::cfLength })
+                if (auto* p = apvts.getParameter (ids::cam (c, f)))
+                    if (const auto node = apvts.state.getChildWithProperty ("id", p->paramID); node.hasProperty ("value"))
+                        p->setValueNotifyingHost (p->convertTo0to1 ((float) node.getProperty ("value")));
+
         sources.reloadFromState();
     };
 

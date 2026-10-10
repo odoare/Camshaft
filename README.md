@@ -19,17 +19,22 @@ See [doc/architecture.md](doc/architecture.md) for how it works.
 ## Using it
 
 - **Audio.** Import a file (or drop it on the waveform). On the waveform, drag
-  inside a cam's range to move it, drag an edge to change its width (its
-  "lobe"); the wheel zooms, a drag on empty space scrolls, a double-click
-  shows the whole file.
+  inside a cam's range (or its numbered flag) to move it, drag an edge to
+  move that edge alone; while notes play, the bars along the bottom show the
+  range each voice reads. The wheel zooms, a drag on empty space scrolls, a
+  double-click shows the whole file.
 - **Cams.** Under each cam's scope row (its wave drawn as a cam profile, and
-  its output), four pages: the cam itself (centre, lobe, overlap (loop
+  its output), four pages: the cam itself (opening and duration (the range's
+  start and length), overlap (loop
   crossfade), snap, tuning, cylinders (unison)), its filters, its amp envelope,
   and its mix (volume, pan, the two Turbo sends).
 - **Modulation.** Drag a modulator (or a MIDI source) from the bottom band onto
   any knob, or right-click the knob and choose "Modulate from". The knob's outer
   ring shows the modulation, the dot its live value. The Matrix tab lists every
-  route.
+  route. Slots are off until given a type (dragging one onto a knob makes it
+  an LFO); a slot that modulates nothing is dimmed and not computed. While you
+  hold a point of a curve, the waveform marks where it puts the ranges it
+  modulates.
 - **Timing belt.** Drag from one cam's pulley to another to make the first
   modulate the second; click a belt's badge to switch FM, ring, AM or off.
 - **Effects.** Turbo 1 and 2 are fed by the cams' sends, the Exhaust takes the

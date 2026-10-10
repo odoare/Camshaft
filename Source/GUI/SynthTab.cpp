@@ -103,6 +103,7 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
         t.onClick = [this, i] { showBottom (i); };
         addAndMakeVisible (t);
     }
+    modulators.onCurveProbe = [this] (int slot, float value) { waveform.setProbe (slot, value); };
     addChildComponent (modulators);
     addChildComponent (matrix);
     addChildComponent (belt);

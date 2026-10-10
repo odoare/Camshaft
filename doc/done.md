@@ -2,6 +2,39 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Ranges by opening and duration; live ranges, curve probe, Off modulators (2026-10-10)
+
+- **Opening and duration.** A cam's range is now set by where it starts
+  (`r<n>_start`, "Opening", 0 to 1 of the file) and how long it lasts
+  (`r<n>_length`, "Duration", samples) instead of its centre and width. On the
+  waveform, dragging an edge moves that edge alone, the other stays; the
+  numbered flag always shows the hand and moves the range, however narrow it
+  is. The engine, the waveform and the cam profile share one function for the
+  range (`cam::camRange`). Schema 2 migrates sessions (see todo 25); the factory
+  presets were regenerated with the exact positions.
+- **15. Modulated range on the waveform.** While notes play, one lane per cam
+  along the bottom of the waveform shows the range every voice reads
+  (modulation, snapping and smoothing included) with a tick where it reads; the
+  newest voice's read position runs across the whole height. The engine
+  publishes each voice's range per block (96 small records, a few atomic
+  stores).
+- **Curve probe.** While a point of a curve modulator is held, the waveform
+  marks where its value puts the opening or the end of each range that curve
+  modulates, with the range as a ghost (FxmeTools:
+  `BreakpointCurveEditor::onPointHeld`).
+- **Off modulators, unused ones not computed.** Modulator slots have a fourth
+  type, Off, the default. Only slots that feed something (directly, through a
+  via, or through another used slot) are computed; the others output 0, do not
+  keep a voice alive in a curve release, and are drawn dimmed with no meter.
+  Routing from an Off slot turns it into an LFO. Kick-start leaves Off slots
+  off.
+- Checked in the engine test: a range opens at its opening and lasts its
+  duration, cut short at the end of the file, never under 16 samples; an
+  unconnected LFO is not computed, a connected one runs, one feeding a used
+  LFO runs, an Off one never does. The sweep test was made deterministic
+  (random phase off, 4-block windows) and checks the middle of the saw region,
+  away from the morph's boundaries.
+
 ## Modulator meters drawn on one scale (2026-10-09)
 
 The small bars under the modulator chips jumped at every zero crossing of a

@@ -63,6 +63,10 @@ struct EngineState
     float modValue[numModulators][numModFields] {};
     float modNorm[numModulators][numModFields] {};
     bool modIsGlobal[numModulators] {};
+    // A modulator feeds something: a route from it (or through it as "via")
+    // reaches a cam, a global destination, or another modulator that is
+    // itself used. The others (and the ones switched off) are not computed.
+    bool modUsed[numModulators] {};
 
     // Routes, split by destination kind.
     RouteList camRoutes;                         // destination < numCamDests

@@ -115,13 +115,37 @@ void StructureState::stampVersion()
 
 void StructureState::migrate (juce::ValueTree& state)
 {
-    // No state predates schema 1 (the first public build); a missing
-    // version is a pre-release session, read as 1. Future migrations go
-    // here, in order: if (version < 2) { ...; version = 2; } ...
-    int version = (int) state.getProperty (versionProperty, schemaVersion);
+    // A missing version is a pre-release session, read as 1. Migrations
+    // run in order: if (version < n) { ...; version = n; } ...
+    int version = (int) state.getProperty (versionProperty, 1);
     if (version > schemaVersion)
         return;   // written by a newer build: leave what we do not know untouched
-    state.setProperty (versionProperty, juce::jmax (version, schemaVersion), nullptr);
+
+    if (version < 2)
+    {
+        // Schema 2: a cam's range is set by its opening and duration
+        // (r<n>_start, r<n>_length) instead of its centre and width
+        // (r<n>_center, r<n>_width). The width carries over as the duration;
+        // the centre becomes the opening (exact would need the recording's
+        // length, unknown here: the range moves by half its width).
+        auto renamed = [] (const juce::String& id)
+        {
+            const auto key = id.fromFirstOccurrenceOf ("_", false, false);
+            if (! id.startsWith ("r") || ! id.contains ("_") || (key != "center" && key != "width"))
+                return juce::String();
+            return id.upToFirstOccurrenceOf ("_", true, false) + (key == "center" ? "start" : "length");
+        };
+        for (auto child : state)
+            if (child.hasType ("PARAM"))
+                if (const auto to = renamed (child.getProperty ("id").toString()); to.isNotEmpty())
+                    child.setProperty ("id", to, nullptr);
+        for (auto route : state.getChildWithName (structureType).getChildWithName (routesType))
+            if (const auto to = renamed (route.getProperty ("dst").toString()); to.isNotEmpty())
+                route.setProperty ("dst", to, nullptr);
+        version = 2;
+    }
+
+    state.setProperty (versionProperty, version, nullptr);
 }
 
 void StructureState::pushAllToEngine()
@@ -194,6 +218,16 @@ void StructureState::setRoute (int i, const Route& r)
     }
     routeCache[(size_t) i] = r.isUsed() ? r : Route();
     pushRoute (i);
+
+    // Routing from (or through) a modulator that is off switches it on, as
+    // an LFO: a connection to a silent source would look broken.
+    if (r.isUsed())
+        for (int s : { r.source, r.via })
+            if (s >= srcModFirst && s < srcModFirst + numModulators)
+                if (auto* type = apvts.getParameter (ids::mod (s - srcModFirst, mfType)))
+                    if ((int) apvts.getRawParameterValue (ids::mod (s - srcModFirst, mfType))->load() == mtOff)
+                        type->setValueNotifyingHost (type->convertTo0to1 ((float) mtLfo));
+
     sendChangeMessage();
 }
 

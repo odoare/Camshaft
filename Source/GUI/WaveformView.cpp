@@ -12,6 +12,7 @@
 */
 
 #include "WaveformView.h"
+#include "CamKnob.h"
 #include "PluginProcessor.h"
 #include "ParamIDs.h"
 #include "Theme.h"
@@ -25,7 +26,6 @@ WaveformView::WaveformView (CamshaftAudioProcessor& p) : processor (p)
 {
     processor.getSources().addChangeListener (this);
     changeListenerCallback (nullptr);
-    playhead.fill (-1.0f);
     startTimerHz (30);
 }
 
@@ -54,13 +54,10 @@ WaveformView::Range WaveformView::rangeOf (int c) const
     if (numSamples <= 0)
         return r;
     auto& apvts = processor.getAPVTS();
-    const float centre = apvts.getRawParameterValue (ids::cam (c, cfCentre))->load();
-    const float width = apvts.getRawParameterValue (ids::cam (c, cfWidth))->load();
-    const float overlap = apvts.getRawParameterValue (ids::cam (c, cfOverlap))->load();
-    r.length = juce::jlimit (8.0, (double) numSamples, (double) width);
-    r.start = juce::jlimit (0.0, (double) numSamples - r.length, std::round ((double) centre * numSamples - 0.5 * r.length));
-    r.overlap = r.length * juce::jlimit (0.0, 0.5, (double) overlap * 0.01);
-    r.audible = apvts.getRawParameterValue (ids::cam (c, cfAudible))->load() > 0.5f;
+    auto value = [&] (int f) { return apvts.getRawParameterValue (ids::cam (c, f))->load(); };
+    camRange (value (cfStart), value (cfLength), (double) numSamples, r.start, r.length);
+    r.overlap = r.length * juce::jlimit (0.0, 0.5, (double) value (cfOverlap) * 0.01);
+    r.audible = value (cfAudible) > 0.5f;
     return r;
 }
 
@@ -91,7 +88,6 @@ void WaveformView::clampView()
 void WaveformView::timerCallback()
 {
     bool changed = false;
-    const auto& display = processor.getEngine().getDisplay();
     for (int c = 0; c < numCams; ++c)
     {
         const auto r = rangeOf (c);
@@ -102,15 +98,63 @@ void WaveformView::timerCallback()
             s = r;
             changed = true;
         }
-        const float ph = display.active[(size_t) c].load() ? display.phase[(size_t) c].load() : -1.0f;
-        if (std::abs (ph - playhead[(size_t) c]) > 1.0e-4f)
-        {
-            playhead[(size_t) c] = ph;
-            changed = true;
-        }
     }
+
+    // What the voices read. Only redrawn when something moved: nothing
+    // playing, nothing to do.
+    const auto& display = processor.getEngine().getDisplay();
+    for (int v = 0; v < maxVoices; ++v)
+        for (int c = 0; c < numCams; ++c)
+        {
+            const auto& from = display.ranges[(size_t) v][(size_t) c];
+            Live now;
+            now.phase = from.phase.load (std::memory_order_relaxed);
+            if (now.phase >= 0.0f)
+            {
+                now.start = from.start.load (std::memory_order_relaxed);
+                now.cycle = from.cycle.load (std::memory_order_relaxed);
+                now.overlap = from.overlap.load (std::memory_order_relaxed);
+            }
+            auto& was = live[(size_t) v][(size_t) c];
+            if (std::abs (now.phase - was.phase) > 1.0e-4f || std::abs (now.start - was.start) > 0.25f
+                || std::abs (now.cycle - was.cycle) > 0.25f || std::abs (now.overlap - was.overlap) > 0.25f)
+            {
+                was = now;
+                changed = true;
+            }
+        }
+    const int newest = display.newestVoice.load (std::memory_order_relaxed);
+    if (newest != newestVoice)
+    {
+        newestVoice = newest;
+        changed = true;
+    }
+
     if (changed)
         repaint();
+}
+
+void WaveformView::setProbe (int slot, float value)
+{
+    if (slot != probeSlot || (slot >= 0 && std::abs (value - probeValue) > 1.0e-6f))
+    {
+        probeSlot = slot;
+        probeValue = value;
+        repaint();
+    }
+}
+
+juce::Rectangle<float> WaveformView::flagArea (int c) const
+{
+    const auto area = plotArea();
+    return { sampleToX (shown[(size_t) c].start), area.getY() + (float) c * 15.0f, 16.0f, 13.0f };
+}
+
+float WaveformView::laneTop (int c) const
+{
+    // Cam 1's lane lowest, just above the zoom gauge.
+    constexpr float laneHeight = 5.0f;
+    return plotArea().getBottom() - 3.0f - (float) (c + 1) * (laneHeight + 1.0f);
 }
 
 //==============================================================================
@@ -181,24 +225,18 @@ void WaveformView::paint (juce::Graphics& g)
         if (hot && (hoverHit == Hit::rightEdge || dragHit == Hit::rightEdge))
             g.fillRect (juce::Rectangle<float> (x1 - 1.5f, area.getY(), 3.0f, area.getHeight()));
 
-        // Tab with the cam number.
-        const auto tab = juce::Rectangle<float> (x0, area.getY() + (float) c * 15.0f, 16.0f, 13.0f);
+        // Flag with the cam number (grab it to move the range).
+        const auto tab = flagArea (c);
         g.setColour (colour.withAlpha (alpha));
         g.fillRoundedRectangle (tab, 2.0f);
         g.setColour (theme::background);
         g.setFont (theme::labelFont (10.0f));
         g.drawText (juce::String (c + 1), tab, juce::Justification::centred);
-
-        // Playhead of the newest voice: the phase runs over the cycle,
-        // which the overlap shortens.
-        const float ph = playhead[(size_t) c];
-        if (ph >= 0.0f)
-        {
-            const float xp = sampleToX (r.start + (double) ph * (r.length - r.overlap));
-            g.setColour (colour.brighter (0.5f));
-            g.drawLine (xp, area.getY(), xp, area.getBottom(), 1.5f);
-        }
     }
+
+    for (int c = numCams; --c >= 0;)
+        paintLive (g, c);
+    paintProbe (g);
 
     // Zoom gauge.
     if (viewLength < (double) numSamples - 1.0)
@@ -220,17 +258,136 @@ void WaveformView::paint (juce::Graphics& g)
         theme::paintEngraved (g, "Loading...", getLocalBounds().reduced (8), juce::Justification::topRight);
 }
 
+void WaveformView::paintLive (juce::Graphics& g, int c) const
+{
+    const auto area = plotArea();
+    const auto colour = theme::camColour (c);
+    const float top = laneTop (c), height = 5.0f;
+    bool any = false;
+
+    for (int v = 0; v < maxVoices; ++v)
+    {
+        const auto& l = live[(size_t) v][(size_t) c];
+        if (l.phase < 0.0f)
+            continue;
+        any = true;
+
+        // The range this voice reads, and where it reads in it (the phase
+        // runs over the cycle, which the overlap shortens).
+        const float x0 = juce::jmax (area.getX(), sampleToX ((double) l.start));
+        const float x1 = juce::jmin (area.getRight(), sampleToX ((double) l.start + (double) l.cycle + (double) l.overlap));
+        if (x1 > x0 - 1.0f)
+        {
+            g.setColour (colour.withAlpha (0.4f));
+            g.fillRect (juce::Rectangle<float> (x0, top, juce::jmax (1.0f, x1 - x0), height));
+        }
+        const float xp = sampleToX ((double) l.start + (double) l.phase * (double) l.cycle);
+        if (xp >= area.getX() && xp <= area.getRight())
+        {
+            g.setColour (colour.brighter (0.6f));
+            g.fillRect (juce::Rectangle<float> (xp - 0.75f, top - 1.0f, 1.5f, height + 2.0f));
+            if (v == newestVoice)
+            {
+                g.setColour (colour.brighter (0.5f).withAlpha (0.85f));
+                g.drawLine (xp, area.getY(), xp, top, 1.2f);
+            }
+        }
+    }
+
+    if (any)
+    {
+        g.setColour (colour.withAlpha (0.25f));
+        g.drawHorizontalLine ((int) (top + height), area.getX(), area.getRight());
+    }
+}
+
+void WaveformView::paintProbe (juce::Graphics& g) const
+{
+    if (probeSlot < 0 || probeSlot >= numModulators || numSamples <= 0)
+        return;
+
+    auto& apvts = processor.getAPVTS();
+    auto& structure = processor.getStructure();
+    const auto area = plotArea();
+    const int source = srcModFirst + probeSlot;
+
+    // The curve's output at the held value, as the engine computes it.
+    const bool bipolar = sourceIsBipolar (apvts, source);
+    const float out = (bipolar ? 2.0f * probeValue - 1.0f : probeValue)
+                    * apvts.getRawParameterValue (ids::mod (probeSlot, mfLevel))->load();
+
+    for (int c = 0; c < numCams; ++c)
+    {
+        const auto startId = ids::cam (c, cfStart), lengthId = ids::cam (c, cfLength);
+        float startOffset = 0.0f, lengthOffset = 0.0f;
+        bool moves[2] {};     // opening, duration
+        bool throughVia = false;
+        for (int i = 0; i < maxRoutes; ++i)
+        {
+            const auto r = structure.getRoute (i);
+            if (r.source != source || (r.dest != startId && r.dest != lengthId))
+                continue;
+            const float depth = apvts.getRawParameterValue (ids::routeDepth (i))->load();
+            const bool isStart = r.dest == startId;
+            (isStart ? startOffset : lengthOffset) += out * depth;
+            moves[isStart ? 0 : 1] = true;
+            throughVia = throughVia || r.via > 0;
+        }
+        if (! moves[0] && ! moves[1])
+            continue;
+
+        auto value = [&] (int f) { return apvts.getRawParameterValue (ids::cam (c, f))->load(); };
+        const float startValue = camSpecs[cfStart].fromNorm (camSpecs[cfStart].toNorm (value (cfStart)) + startOffset);
+        const float lengthValue = camSpecs[cfLength].fromNorm (camSpecs[cfLength].toNorm (value (cfLength)) + lengthOffset);
+        double start, length;
+        camRange (startValue, lengthValue, (double) numSamples, start, length);
+
+        // The range where the curve puts it, as a ghost, and the edge it
+        // moves as a marker (both edges when it moves the opening). A route
+        // through a "via" source is drawn as if that source were at 1.
+        const auto colour = theme::camColour (c);
+        const float x0 = sampleToX (start), x1 = sampleToX (start + length);
+        g.setColour (colour.withAlpha (0.12f));
+        g.fillRect (juce::Rectangle<float> (x0, area.getY(), juce::jmax (1.0f, x1 - x0), area.getHeight()));
+
+        auto marker = [&] (float x, bool strong)
+        {
+            if (x < area.getX() - 1.0f || x > area.getRight() + 1.0f)
+                return;
+            g.setColour (colour.brighter (0.4f).withAlpha (strong ? 1.0f : 0.6f));
+            if (throughVia)
+            {
+                const float dashes[] { 4.0f, 3.0f };
+                g.drawDashedLine ({ x, area.getY(), x, area.getBottom() }, dashes, 2, strong ? 2.0f : 1.0f);
+            }
+            else
+                g.drawLine (x, area.getY(), x, area.getBottom(), strong ? 2.0f : 1.0f);
+            // A small arrowhead at the top, pointing down.
+            juce::Path tip;
+            tip.addTriangle (x - 4.0f, area.getY(), x + 4.0f, area.getY(), x, area.getY() + 6.0f);
+            g.fillPath (tip);
+        };
+        marker (x0, moves[0]);
+        marker (x1, true);
+    }
+}
+
 void WaveformView::resized() {}
 
 //==============================================================================
 std::pair<int, WaveformView::Hit> WaveformView::hitTest (juce::Point<float> p) const
 {
-    // Edges first, any cam; then the narrowest range under the mouse.
+    // Flags first (cam 1's drawn on top), then edges, then the narrowest
+    // range under the mouse.
+    for (int c = 0; c < numCams; ++c)
+        if (flagArea (c).expanded (1.0f).contains (p))
+            return { c, Hit::flag };
     for (int c = 0; c < numCams; ++c)
     {
         const auto& r = shown[(size_t) c];
-        if (std::abs (p.x - sampleToX (r.start)) < 5.0f)                return { c, Hit::leftEdge };
-        if (std::abs (p.x - sampleToX (r.start + r.length)) < 5.0f)     return { c, Hit::rightEdge };
+        const float dl = std::abs (p.x - sampleToX (r.start)), dr = std::abs (p.x - sampleToX (r.start + r.length));
+        if (juce::jmin (dl, dr) < 5.0f)
+            return { c, dl <= dr ? Hit::leftEdge : Hit::rightEdge };
     }
     int best = -1;
     double bestLen = 1.0e30;
@@ -254,7 +411,7 @@ void WaveformView::mouseMove (const juce::MouseEvent& e)
     {
         hoverCam = c;
         hoverHit = hit;
-        setMouseCursor (hit == Hit::body ? juce::MouseCursor::DraggingHandCursor
+        setMouseCursor (hit == Hit::body || hit == Hit::flag ? juce::MouseCursor::DraggingHandCursor
                       : hit == Hit::none ? juce::MouseCursor::NormalCursor
                                          : juce::MouseCursor::LeftRightResizeCursor);
         repaint();
@@ -271,18 +428,20 @@ void WaveformView::beginGesture (int cam, Hit hit)
 {
     dragCam = cam;
     dragHit = hit;
-    auto& apvts = processor.getAPVTS();
-    dragStartCentre = apvts.getRawParameterValue (ids::cam (cam, cfCentre))->load();
-    dragStartWidth = apvts.getRawParameterValue (ids::cam (cam, cfWidth))->load();
-    for (int f : { (int) cfCentre, (int) cfWidth })
-        if (auto* p = apvts.getParameter (ids::cam (cam, f)))
+    // The range as shown (the duration cut short at the end of the file):
+    // the edge not dragged stays where it is seen.
+    const auto r = rangeOf (cam);
+    dragStartStart = r.start;
+    dragStartLength = r.length;
+    for (int f : { (int) cfStart, (int) cfLength })
+        if (auto* p = processor.getAPVTS().getParameter (ids::cam (cam, f)))
             p->beginChangeGesture();
 }
 
 void WaveformView::endGesture()
 {
     if (dragCam >= 0)
-        for (int f : { (int) cfCentre, (int) cfWidth })
+        for (int f : { (int) cfStart, (int) cfLength })
             if (auto* p = processor.getAPVTS().getParameter (ids::cam (dragCam, f)))
                 p->endChangeGesture();
     dragCam = -1;
@@ -318,15 +477,26 @@ void WaveformView::mouseDrag (const juce::MouseEvent& e)
     if (dragCam < 0 || numSamples <= 0)
         return;
 
-    if (dragHit == Hit::body)
-        setParameter (dragCam, cfCentre, (float) juce::jlimit (0.0, 1.0, dragStartCentre + dx / numSamples));
+    const double n = (double) numSamples, minLength = (double) camSpecs[cfLength].min;
+    const double end = dragStartStart + dragStartLength;
+    if (dragHit == Hit::body || dragHit == Hit::flag)
+    {
+        // The whole range moves, its duration kept.
+        const double start = juce::jlimit (0.0, juce::jmax (0.0, n - dragStartLength), dragStartStart + dx);
+        setParameter (dragCam, cfStart, (float) (start / n));
+    }
+    else if (dragHit == Hit::leftEdge)
+    {
+        // The opening moves, the end stays: the duration takes up the difference.
+        const double start = juce::jlimit (0.0, juce::jmax (0.0, end - minLength), dragStartStart + dx);
+        setParameter (dragCam, cfStart, (float) (start / n));
+        setParameter (dragCam, cfLength, (float) (end - start));
+    }
     else
     {
-        // Edges move symmetrically around the centre.
-        const double sign = dragHit == Hit::rightEdge ? 2.0 : -2.0;
-        const double width = juce::jlimit ((double) camSpecs[cfWidth].min, (double) camSpecs[cfWidth].max,
-                                           dragStartWidth + sign * dx);
-        setParameter (dragCam, cfWidth, (float) width);
+        // The end moves, the opening stays.
+        const double newEnd = juce::jlimit (dragStartStart + minLength, n, end + dx);
+        setParameter (dragCam, cfLength, (float) (newEnd - dragStartStart));
     }
 }
 
@@ -339,7 +509,7 @@ void WaveformView::mouseUp (const juce::MouseEvent&)
 void WaveformView::mouseDoubleClick (const juce::MouseEvent& e)
 {
     const auto [c, hit] = hitTest (e.position);
-    if (c >= 0 && hit == Hit::body)
+    if (c >= 0 && (hit == Hit::body || hit == Hit::flag))
     {
         const auto& r = shown[(size_t) c];
         viewLength = r.length * 1.5;

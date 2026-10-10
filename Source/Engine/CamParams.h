@@ -107,7 +107,7 @@ inline constexpr const char* const overlapShapes[]  = { "Linear", "Equal power" 
 inline constexpr const char* const snapModes[]      = { "Off", "Zero crossing", "Period" };
 inline constexpr const char* const tapPoints[]      = { "Pre-filter", "Post-filter", "Post-gain" };
 inline constexpr const char* const filterRoutings[] = { "Series", "Parallel" };
-inline constexpr const char* const modTypes[]       = { "LFO", "ADSR", "Curve" };
+inline constexpr const char* const modTypes[]       = { "LFO", "ADSR", "Curve", "Off" };
 inline constexpr const char* const lfoModes[]       = { "Per voice", "Global" };
 inline constexpr const char* const durationModes[]  = { "Seconds", "Beats" };
 inline constexpr const char* const voiceModes[]     = { "Poly", "Mono", "Legato" };
@@ -125,7 +125,7 @@ inline constexpr bool isZero (float v) noexcept { return ! (v > 0.0f || v < 0.0f
 
 enum CamField
 {
-    cfAudible = 0, cfCentre, cfWidth, cfOverlap, cfOverlapShape, cfSnap,
+    cfAudible = 0, cfStart, cfLength, cfOverlap, cfOverlapShape, cfSnap,
     cfCoarse, cfFine, cfCylinders, cfDetune, cfSpread, cfRandomPhase,
     cfVolume, cfPan, cfSend1, cfSend2, cfTap1, cfTap2,
     cfAttack, cfDecay, cfSustain, cfRelease, cfAttackCurve, cfDecayCurve, cfReleaseCurve, cfVelocity,
@@ -140,8 +140,8 @@ constexpr int filterFieldStride = cfF2On - cfF1On;   // offset from filter 1's f
 
 inline constexpr ParamSpec camSpecs[numCamFields] = {
     { "audible",     "Audible",        Mapping::boolean, 0, 1, 1, 1, false, "", offOn, 2 },
-    { "center",      "Centre",         Mapping::linear,  0, 1, 0.5f, 1, true, "" },
-    { "width",       "Lobe",           Mapping::log,     16, 1048576, 2048, 1, true, "smp" },
+    { "start",       "Opening",        Mapping::linear,  0, 1, 0.5f, 1, true, "" },
+    { "length",      "Duration",       Mapping::log,     16, 1048576, 2048, 1, true, "smp" },
     { "overlap",     "Overlap",        Mapping::linear,  0, 50, 10, 1, true, "%" },
     { "xfshape",     "Overlap shape",  Mapping::choice,  0, 1, 1, 1, false, "", overlapShapes, 2 },
     { "snap",        "Snap",           Mapping::choice,  0, 2, 0, 1, false, "", snapModes, 3 },
@@ -198,6 +198,21 @@ inline constexpr ParamSpec camSpecs[numCamFields] = {
     { "xm4_lift",    "Lift from Cam 4", Mapping::linear, 0, 1, 0.3f, 1, true, "" },
 };
 
+/** A cam's range in a recording of `numSamples` samples, from its opening
+    (start, 0 to 1 of the recording) and duration (length, samples): the
+    range starts where it opens and runs for its duration, cut short at the
+    end of the recording; at least 16 samples. Before any snapping. The
+    engine and the editor's displays both use it. */
+inline void camRange (float startParam, float lengthParam, double numSamples, double& start, double& length) noexcept
+{
+    constexpr double minLength = 16.0;
+    const double n = numSamples > minLength ? numSamples : minLength;
+    const double s = (double) (startParam < 0.0f ? 0.0f : (startParam > 1.0f ? 1.0f : startParam)) * n;
+    start = s < n - minLength ? s : n - minLength;
+    const double room = n - start;
+    length = (double) lengthParam < minLength ? minLength : ((double) lengthParam > room ? room : (double) lengthParam);
+}
+
 //==============================================================================
 // Per-modulator fields: parameter "mod<n>_<key>"
 
@@ -209,8 +224,11 @@ enum ModField
     numModFields
 };
 
+/** Values of the "type" field (modTypes). */
+enum ModType { mtLfo = 0, mtAdsr, mtCurve, mtOff };
+
 inline constexpr ParamSpec modSpecs[numModFields] = {
-    { "type",    "Type",          Mapping::choice,  0, 2, 0, 1, false, "", modTypes, 3 },
+    { "type",    "Type",          Mapping::choice,  0, 3, 3, 1, false, "", modTypes, 4 },
     { "shape",   "Shape",         Mapping::choice,  0, (float) fxme::ModulationLfo::numShapes - 1, 0, 1, false, "",
                                   fxme::ModulationLfo::shapeNames, fxme::ModulationLfo::numShapes },
     { "rate",    "Rate",          Mapping::log,     0.01f, 50, 2, 1, true, "Hz" },

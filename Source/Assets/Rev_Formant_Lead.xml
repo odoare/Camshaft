@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Rev - Formant Lead" schemaVersion="1">
+<Parameters presetName="Rev - Formant Lead" schemaVersion="2">
   <PARAM id="polymode" value="2.0" />
   <PARAM id="glide_time" value="80.0" />
-  <PARAM id="r1_center" value="0.66" />
+  <PARAM id="r1_start" value="0.6521875" />
   <PARAM id="r1_cyl" value="2.0" />
   <PARAM id="r1_detune" value="8.0" />
   <PARAM id="r1_volume" value="-7.0" />
@@ -19,6 +19,7 @@
   <PARAM id="r1_send2" value="0.3" />
   <PARAM id="aux2_fx0_type" value="1.0" />
   <PARAM id="aux2_return" value="-6.0" />
+  <PARAM id="mod1_type" value="0.0" />
   <Structure>
     <Routes>
       <Route i="0" src="mod1" dst="r1_f1_vowelpos" via="none" />

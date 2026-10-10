@@ -43,8 +43,10 @@ void CamProfileView::rebuild()
     auto value = [&] (int f) { return apvts.getRawParameterValue (ids::cam (cam, f))->load(); };
 
     fxme::WavetableBuildSettings s;
-    s.centre = (double) value (cfCentre) * source->numSamples;
-    s.width = (double) value (cfWidth);
+    double start, length;
+    camRange (value (cfStart), value (cfLength), (double) source->numSamples, start, length);
+    s.centre = start + 0.5 * length;
+    s.width = length;
     s.overlap = value (cfOverlap) * 0.01f;
     s.overlapShape = (fxme::WavetableBuildSettings::OverlapShape) (int) value (cfOverlapShape);
     s.snap = (fxme::WavetableBuildSettings::Snap) (int) value (cfSnap);

@@ -5,11 +5,13 @@
     The 16 modulator slots and the fixed MIDI / voice sources.
 
       Left:  one chip per slot (its name after its type, "LFO 3", and a bar
-             with its live output) and the fixed sources (velocity, key,
-             wheel, CCs, the cams' amp envelopes...). Click a slot chip to
-             edit it; drag any chip onto a knob to modulate that knob.
-      Right: the selected slot's editor: type (LFO, ADSR, curve) and output
-             level, then
+             with its live output; dimmed, without a bar, when the slot is
+             off or feeds nothing, since it is then not computed) and the
+             fixed sources (velocity, key, wheel, CCs, the cams' amp
+             envelopes...). Click a slot chip to edit it; drag any chip onto
+             a knob to modulate that knob (an "Off" slot becomes an LFO).
+      Right: the selected slot's editor: type (LFO, ADSR, curve, Off) and
+             output level, then
                LFO    shape, rate or tempo division, phase, delay, fade-in,
                       unipolar / bipolar, per-voice retrigger or global
                ADSR   the four stages, their curves, velocity amount
@@ -59,6 +61,7 @@ private:
     juce::String name;
     float level = 0.0f;
     bool bipolar = false, selected = false, dragging = false;
+    bool inUse = true;    // a modulator slot that feeds nothing (or is off) is drawn dimmed, without its bar
 };
 
 /** The editor of one modulator slot (remade when another slot is chosen). */
@@ -68,6 +71,10 @@ class ModulatorEditor : public juce::Component,
 public:
     ModulatorEditor (CamshaftAudioProcessor& processor, int slot);
     ~ModulatorEditor() override;
+
+    /** While a point of the curve is held: the slot and the curve's value
+        there (0 to 1); slot -1 when it is let go. */
+    std::function<void (int slot, float value)> onCurveProbe;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -116,6 +123,9 @@ public:
     void resized() override;
 
     void select (int slot);
+
+    /** See ModulatorEditor::onCurveProbe. */
+    std::function<void (int slot, float value)> onCurveProbe;
 
 private:
     CamshaftAudioProcessor& processor;

@@ -79,8 +79,8 @@ namespace
             auto id = [c] (int f) { return ids::cam (c, f); };
             auto r = [&] (int f, float lo, float hi) { x.range (id (f), camSpecs[f], lo, hi); };
 
-            r (cfCentre, 0.0f, 1.0f);
-            r (cfWidth, 128.0f, 16384.0f);
+            r (cfStart, 0.0f, 0.95f);
+            r (cfLength, 128.0f, 16384.0f);
             r (cfOverlap, 0.0f, 30.0f);
             x.choice (id (cfOverlapShape), camSpecs[cfOverlapShape]);
             x.choice (id (cfSnap), camSpecs[cfSnap]);
@@ -140,7 +140,10 @@ namespace
             auto id = [m] (int f) { return ids::mod (m, f); };
             auto r = [&] (int f, float lo, float hi) { x.range (id (f), modSpecs[f], lo, hi); };
 
-            x.pick (id (mfType), { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 2.0f });
+            // A slot that is off stays off (it feeds nothing: the routes
+            // are the user's); the others may change type.
+            if ((int) x.apvts.getRawParameterValue (id (mfType))->load() != mtOff)
+                x.pick (id (mfType), { (float) mtLfo, (float) mtLfo, (float) mtLfo, (float) mtAdsr, (float) mtAdsr, (float) mtCurve });
             x.choice (id (mfShape), modSpecs[mfShape]);
             r (mfRate, 0.05f, 8.0f);
             x.chance (id (mfSync), 0.3f);

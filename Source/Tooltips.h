@@ -3,7 +3,7 @@
     Tooltips.h
 
     Every hover-help string of Camshaft, one namespace per pane. No tooltip
-    literal anywhere else. The engine names (Lobe, Overlap, Cylinders...)
+    literal anywhere else. The engine names (Opening, Duration, Cylinders...)
     come with their standard term, so the metaphor never gets in the way.
 
     Shown only while the "?" switch in the settings is on (AppSettings.h).
@@ -30,7 +30,7 @@ namespace camshaft::tips::file
     inline constexpr auto builtIn     = "Back to the built-in morph of waveforms (removes the imported audio).";
     inline constexpr auto channels    = "Which channels of a stereo file the cams read: both, left, right, or their mid.";
     inline constexpr auto normalise   = "Normalise the file's peak to -1 dBFS (not destructive: off restores its level).";
-    inline constexpr auto waveform    = "Drag inside a cam's range to move its centre, drag an edge to change its lobe. Wheel: zoom; shift+wheel or drag on empty space: scroll; double-click: whole file (or zoom on a range). Drop a file here to import it.";
+    inline constexpr auto waveform    = "Drag inside a cam's range, or its numbered flag, to move it; drag an edge to move that edge only. The coloured bars along the bottom are the ranges every playing voice reads (modulation included), the bright lines where they read. Wheel: zoom; shift+wheel or drag on empty space: scroll; double-click: whole file (or zoom on a range). Drop a file here to import it.";
 }
 
 namespace camshaft::tips::scope
@@ -47,11 +47,11 @@ namespace camshaft::tips::cam
     inline constexpr auto pageAmp      = "The cam's amp envelope.";
     inline constexpr auto pageMix      = "Volume, pan, the Turbo sends, and the lift of the belts driving this cam.";
 
-    inline constexpr auto centre       = "Centre: where in the file the range sits (0 = start, 100 % = end).";
-    inline constexpr auto width        = "Lobe: the range's width in samples of the file. The whole range is one cycle of the wave.";
-    inline constexpr auto overlap      = "Overlap: loop crossfade length, as a share of the lobe. Blends the end of the range into its start so the cycle wraps smoothly.";
+    inline constexpr auto start        = "Opening (range start): where in the file the range begins (0 = start of the file, 100 % = end).";
+    inline constexpr auto length       = "Duration (range length): how long the range lasts, in samples of the file, from its opening (cut short at the end of the file). The whole range is one cycle of the wave.";
+    inline constexpr auto overlap      = "Overlap: loop crossfade length, as a share of the duration. Blends the end of the range into its start so the cycle wraps smoothly.";
     inline constexpr auto overlapShape = "Overlap shape: linear or equal-power crossfade.";
-    inline constexpr auto snap         = "Snap: move the edges to zero crossings, or make the lobe a whole number of periods of the sound.";
+    inline constexpr auto snap         = "Snap: move the edges to zero crossings, or make the duration a whole number of periods of the sound.";
     inline constexpr auto coarse       = "Coarse tune, in semitones.";
     inline constexpr auto fine         = "Fine tune, in cents.";
     inline constexpr auto cylinders    = "Cylinders: unison voices (1 to 4) playing the same wave, detuned and spread.";
@@ -92,9 +92,9 @@ namespace camshaft::tips::cam
 
 namespace camshaft::tips::mods
 {
-    inline constexpr auto slotChip      = "A modulator slot: click to edit it, drag it onto a knob to modulate that knob. The bar shows its live output.";
+    inline constexpr auto slotChip      = "A modulator slot: click to edit it, drag it onto a knob to modulate that knob. The bar shows its live output; dimmed, the slot is off or modulates nothing, and is not computed.";
     inline constexpr auto fixedChip     = "A MIDI or voice source: drag it onto a knob to modulate that knob.";
-    inline constexpr auto type          = "LFO, ADSR envelope, or a drawn curve.";
+    inline constexpr auto type          = "LFO, ADSR envelope, a drawn curve, or Off (the slot is not used).";
     inline constexpr auto level         = "Output level of this modulator (a modulation destination itself).";
     inline constexpr auto bipolar       = "Bipolar: swings both ways around the knob's value; off, only upwards.";
     inline constexpr auto shape         = "LFO shape. S&H holds a new random value each cycle; smooth random glides between them.";
@@ -111,7 +111,7 @@ namespace camshaft::tips::mods
     inline constexpr auto release       = "Envelope release time.";
     inline constexpr auto curve         = "Segment curve: negative moves fast then slows, positive starts slowly.";
     inline constexpr auto velocity      = "How much the note's velocity scales the envelope.";
-    inline constexpr auto curveEditor   = "Drag points; double-click to add or remove one; drag a segment's small circle to bend it; shift snaps to a grid. With the sustain on, drag its markers at the top.";
+    inline constexpr auto curveEditor   = "Drag points; double-click to add or remove one; drag a segment's small circle to bend it; shift snaps to a grid. With the sustain on, drag its markers at the top. While a point is held, the waveform marks where its value puts the opening or the end of each range this curve modulates.";
     inline constexpr auto duration      = "Length of the whole curve, in seconds.";
     inline constexpr auto beats         = "Length of the whole curve, in beats at the host tempo.";
     inline constexpr auto durationMode  = "Curve length in seconds or in beats.";

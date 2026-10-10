@@ -104,12 +104,12 @@ void CamStrip::buildCamPage()
     auto& page = pages[0];
     auto& apvts = processor.getAPVTS();
 
-    auto& centre  = knob (page, cfCentre, tips::cam::centre);
-    auto& width   = knob (page, cfWidth, tips::cam::width);
+    auto& start   = knob (page, cfStart, tips::cam::start);
+    auto& length  = knob (page, cfLength, tips::cam::length);
     auto& overlap = knob (page, cfOverlap, tips::cam::overlap);
     auto& coarse  = knob (page, cfCoarse, tips::cam::coarse, true);
     auto& fine    = knob (page, cfFine, tips::cam::fine, true);
-    page.addRow ({ &centre, &width, &overlap, &coarse, &fine }, 64);
+    page.addRow ({ &start, &length, &overlap, &coarse, &fine }, 64);
 
     auto& shape = page.combo (apvts, ids::cam (cam, cfOverlapShape), colour, tips::cam::overlapShape);
     auto& snap  = page.combo (apvts, ids::cam (cam, cfSnap), colour, tips::cam::snap);

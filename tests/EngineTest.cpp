@@ -3,7 +3,7 @@
     EngineTest.cpp
 
     The JUCE-free engine on its own (links FxmeCore only): a chord on the
-    built-in source with an LFO on cam 1's centre and FM from cam 2, then a
+    built-in source with an LFO on cam 1's opening and FM from cam 2, then a
     full-load run (24 voices, 4 cams, 4 cylinders, both filters). Checks the
     output is finite and not silent, that voices are freed after their
     release, and prints the CPU time per second of audio.
@@ -92,10 +92,11 @@ int main()
     {
         Rig rig;
         rig.camVals[1][cfAudible] = 1.0f;
-        rig.camVals[1][cfCentre] = 0.8f;
+        rig.camVals[1][cfStart] = 0.8f;
         rig.camVals[1][cfCylinders] = 4.0f;
+        rig.modVals[0][mfType] = (float) mtLfo;
         rig.depths[0] = 0.3f;
-        rig.engine.setRoute (0, srcModFirst, camDest (0, cfCentre), 0);   // LFO 1 -> cam 1 centre
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfStart), 0);    // LFO 1 -> cam 1 opening
         rig.engine.setXmod (1, 0, 1);                                     // FM cam 2 -> cam 1
 
         bool finite = true;
@@ -128,7 +129,7 @@ int main()
             rig.camVals[c][cfCylinders] = (float) maxCylinders;
             rig.camVals[c][cfF1On] = 1.0f;
             rig.camVals[c][cfF2On] = 1.0f;
-            rig.camVals[c][cfCentre] = 0.2f * (float) c + 0.1f;
+            rig.camVals[c][cfStart] = 0.2f * (float) c + 0.1f;
         }
         rig.settings.polyphony = maxVoices;
         bool finite = true;
@@ -150,68 +151,93 @@ int main()
     }
 
     {
-        // A centre swept across the built-in morph (sine at 0, saws further
+        // An opening swept across the built-in morph (sine at 0, saws further
         // on): the sound must follow during the sweep, not jump at its end.
-        Rig rig;
-        rig.camVals[0][cfCentre] = 0.02f;
-        bool finite = true;
-        rig.run (finite);
-        std::this_thread::sleep_for (std::chrono::milliseconds (100));
-        rig.engine.noteOn (48, 0.8f);
+        // Positions are given as the range's middle (a 2048-sample range on
+        // the 131072-sample built-in source opens half a cycle earlier).
+        // Random phase off and brightness summed over 4 blocks: one block is
+        // under 2 cycles of the note, its brightness depends on where in the
+        // cycle it falls.
+        constexpr float half = 1024.0f / 131072.0f;
+        constexpr int window = 4;
 
-        // Brightness of a block: energy of the first difference over energy.
-        auto brightness = [&rig]
+        // Brightness of the rig's last block: energy of the first difference
+        // and energy, accumulated.
+        auto accumulate = [] (const Rig& r, double& e, double& d)
         {
-            double e = 0.0, d = 0.0;
             for (int i = 1; i < Rig::block; ++i)
             {
-                const double x = rig.buf[0][(size_t) i], dx = x - rig.buf[0][(size_t) i - 1];
+                const double x = r.buf[0][(size_t) i], dx = x - r.buf[0][(size_t) i - 1];
                 e += x * x;
                 d += dx * dx;
+            }
+        };
+
+        Rig rig;
+        rig.camVals[0][cfRandomPhase] = 0.0f;
+        rig.camVals[0][cfStart] = 0.02f - half;
+        bool finite = true;
+        rig.run (finite);
+        rig.engine.noteOn (48, 0.8f);
+
+        const int blocks = 200;                   // about 2 s, swept 0.02 -> 0.5
+        std::vector<double> energy, diff;
+        for (int b = 0; b < blocks; ++b)
+        {
+            rig.camVals[0][cfStart] = 0.02f + 0.48f * (float) b / (float) blocks - half;
+            rig.run (finite);
+            double e = 0.0, d = 0.0;
+            accumulate (rig, e, d);
+            energy.push_back (e);
+            diff.push_back (d);
+        }
+        // The sweep's brightness over the window ending at block `last`.
+        auto swept = [&] (int last)
+        {
+            double e = 0.0, d = 0.0;
+            for (int b = last - window + 1; b <= last; ++b)
+            {
+                e += energy[(size_t) b];
+                d += diff[(size_t) b];
+            }
+            return e > 1.0e-12 ? d / e : 0.0;
+        };
+        // The same note held still at a given position, for reference.
+        auto staticBrightness = [&] (float centre)
+        {
+            Rig still;
+            still.camVals[0][cfRandomPhase] = 0.0f;
+            still.camVals[0][cfStart] = centre - half;
+            bool ok = true;
+            still.run (ok);
+            still.engine.noteOn (48, 0.8f);
+            double e = 0.0, d = 0.0;
+            for (int b = 0; b < 40; ++b)
+            {
+                still.run (ok);
+                if (b >= 40 - window)
+                    accumulate (still, e, d);
             }
             return e > 1.0e-12 ? d / e : 0.0;
         };
 
-        const int blocks = 200;                   // about 2 s, swept 0.02 -> 0.5
-        std::vector<double> bright;
-        for (int b = 0; b < blocks; ++b)
-        {
-            rig.camVals[0][cfCentre] = 0.02f + 0.48f * (float) b / (float) blocks;
-            rig.run (finite);
-            bright.push_back (brightness());
-            std::this_thread::sleep_for (std::chrono::microseconds (500));   // let the worker breathe, as a real host would
-        }
-        // The same note held still at a given centre, for reference.
-        auto staticBrightness = [&] (float centre)
-        {
-            Rig still;
-            still.camVals[0][cfCentre] = centre;
-            bool ok = true;
-            still.run (ok);
-            std::this_thread::sleep_for (std::chrono::milliseconds (100));
-            still.engine.noteOn (48, 0.8f);
-            for (int b = 0; b < 40; ++b)
-                still.run (ok);
-            double e = 0.0, d = 0.0;
-            for (int i = 1; i < Rig::block; ++i)
-            {
-                const double x = still.buf[0][(size_t) i], dx = x - still.buf[0][(size_t) i - 1];
-                e += x * x;
-                d += dx * dx;
-            }
-            return d / e;
-        };
-
-        // Where the sweep is a few blocks before each check point, since the
-        // table follows the position a few milliseconds late.
-        const double start = bright[10];
-        const double middle = bright[(size_t) blocks / 2];
-        const double refMiddle = staticBrightness (0.02f + 0.48f * 0.49f);
+        // The reference is where the sweep was in the middle of the window,
+        // a little earlier still since the range follows its parameter a few
+        // milliseconds late. The middle is checked in the saw region (0.25
+        // to 0.375), away from the morph's boundaries where the timbre
+        // changes abruptly.
+        const int at = 122;                       // the sweep at about 0.31
+        const double start = swept (12);
+        const double middle = swept (at);
+        const double refMiddle = staticBrightness (0.02f + 0.48f * ((float) at - 0.5f * window - 0.5f) / (float) blocks);
         const double refStart = staticBrightness (0.02f);
         check (finite, "sweep stays finite");
         check (middle > 3.0 * start, "the timbre changes during the sweep");
+        // Not equal: a moving range is a scan, its speed adds to the read
+        // speed (here about 0.6 of the 5.6 source samples read per output
+        // sample, +11 % in frequency, +23 % in this brightness measure).
         check (std::abs (middle - refMiddle) < 0.35 * refMiddle,
-               "mid-sweep, it sounds like a held note at that centre");
+               "mid-sweep, it sounds like a held note at that opening");
         std::printf ("  brightness: start %.4f (held %.4f), middle %.4f (held %.4f)\n", start, refStart, middle, refMiddle);
     }
 
@@ -220,6 +246,9 @@ int main()
         // line up with the control blocks (441 samples): its value must match
         // the host position at the end of each control span, every block.
         Rig rig;
+        rig.modVals[0][mfType] = (float) mtLfo;
+        rig.depths[0] = 0.01f;
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfFine), 0);     // in use, so computed
         rig.modVals[0][mfMode] = 1.0f;        // global
         rig.modVals[0][mfSync] = 1.0f;
         rig.modVals[0][mfDivision] = 5.0f;    // 1/4: one cycle per beat
@@ -258,7 +287,10 @@ int main()
         // LFO under a held note must move continuously, block after block,
         // by no more than its slope allows.
         Rig rig;
+        rig.modVals[0][mfType] = (float) mtLfo;
         rig.modVals[0][mfRate] = 2.0f;
+        rig.depths[0] = 0.01f;
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfFine), 0);
         bool finite = true;
         rig.run (finite);
         rig.engine.noteOn (60, 0.8f);
@@ -276,6 +308,64 @@ int main()
         const double allowed = 4.0 * 3.14159265 * (512.0 + 32.0) / 48000.0;
         check (maxStep <= allowed, "per-voice LFO value moves continuously");
         std::printf ("  LFO meter value: largest step per block %.4f (allowed %.4f)\n", maxStep, allowed);
+    }
+
+    {
+        // The range opens at its opening and runs for its duration, cut short
+        // at the end of the recording; the display shows what is read.
+        Rig rig;
+        const double n = (double) makeDemoSource()->numSamples;
+        rig.camVals[0][cfStart] = 0.25f;
+        rig.camVals[0][cfLength] = 4096.0f;
+        rig.camVals[0][cfOverlap] = 0.0f;
+        bool finite = true;
+        rig.run (finite);
+        rig.engine.noteOn (60, 0.8f);
+        rig.run (finite);
+        const auto& d = rig.engine.getDisplay();
+        const int v = d.newestVoice.load();
+        const auto& r = d.ranges[(size_t) std::max (0, v)][0];
+        check (v >= 0 && std::abs (r.start.load() - 0.25 * n) < 1.0 && std::abs (r.cycle.load() - 4096.0) < 1.0,
+               "range opens at its opening and lasts its duration");
+        check (r.phase.load() >= 0.0f && d.ranges[(size_t) std::max (0, v)][1].phase.load() < 0.0f,
+               "live range shown for the cams that play only");
+
+        rig.camVals[0][cfStart] = 0.99f;
+        for (int b = 0; b < 20; ++b)
+            rig.run (finite);
+        check (std::abs (r.start.load() - 0.99 * n) < 1.0 && std::abs (r.cycle.load() - 0.01 * n) < 1.0,
+               "near the end, the duration is cut short (the opening stays)");
+
+        double start = 0.0, length = 0.0;
+        camRange (1.0f, 4096.0f, n, start, length);
+        check (std::abs (start - (n - 16.0)) < 1.0e-9 && std::abs (length - 16.0) < 1.0e-9, "range never shorter than 16 samples");
+    }
+
+    {
+        // Modulators that feed nothing are not computed (value 0); one that
+        // feeds a used one is; an "Off" one never is.
+        Rig rig;
+        rig.modVals[0][mfType] = (float) mtLfo;
+        rig.modVals[1][mfType] = (float) mtLfo;
+        rig.modVals[2][mfType] = (float) mtOff;
+        rig.modVals[0][mfPhase] = 0.25f;       // starts at its peak
+        bool finite = true;
+        rig.run (finite);
+        rig.engine.noteOn (60, 0.8f);
+        rig.run (finite);
+        const auto& d = rig.engine.getDisplay();
+        check (! d.modUsed[0].load() && isZero (d.source[(size_t) srcModFirst].load()), "an unconnected LFO is not computed");
+
+        rig.depths[0] = 0.1f;
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfFine), 0);              // LFO 1 -> cam 1 fine
+        rig.depths[1] = 0.1f;
+        rig.engine.setRoute (1, srcModFirst + 1, modDest (0, mfRate), 0);          // LFO 2 -> LFO 1 rate
+        rig.depths[2] = 0.1f;
+        rig.engine.setRoute (2, srcModFirst + 2, camDest (0, cfPan), 0);           // Off 3 -> cam 1 pan
+        rig.run (finite);
+        check (d.modUsed[0].load() && std::abs (d.source[(size_t) srcModFirst].load()) > 0.1f, "a connected LFO runs");
+        check (d.modUsed[1].load(), "an LFO modulating a used one runs");
+        check (! d.modUsed[2].load() && isZero (d.source[(size_t) srcModFirst + 2].load()), "an Off modulator never runs");
     }
 
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);

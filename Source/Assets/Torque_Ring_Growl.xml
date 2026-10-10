@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Torque - Ring Growl" schemaVersion="1">
-  <PARAM id="r1_center" value="0.42" />
+<Parameters presetName="Torque - Ring Growl" schemaVersion="2">
+  <PARAM id="r1_start" value="0.4121875" />
   <PARAM id="r1_volume" value="-7.0" />
   <PARAM id="r1_att" value="3.0" />
   <PARAM id="r1_dec" value="600.0" />
@@ -11,11 +11,12 @@
   <PARAM id="r1_f1_cutoff" value="1500.0" />
   <PARAM id="r1_f1_res" value="0.4" />
   <PARAM id="r1_f1_envamt" value="0.3" />
-  <PARAM id="r2_center" value="0.05" />
+  <PARAM id="r2_start" value="0.0421875" />
   <PARAM id="r2_coarse" value="7.0" />
   <PARAM id="r1_xm2_lift" value="0.7" />
   <PARAM id="mod1_rate" value="0.4" />
   <PARAM id="master_fx0_type" value="2.0" />
+  <PARAM id="mod1_type" value="0.0" />
   <Structure>
     <Routes>
       <Route i="0" src="mod1" dst="r1_xm2_lift" via="none" />
