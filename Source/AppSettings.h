@@ -6,7 +6,8 @@
     standalone app), in FX-Mechanics/Camshaft.settings under the user's
     application-data folder (~/.config on Linux, ~/Library/Application
     Support on macOS, %APPDATA% on Windows): whether the hover help is shown,
-    and the default MIDI learn map.
+    the default MIDI learn map, and the curve editor's beat grid (whether
+    the points of a curve timed in beats snap to it, and its division).
 
     Header-only, one shared PropertiesFile in a function-local static.
     Message thread.
@@ -58,6 +59,58 @@ inline void setUiTooltips (bool on)
     if (auto* s = appProperties().getUserSettings())
     {
         s->setValue ("uiTooltips", on);
+        s->saveIfNeeded();
+    }
+}
+
+/** The curve editor's beat grid divisions (for a curve whose duration is
+    in beats), in beats. Stored by value, so the list may change. */
+struct CurveGridDivision
+{
+    const char* name;
+    double beats;
+};
+
+inline constexpr CurveGridDivision curveGridDivisions[] = {
+    { "1 bar (4 beats)", 4.0 },
+    { "1 beat", 1.0 },
+    { "1/2 beat", 0.5 },
+    { "1/3 beat", 1.0 / 3.0 },
+    { "1/4 beat", 0.25 },
+    { "1/6 beat", 1.0 / 6.0 },
+    { "1/8 beat", 0.125 },
+};
+
+/** Whether the points of a curve timed in beats snap to the beat grid (off
+    by default; the grid is drawn either way). */
+inline bool getCurveGridSnap()
+{
+    auto* s = appProperties().getUserSettings();
+    return s != nullptr && s->getBoolValue ("curveGridSnap", false);
+}
+
+inline void setCurveGridSnap (bool on)
+{
+    if (auto* s = appProperties().getUserSettings())
+    {
+        s->setValue ("curveGridSnap", on);
+        s->saveIfNeeded();
+    }
+}
+
+/** The beat grid's division, in beats (a quarter of a beat by default). */
+inline double getCurveGridBeats()
+{
+    auto* s = appProperties().getUserSettings();
+    const double b = s != nullptr ? s->getDoubleValue ("curveGridBeats", 0.25) : 0.25;
+    return b > 0.0 ? b : 0.25;
+}
+
+inline void setCurveGridBeats (double beats)
+{
+    if (auto* s = appProperties().getUserSettings())
+    {
+        s->setValue ("curveGridBeats", beats);
         s->saveIfNeeded();
     }
 }

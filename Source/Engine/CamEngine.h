@@ -198,7 +198,8 @@ private:
 
     // Global modulators (free-running LFOs, curves on the host timeline).
     std::array<fxme::ModulationLfo, numModulators> globalLfos;
-    std::array<double, numModulators> globalCurvePos {};
+    std::array<double, numModulators> globalCurveElapsed {};    // in curve lengths
+    std::array<fxme::CurvePlayer, numModulators> globalCurves;
     double ppqNow = 0.0;
 
     // Global destinations.

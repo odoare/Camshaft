@@ -9,6 +9,8 @@
       Engine        interpolation quality
       MIDI          the CC numbers of the four CC sources, the MIDI learn
                     default (save the current map, or clear it)
+      Curves        snap curve points to the beat grid (curves timed in
+                    beats), and the grid's division (machine-wide)
       Instance      keep the audio when loading presets
       Help          the "?" switch for hover tips (machine-wide)
 
@@ -52,6 +54,8 @@ private:
 
     std::array<juce::ComboBox, 4> ccBoxes;
     juce::TextButton saveLearn { "Save MIDI map as default" }, clearLearn { "Clear default" };
+    juce::ToggleButton curveSnap { "Snap curve points to the beat grid" };
+    juce::ComboBox curveGrid;
     juce::ToggleButton keepAudio { "Keep audio when loading presets" };
     fxme::AccentToggle tooltipsButton;
     fxme::InfoButton infoButton;

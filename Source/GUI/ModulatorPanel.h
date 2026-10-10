@@ -16,8 +16,8 @@
                       unipolar / bipolar, per-voice retrigger or global
                ADSR   the four stages, their curves, velocity amount
                curve  the breakpoint editor (live playheads), duration in
-                      seconds or beats, speed, sustain region (hold or loop),
-                      release region, stick to DAW time
+                      seconds or beats, speed, sustain region (hold, loop or
+                      back and forth), release region, stick to DAW time
 
     Author: Olivier Doaré, github.com/odoare
     Dual-licensed, mirroring the JUCE framework it depends on: under the GNU
@@ -111,7 +111,8 @@ private:
     CamKnob *duration = nullptr, *beats = nullptr, *speed = nullptr;
     juce::ComboBox* durationMode = nullptr;
     fxme::FxmeButton* dawSync = nullptr;
-    juce::ToggleButton sustainToggle { "Sustain" }, loopToggle { "Loop" }, releaseToggle { "Release" };
+    juce::ToggleButton sustainToggle { "Sustain" }, releaseToggle { "Release" };
+    juce::ComboBox sustainModeBox;    // Hold, Loop, Back & forth
 };
 
 class ModulatorPanel : public juce::Component

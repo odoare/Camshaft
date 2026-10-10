@@ -111,14 +111,14 @@ namespace camshaft::tips::mods
     inline constexpr auto release       = "Envelope release time.";
     inline constexpr auto curve         = "Segment curve: negative moves fast then slows, positive starts slowly.";
     inline constexpr auto velocity      = "How much the note's velocity scales the envelope.";
-    inline constexpr auto curveEditor   = "Drag points; double-click to add or remove one; drag a segment's small circle to bend it; shift snaps to a grid. With the sustain on, drag its markers at the top. While a point is held, the waveform marks where its value puts the opening or the end of each range this curve modulates.";
+    inline constexpr auto curveEditor   = "Drag points; double-click to add or remove one; drag a segment's small circle to bend it; shift snaps to a grid. Timed in beats, the beat grid is drawn, and points snap to it when the snap is on in the settings (alt: free). With the sustain on, drag its markers at the top. While a point is held, the waveform marks where its value puts the opening or the end of each range this curve modulates.";
     inline constexpr auto duration      = "Length of the whole curve, in seconds.";
     inline constexpr auto beats         = "Length of the whole curve, in beats at the host tempo.";
     inline constexpr auto durationMode  = "Curve length in seconds or in beats.";
     inline constexpr auto speed         = "Playback speed of the curve (a modulation destination).";
-    inline constexpr auto daw           = "Stick to DAW time: the curve follows the host's position, the same point for every voice; free running when the host stops.";
+    inline constexpr auto daw           = "Stick to DAW time: the curve follows the host's position, the same point for every voice; free running when the host stops. With a sustain region, it plays its start once, then stays in the region (as a note held forever); without one, the whole curve repeats.";
     inline constexpr auto sustainRegion = "Sustain region: while the note is held, the curve stays between the two markers.";
-    inline constexpr auto loop          = "Loop the sustain region (off: hold the value at its end).";
+    inline constexpr auto loop          = "What the sustain region does while the note is held: hold the value at its end, loop it, or go back and forth between its markers. With Stick to DAW, the curve plays its start once from the song's start, then stays in the sustain region.";
     inline constexpr auto releaseRegion = "Release region: on note-off, the curve plays from the sustain end to its end, and the voice waits for it.";
 }
 
@@ -184,5 +184,7 @@ namespace camshaft::tips::global
     inline constexpr auto saveLearn     = "New instances will start with the current MIDI learn map.";
     inline constexpr auto clearLearn    = "New instances will start with no MIDI learn map.";
     inline constexpr auto keepAudio     = "Keep the current audio when a preset is loaded (this instance only).";
+    inline constexpr auto curveSnap     = "Curve modulators timed in beats: the points you drag or add land on the beat grid (hold alt to move one freely). For every instance.";
+    inline constexpr auto curveGrid     = "The beat grid's division in the curve editor (drawn whenever a curve's duration is in beats).";
     inline constexpr auto tooltips      = "Hover help on the controls: on or off (for every instance).";
 }

@@ -2,6 +2,33 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Curve editor beat grid (2026-10-10)
+
+When a curve modulator's duration is in beats, its editor draws the beat grid
+(lines at the chosen division, stronger on each beat, or on each bar for
+divisions of a beat or more) instead of plain eighths. A switch in the settings
+callout ("Curves") makes the points dragged or added snap to it, alt held moving
+one freely; a menu next to it picks the division (a bar, a beat, 1/2, 1/3, 1/4,
+1/6, 1/8 of a beat). Both are machine-wide, like the "?" switch (AppSettings).
+FxmeTools: `BreakpointCurveEditor::setTimeGrid`.
+
+## Curve modulators: back and forth, markers above the plot, sustain with Stick to DAW (2026-10-10)
+
+- **Back and forth.** The sustain region's mode is now a choice: hold, loop, or
+  back and forth (from its end back to its start, then forwards, with no jump).
+  Stored as `pingpong` on the curve (FxmeTools: `CurveShape::sustainPingPong`).
+- **Sustain markers** are tabs in a band above the plot, so they no longer sit
+  on the points at the top of the curve; the line between them shows the mode
+  (one arrow for a loop, two for back and forth).
+- **Stick to DAW ignored the sustain**: the global curve's position was the
+  host time wrapped over the whole curve. It now plays like a note held from
+  the song's start: the start once, then the sustain region (looped, back and
+  forth, or held); the whole curve repeats only without a sustain region.
+- Checked: core tests (back and forth stays in its region, goes both ways,
+  never jumps, releases to the end; the host-timeline positions) and an engine
+  test (a curve on a playing host's timeline plays its start, then stays in
+  its sustain loop; the old code repeated the whole curve and fails it).
+
 ## Ranges by opening and duration; live ranges, curve probe, Off modulators (2026-10-10)
 
 - **Opening and duration.** A cam's range is now set by where it starts

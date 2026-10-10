@@ -154,7 +154,10 @@ aftertouch (channel and poly), pitch bend, mod wheel, 4 assignable CCs (CC 20 to
 Slots: LFO (per voice or global free-running, locked to the host while it
 plays: its phase is the host position, taken at the end of each control span
 like every modulator value, and kept exact whatever the host's block size), ADSR (per voice), curve (per voice, or global when "stick to DAW time":
-its position comes from the host's PPQ), or Off (the default: an empty slot).
+its time comes from the host's PPQ, from the song's start, and
+`CurvePlayer::setElapsed` turns it into a position as for a note held that long:
+the start once, then the sustain region forever; the whole curve repeats only
+without a sustain region), or Off (the default: an empty slot).
 Each has an output level.
 
 Only the slots that feed something are computed (`CamEngine::updateUsage`, each

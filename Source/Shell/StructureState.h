@@ -8,7 +8,7 @@
       <Structure>
         <Routes>     <Route i="0" src="mod1" dst="r1_start" via="none"/> ...
         <Belt>       <Link src="1" dst="0" type="FM"/> ...       (cross-mod)
-        <Curves>     <Curve mod="0" points="x,y,c;..." sustain= sStart= sEnd= loop= release=/>
+        <Curves>     <Curve mod="0" points="x,y,c;..." sustain= sStart= sEnd= loop= pingpong= release=/>
         <CcSources   cc1="20" cc2="21" cc3="22" cc4="23"/>
         <MidiLearn>  <Map cc="74" param="r1_f1_cutoff"/> ...
         <Locks>      <Lock param="r1_volume"/> ...                (randomize locks)

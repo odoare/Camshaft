@@ -448,13 +448,17 @@ void CamEngine::updateGlobalModulators()
             const double beats = mv[mfDurationMode] > 0.5f ? (double) mv[mfBeats]
                                                            : (double) mv[mfDuration] * state.bpm / 60.0;
             const double speed = (double) value (mfSpeed);
-            double& pos = globalCurvePos[(size_t) m];
+            // Time on the host's timeline (from the song's start while it
+            // plays, free-running otherwise), in curve lengths; the player
+            // turns it into a position as if a note had been held that long:
+            // the start once, then the sustain region (looped, back and
+            // forth, or held), or the whole curve repeated without one.
+            double& elapsed = globalCurveElapsed[(size_t) m];
             if (state.playing)
-                pos = (ppqNow + (double) controlBlock * beatsPerSample()) / std::max (0.01, beats) * speed;
+                elapsed = (ppqNow + (double) controlBlock * beatsPerSample()) / std::max (0.01, beats) * speed;
             else
-                pos += (double) controlBlock / sr * state.bpm / 60.0 / std::max (0.01, beats) * speed;
-            pos -= std::floor (pos);
-            out = state.curves[(size_t) m].valueAt ((float) pos);
+                elapsed += (double) controlBlock / sr * state.bpm / 60.0 / std::max (0.01, beats) * speed;
+            out = globalCurves[(size_t) m].setElapsed (state.curves[(size_t) m], elapsed);
             if (mv[mfBipolar] > 0.5f)
                 out = 2.0f * out - 1.0f;
         }
@@ -643,7 +647,7 @@ void CamEngine::publishDisplay (int newest)
         auto& row = display.curvePos[(size_t) m];
         if (state.modIsGlobal[m] && state.modUsed[m] && (int) state.modValue[m][mfType] == mtCurve)
         {
-            row[0].store ((float) globalCurvePos[(size_t) m], std::memory_order_relaxed);
+            row[0].store ((float) globalCurves[(size_t) m].getPosition(), std::memory_order_relaxed);
             for (int v = 1; v < maxVoices; ++v)
                 row[(size_t) v].store (-1.0f, std::memory_order_relaxed);
         }

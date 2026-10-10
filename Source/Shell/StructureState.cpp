@@ -397,6 +397,7 @@ fxme::CurveShape StructureState::getCurve (int m) const
     s.sustainStart = (int) node.getProperty ("sStart", 0);
     s.sustainEnd = (int) node.getProperty ("sEnd", 0);
     s.sustainLoop = (bool) node.getProperty ("loop", true);
+    s.sustainPingPong = (bool) node.getProperty ("pingpong", false);
     s.releaseEnabled = (bool) node.getProperty ("release", false);
     s.sanitise();
     return s;
@@ -417,6 +418,7 @@ void StructureState::setCurve (int m, const fxme::CurveShape& shape)
     node.setProperty ("sStart", shape.sustainStart, nullptr);
     node.setProperty ("sEnd", shape.sustainEnd, nullptr);
     node.setProperty ("loop", shape.sustainLoop, nullptr);
+    node.setProperty ("pingpong", shape.sustainPingPong, nullptr);
     node.setProperty ("release", shape.releaseEnabled, nullptr);
     pushCurve (m);
 }

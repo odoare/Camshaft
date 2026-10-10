@@ -12,6 +12,7 @@
 */
 
 #include "ModulatorPanel.h"
+#include "AppSettings.h"
 #include "PluginProcessor.h"
 #include "ParamIDs.h"
 #include "Theme.h"
@@ -152,22 +153,29 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     };
     addChildComponent (curveEditor);
 
-    for (auto* t : { &sustainToggle, &loopToggle, &releaseToggle })
+    auto sustainEdited = [this]
+    {
+        auto shape = curveEditor.getShape();
+        shape.sustainEnabled = sustainToggle.getToggleState();
+        const int mode = sustainModeBox.getSelectedId();   // 1 hold, 2 loop, 3 back and forth
+        shape.sustainLoop = mode >= 2;
+        shape.sustainPingPong = mode == 3;
+        shape.releaseEnabled = releaseToggle.getToggleState();
+        curveEditor.setShape (shape);
+        curveChanged (curveEditor.getShape());
+    };
+    for (auto* t : { &sustainToggle, &releaseToggle })
     {
         theme::accentToggle (*t, theme::accent);
         addChildComponent (*t);
-        t->onClick = [this]
-        {
-            auto shape = curveEditor.getShape();
-            shape.sustainEnabled = sustainToggle.getToggleState();
-            shape.sustainLoop = loopToggle.getToggleState();
-            shape.releaseEnabled = releaseToggle.getToggleState();
-            curveEditor.setShape (shape);
-            curveChanged (curveEditor.getShape());
-        };
+        t->onClick = sustainEdited;
     }
+    sustainModeBox.addItemList ({ "Hold", "Loop", "Back & forth" }, 1);
+    theme::accentCombo (sustainModeBox, colour);
+    sustainModeBox.onChange = sustainEdited;
+    addChildComponent (sustainModeBox);
     sustainToggle.setTooltip (tips::mods::sustainRegion);
-    loopToggle.setTooltip (tips::mods::loop);
+    sustainModeBox.setTooltip (tips::mods::loop);
     releaseToggle.setTooltip (tips::mods::releaseRegion);
 
     timerCallback();
@@ -246,13 +254,25 @@ void ModulatorEditor::timerCallback()
         duration->setVisible (! beatsMode);
         beats->setVisible (beatsMode);
 
+        // Timed in beats: the beat grid (the settings' division, a line per
+        // beat, or per bar for divisions of a beat or more), snapping if
+        // asked. In seconds: the editor's own grid.
+        if (beatsMode)
+        {
+            const double length = juce::jmax (0.01, (double) apvts.getRawParameterValue (ids::mod (slot, mfBeats))->load());
+            const double division = getCurveGridBeats();
+            curveEditor.setTimeGrid (division / length, (division >= 1.0 ? 4.0 : 1.0) / length, getCurveGridSnap());
+        }
+        else
+            curveEditor.setTimeGrid (0.0, 0.0, false);
+
         // The shape may have changed under us (a preset load).
         curveEditor.setShape (processor.getStructure().getCurve (slot));
         const auto& shape = curveEditor.getShape();
         sustainToggle.setToggleState (shape.sustainEnabled, juce::dontSendNotification);
-        loopToggle.setToggleState (shape.sustainLoop, juce::dontSendNotification);
+        sustainModeBox.setSelectedId (! shape.sustainLoop ? 1 : (shape.sustainPingPong ? 3 : 2), juce::dontSendNotification);
         releaseToggle.setToggleState (shape.releaseEnabled, juce::dontSendNotification);
-        loopToggle.setEnabled (shape.sustainEnabled);
+        sustainModeBox.setEnabled (shape.sustainEnabled);
         releaseToggle.setEnabled (shape.sustainEnabled);
 
         std::vector<float> heads;
@@ -271,7 +291,7 @@ void ModulatorEditor::layoutForType()
     for (auto& c : owned)
         c->setVisible (false);
     curveEditor.setVisible (false);
-    for (auto* t : { &sustainToggle, &loopToggle, &releaseToggle })
+    for (auto* t : { (juce::Component*) &sustainToggle, (juce::Component*) &sustainModeBox, (juce::Component*) &releaseToggle })
         t->setVisible (false);
 
     typeBox->setVisible (true);
@@ -283,7 +303,7 @@ void ModulatorEditor::layoutForType()
     else if (shownType == mtAdsr)
         visible = { attack, decay, sustain, release, attackCurve, decayCurve, releaseCurve, velocity };
     else if (shownType == mtCurve)
-        visible = { bipolar, &curveEditor, duration, speed, durationMode, dawSync, &sustainToggle, &loopToggle, &releaseToggle };
+        visible = { bipolar, &curveEditor, duration, speed, durationMode, dawSync, &sustainToggle, &sustainModeBox, &releaseToggle };
     for (auto* c : visible)
         c->setVisible (true);
 
@@ -357,10 +377,10 @@ void ModulatorEditor::resized()
         speed->setBounds (knobs.reduced (2));
         side.removeFromTop (2);
         auto toggles = side.removeFromTop (22);
-        const int tw = toggles.getWidth() / 3;
-        sustainToggle.setBounds (toggles.removeFromLeft (tw));
-        loopToggle.setBounds (toggles.removeFromLeft (tw));
+        sustainToggle.setBounds (toggles.removeFromLeft (toggles.getWidth() / 2));
         releaseToggle.setBounds (toggles);
+        side.removeFromTop (2);
+        sustainModeBox.setBounds (side.removeFromTop (22).reduced (2, 0));
     }
 }
 

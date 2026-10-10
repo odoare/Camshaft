@@ -368,6 +368,45 @@ int main()
         check (! d.modUsed[2].load() && isZero (d.source[(size_t) srcModFirst + 2].load()), "an Off modulator never runs");
     }
 
+    {
+        // A curve stuck to the host's timeline plays its start once, then
+        // keeps to its sustain loop (no note-off on a timeline), instead of
+        // repeating the whole curve.
+        Rig rig;
+        fxme::CurveShape shape;
+        shape.numPoints = 4;
+        shape.x = { 0.0f, 0.25f, 0.5f, 1.0f };
+        shape.y = { 0.0f, 1.0f, 0.5f, 0.0f };
+        shape.sustainEnabled = true;
+        shape.sustainStart = 1;
+        shape.sustainEnd = 2;
+        shape.sustainLoop = true;
+        shape.sanitise();
+        rig.engine.curve (0).write (shape);
+        rig.modVals[0][mfType] = (float) mtCurve;
+        rig.modVals[0][mfDawSync] = 1.0f;
+        rig.modVals[0][mfDurationMode] = 1.0f;     // in beats
+        rig.modVals[0][mfBeats] = 4.0f;
+        rig.depths[0] = 0.01f;
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfFine), 0);
+        rig.settings.bpm = 120.0;
+        rig.settings.playing = true;
+
+        bool finite = true, inLoop = true, startPlayed = false;
+        const double beatsPerBlock = 120.0 / 60.0 / 48000.0 * Rig::block;
+        for (int b = 0; b < 400; ++b)            // about 17 beats
+        {
+            rig.settings.ppq = b * beatsPerBlock;
+            rig.run (finite);
+            const float pos = rig.engine.getDisplay().curvePos[0][0].load();
+            if (rig.settings.ppq < 0.8)
+                startPlayed = startPlayed || pos < 0.2f;
+            if (rig.settings.ppq > 3.0)          // past the sustain end (2 beats)
+                inLoop = inLoop && pos >= 0.25f - 1.0e-4f && pos <= 0.5f + 1.0e-4f;
+        }
+        check (startPlayed && inLoop, "a curve on the host's timeline plays its start, then loops its sustain region");
+    }
+
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);
     return failures == 0 ? 0 : 1;
 }

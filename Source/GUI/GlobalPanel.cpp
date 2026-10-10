@@ -35,7 +35,11 @@ namespace
         "CC sources: the controller numbers of the four CC modulation sources.\n\n"
         "MIDI learn: right-click any knob, Learn MIDI, move a controller. The "
         "map is saved with the session and presets; saved as default, new "
-        "instances start with it.";
+        "instances start with it.\n\n"
+        "Curves: when a curve modulator's duration is in beats, its editor "
+        "draws the beat grid at the division chosen here; with the snap on, "
+        "the points you drag or add land on it (hold alt to move one freely). "
+        "For every instance.";
 }
 
 GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
@@ -79,6 +83,33 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
     addAndMakeVisible (saveLearn);
     addAndMakeVisible (clearLearn);
 
+    curveSnap.setToggleState (getCurveGridSnap(), juce::dontSendNotification);
+    curveSnap.setTooltip (tips::global::curveSnap);
+    curveSnap.onClick = [this] { setCurveGridSnap (curveSnap.getToggleState()); };
+    theme::accentToggle (curveSnap, theme::accent);
+    addAndMakeVisible (curveSnap);
+
+    const double gridBeats = getCurveGridBeats();
+    int id = 1;
+    for (const auto& d : curveGridDivisions)
+    {
+        curveGrid.addItem (d.name, id);
+        if (std::abs (d.beats - gridBeats) < 1.0e-9)
+            curveGrid.setSelectedId (id, juce::dontSendNotification);
+        ++id;
+    }
+    if (curveGrid.getSelectedId() == 0)
+        curveGrid.setSelectedId (5, juce::dontSendNotification);   // 1/4 beat
+    curveGrid.setTooltip (tips::global::curveGrid);
+    curveGrid.onChange = [this]
+    {
+        const int i = curveGrid.getSelectedId() - 1;
+        if (i >= 0 && i < (int) std::size (curveGridDivisions))
+            setCurveGridBeats (curveGridDivisions[(size_t) i].beats);
+    };
+    theme::accentCombo (curveGrid, theme::accent);
+    addAndMakeVisible (curveGrid);
+
     keepAudio.setToggleState (processor.getKeepAudioOnPresetLoad(), juce::dontSendNotification);
     keepAudio.setTooltip (tips::global::keepAudio);
     keepAudio.onClick = [this] { processor.setKeepAudioOnPresetLoad (keepAudio.getToggleState()); };
@@ -96,7 +127,7 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
     infoButton.setInfo ("Settings", helpBody);
     addAndMakeVisible (infoButton);
 
-    setSize (440, 330);
+    setSize (440, 380);
 }
 
 juce::ComboBox& GlobalPanel::combo (const juce::String& id, const char* tooltip)
@@ -121,6 +152,8 @@ void GlobalPanel::paint (juce::Graphics& g)
     theme::paintEngraved (g, "Engine", r.removeFromTop (16));
     r.removeFromTop (24 + 6);
     theme::paintEngraved (g, "MIDI", r.removeFromTop (16));
+    r.removeFromTop (24 + 4 + 24 + 8);
+    theme::paintEngraved (g, "Curves", r.removeFromTop (16));
 }
 
 void GlobalPanel::resized()
@@ -159,6 +192,12 @@ void GlobalPanel::resized()
     line = r.removeFromTop (24);
     saveLearn.setBounds (line.removeFromLeft (line.getWidth() * 2 / 3).reduced (2, 1));
     clearLearn.setBounds (line.reduced (2, 1));
+    r.removeFromTop (8);
+
+    r.removeFromTop (16);
+    line = r.removeFromTop (24);
+    curveSnap.setBounds (line.removeFromLeft (line.getWidth() * 2 / 3).reduced (2, 1));
+    curveGrid.setBounds (line.reduced (2, 1));
     r.removeFromTop (8);
     keepAudio.setBounds (r.removeFromTop (24));
 }
