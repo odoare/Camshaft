@@ -5,7 +5,7 @@
     Every parameter ID, and the stable keys of the modulation sources.
 
     The scheme is <section><index>_<name>, lowercase, frozen once released:
-      r1_start, r1_length, r1_f1_cutoff ...   cam 1 (CamParams.h, camSpecs)
+      r1_opening, r1_duration, r1_f1_cutoff ...   cam 1 (CamParams.h, camSpecs)
       mod3_rate ...                           modulator 3 (modSpecs)
       route12_depth                           modulation route 12
       aux1_return, aux1_fx0_type ...          Turbo 1 (and its effect slots)

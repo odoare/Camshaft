@@ -92,11 +92,11 @@ int main()
     {
         Rig rig;
         rig.camVals[1][cfAudible] = 1.0f;
-        rig.camVals[1][cfStart] = 0.8f;
+        rig.camVals[1][cfOpening] = 0.8f;
         rig.camVals[1][cfCylinders] = 4.0f;
         rig.modVals[0][mfType] = (float) mtLfo;
         rig.depths[0] = 0.3f;
-        rig.engine.setRoute (0, srcModFirst, camDest (0, cfStart), 0);    // LFO 1 -> cam 1 opening
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfOpening), 0);    // LFO 1 -> cam 1 opening
         rig.engine.setXmod (1, 0, 1);                                     // FM cam 2 -> cam 1
 
         bool finite = true;
@@ -129,7 +129,7 @@ int main()
             rig.camVals[c][cfCylinders] = (float) maxCylinders;
             rig.camVals[c][cfF1On] = 1.0f;
             rig.camVals[c][cfF2On] = 1.0f;
-            rig.camVals[c][cfStart] = 0.2f * (float) c + 0.1f;
+            rig.camVals[c][cfOpening] = 0.2f * (float) c + 0.1f;
         }
         rig.settings.polyphony = maxVoices;
         bool finite = true;
@@ -175,7 +175,7 @@ int main()
 
         Rig rig;
         rig.camVals[0][cfRandomPhase] = 0.0f;
-        rig.camVals[0][cfStart] = 0.02f - half;
+        rig.camVals[0][cfOpening] = 0.02f - half;
         bool finite = true;
         rig.run (finite);
         rig.engine.noteOn (48, 0.8f);
@@ -184,7 +184,7 @@ int main()
         std::vector<double> energy, diff;
         for (int b = 0; b < blocks; ++b)
         {
-            rig.camVals[0][cfStart] = 0.02f + 0.48f * (float) b / (float) blocks - half;
+            rig.camVals[0][cfOpening] = 0.02f + 0.48f * (float) b / (float) blocks - half;
             rig.run (finite);
             double e = 0.0, d = 0.0;
             accumulate (rig, e, d);
@@ -207,7 +207,7 @@ int main()
         {
             Rig still;
             still.camVals[0][cfRandomPhase] = 0.0f;
-            still.camVals[0][cfStart] = centre - half;
+            still.camVals[0][cfOpening] = centre - half;
             bool ok = true;
             still.run (ok);
             still.engine.noteOn (48, 0.8f);
@@ -315,8 +315,8 @@ int main()
         // at the end of the recording; the display shows what is read.
         Rig rig;
         const double n = (double) makeDemoSource()->numSamples;
-        rig.camVals[0][cfStart] = 0.25f;
-        rig.camVals[0][cfLength] = 4096.0f;
+        rig.camVals[0][cfOpening] = 0.25f;
+        rig.camVals[0][cfDuration] = 4096.0f;
         rig.camVals[0][cfOverlap] = 0.0f;
         bool finite = true;
         rig.run (finite);
@@ -330,7 +330,7 @@ int main()
         check (r.phase.load() >= 0.0f && d.ranges[(size_t) std::max (0, v)][1].phase.load() < 0.0f,
                "live range shown for the cams that play only");
 
-        rig.camVals[0][cfStart] = 0.99f;
+        rig.camVals[0][cfOpening] = 0.99f;
         for (int b = 0; b < 20; ++b)
             rig.run (finite);
         check (std::abs (r.start.load() - 0.99 * n) < 1.0 && std::abs (r.cycle.load() - 0.01 * n) < 1.0,
@@ -405,6 +405,58 @@ int main()
                 inLoop = inLoop && pos >= 0.25f - 1.0e-4f && pos <= 0.5f + 1.0e-4f;
         }
         check (startPlayed && inLoop, "a curve on the host's timeline plays its start, then loops its sustain region");
+    }
+
+    {
+        // Silent cams are not rendered (their read position stops) unless they
+        // modulate another cam or a send can still carry them.
+        auto phaseMoves = [] (auto setup)
+        {
+            Rig rig;
+            rig.camVals[1][cfAudible] = 1.0f;
+            setup (rig);
+            bool finite = true;
+            rig.run (finite);
+            rig.engine.noteOn (60, 0.8f);
+            for (int b = 0; b < 4; ++b)
+                rig.run (finite);
+            const auto& d = rig.engine.getDisplay();
+            const int v = std::max (0, d.newestVoice.load());
+            const float before = d.ranges[(size_t) v][1].phase.load();
+            rig.run (finite);
+            return std::abs (d.ranges[(size_t) v][1].phase.load() - before) > 1.0e-6f;
+        };
+        check (phaseMoves ([] (Rig&) {}), "a cam that is heard is rendered");
+        check (! phaseMoves ([] (Rig& r) { r.camVals[1][cfVolume] = -60.0f; }),
+               "a cam with its volume off and no send is not rendered");
+        check (phaseMoves ([] (Rig& r) { r.camVals[1][cfVolume] = -60.0f; r.engine.setXmod (1, 0, 1); }),
+               "a silent cam that modulates another is rendered");
+        check (phaseMoves ([] (Rig& r) { r.camVals[1][cfVolume] = -60.0f; r.camVals[1][cfSend1] = 0.5f; r.camVals[1][cfTap1] = 0.0f; }),
+               "a silent cam sending before its volume is rendered");
+        check (! phaseMoves ([] (Rig& r) { r.camVals[1][cfVolume] = -60.0f; r.camVals[1][cfSend1] = 0.5f; r.camVals[1][cfTap1] = 2.0f; }),
+               "a silent cam sending after its volume is not rendered");
+
+        // Cams release at their own pace: one whose envelope ended stops while
+        // the voice goes on.
+        Rig rig;
+        rig.camVals[1][cfAudible] = 1.0f;
+        rig.camVals[1][cfRelease] = 10.0f;       // ms
+        rig.camVals[0][cfRelease] = 5000.0f;
+        bool finite = true;
+        rig.run (finite);
+        rig.engine.noteOn (60, 0.8f);
+        for (int b = 0; b < 4; ++b)
+            rig.run (finite);
+        rig.engine.noteOff (60, 0.0f);
+        for (int b = 0; b < 10; ++b)
+            rig.run (finite);
+        const auto& d = rig.engine.getDisplay();
+        const int v = std::max (0, d.newestVoice.load());
+        const float c0 = d.ranges[(size_t) v][0].phase.load(), c1 = d.ranges[(size_t) v][1].phase.load();
+        float peak = rig.run (finite);
+        check (d.voicesActive.load() == 1 && std::abs (d.ranges[(size_t) v][1].phase.load() - c1) < 1.0e-6f
+                   && std::abs (d.ranges[(size_t) v][0].phase.load() - c0) > 1.0e-6f && peak > 0.0f,
+               "a cam whose envelope ended stops while the voice plays on");
     }
 
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);

@@ -55,7 +55,7 @@ WaveformView::Range WaveformView::rangeOf (int c) const
         return r;
     auto& apvts = processor.getAPVTS();
     auto value = [&] (int f) { return apvts.getRawParameterValue (ids::cam (c, f))->load(); };
-    camRange (value (cfStart), value (cfLength), (double) numSamples, r.start, r.length);
+    camRange (value (cfOpening), value (cfDuration), (double) numSamples, r.start, r.length);
     r.overlap = r.length * juce::jlimit (0.0, 0.5, (double) value (cfOverlap) * 0.01);
     r.audible = value (cfAudible) > 0.5f;
     return r;
@@ -303,7 +303,7 @@ void WaveformView::paintProbe (juce::Graphics& g) const
 
     for (int c = 0; c < numCams; ++c)
     {
-        const auto startId = ids::cam (c, cfStart), lengthId = ids::cam (c, cfLength);
+        const auto startId = ids::cam (c, cfOpening), lengthId = ids::cam (c, cfDuration);
         float startOffset = 0.0f, lengthOffset = 0.0f;
         bool moves[2] {};     // opening, duration
         bool throughVia = false;
@@ -322,8 +322,8 @@ void WaveformView::paintProbe (juce::Graphics& g) const
             continue;
 
         auto value = [&] (int f) { return apvts.getRawParameterValue (ids::cam (c, f))->load(); };
-        const float startValue = camSpecs[cfStart].fromNorm (camSpecs[cfStart].toNorm (value (cfStart)) + startOffset);
-        const float lengthValue = camSpecs[cfLength].fromNorm (camSpecs[cfLength].toNorm (value (cfLength)) + lengthOffset);
+        const float startValue = camSpecs[cfOpening].fromNorm (camSpecs[cfOpening].toNorm (value (cfOpening)) + startOffset);
+        const float lengthValue = camSpecs[cfDuration].fromNorm (camSpecs[cfDuration].toNorm (value (cfDuration)) + lengthOffset);
         double start, length;
         camRange (startValue, lengthValue, (double) numSamples, start, length);
 
@@ -453,7 +453,7 @@ void WaveformView::beginGesture (int cam, Hit hit)
     const auto r = rangeOf (cam);
     dragStartStart = r.start;
     dragStartLength = r.length;
-    for (int f : { (int) cfStart, (int) cfLength })
+    for (int f : { (int) cfOpening, (int) cfDuration })
         if (auto* p = processor.getAPVTS().getParameter (ids::cam (cam, f)))
             p->beginChangeGesture();
 }
@@ -461,7 +461,7 @@ void WaveformView::beginGesture (int cam, Hit hit)
 void WaveformView::endGesture()
 {
     if (dragCam >= 0)
-        for (int f : { (int) cfStart, (int) cfLength })
+        for (int f : { (int) cfOpening, (int) cfDuration })
             if (auto* p = processor.getAPVTS().getParameter (ids::cam (dragCam, f)))
                 p->endChangeGesture();
     dragCam = -1;
@@ -497,26 +497,26 @@ void WaveformView::mouseDrag (const juce::MouseEvent& e)
     if (dragCam < 0 || numSamples <= 0)
         return;
 
-    const double n = (double) numSamples, minLength = (double) camSpecs[cfLength].min;
+    const double n = (double) numSamples, minLength = (double) camSpecs[cfDuration].min;
     const double end = dragStartStart + dragStartLength;
     if (dragHit == Hit::body || dragHit == Hit::flag)
     {
         // The whole range moves, its duration kept.
         const double start = juce::jlimit (0.0, juce::jmax (0.0, n - dragStartLength), dragStartStart + dx);
-        setParameter (dragCam, cfStart, (float) (start / n));
+        setParameter (dragCam, cfOpening, (float) (start / n));
     }
     else if (dragHit == Hit::leftEdge)
     {
         // The opening moves, the end stays: the duration takes up the difference.
         const double start = juce::jlimit (0.0, juce::jmax (0.0, end - minLength), dragStartStart + dx);
-        setParameter (dragCam, cfStart, (float) (start / n));
-        setParameter (dragCam, cfLength, (float) (end - start));
+        setParameter (dragCam, cfOpening, (float) (start / n));
+        setParameter (dragCam, cfDuration, (float) (end - start));
     }
     else
     {
         // The end moves, the opening stays.
         const double newEnd = juce::jlimit (dragStartStart + minLength, n, end + dx);
-        setParameter (dragCam, cfLength, (float) (newEnd - dragStartStart));
+        setParameter (dragCam, cfDuration, (float) (newEnd - dragStartStart));
     }
 }
 

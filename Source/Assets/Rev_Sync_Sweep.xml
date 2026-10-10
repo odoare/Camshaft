@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Rev - Sync Sweep" schemaVersion="2">
-  <PARAM id="r1_start" value="0.89609375" />
-  <PARAM id="r1_length" value="1024.0" />
+<Parameters presetName="Rev - Sync Sweep" schemaVersion="3">
+  <PARAM id="r1_opening" value="0.89609375" />
+  <PARAM id="r1_duration" value="1024.0" />
   <PARAM id="r1_volume" value="-8.0" />
   <PARAM id="r1_att" value="5.0" />
   <PARAM id="r1_rel" value="250.0" />
@@ -17,8 +17,8 @@
   <PARAM id="aux2_return" value="-8.0" />
   <Structure>
     <Routes>
-      <Route i="0" src="mod1" dst="r1_length" via="none" />
-      <Route i="1" src="velocity" dst="r1_start" via="none" />
+      <Route i="0" src="mod1" dst="r1_duration" via="none" />
+      <Route i="1" src="velocity" dst="r1_opening" via="none" />
     </Routes>
     <Belt />
     <Curves />

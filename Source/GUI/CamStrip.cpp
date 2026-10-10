@@ -104,8 +104,8 @@ void CamStrip::buildCamPage()
     auto& page = pages[0];
     auto& apvts = processor.getAPVTS();
 
-    auto& start   = knob (page, cfStart, tips::cam::start);
-    auto& length  = knob (page, cfLength, tips::cam::length);
+    auto& start   = knob (page, cfOpening, tips::cam::start);
+    auto& length  = knob (page, cfDuration, tips::cam::length);
     auto& overlap = knob (page, cfOverlap, tips::cam::overlap);
     auto& coarse  = knob (page, cfCoarse, tips::cam::coarse, true);
     auto& fine    = knob (page, cfFine, tips::cam::fine, true);

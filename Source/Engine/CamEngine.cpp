@@ -304,6 +304,14 @@ void CamEngine::updateGraph()
             for (int d = 0; d < numCams; ++d)
                 if (s != d && state.xmodType[s][d] != 0 && state.camNeeded[d])
                     state.camNeeded[s] = true;
+
+    for (int s = 0; s < numCams; ++s)
+    {
+        state.camFeeds[s] = false;
+        for (int d = 0; d < numCams; ++d)
+            if (s != d && state.xmodType[s][d] != 0 && state.camNeeded[d])
+                state.camFeeds[s] = true;
+    }
 }
 
 //==============================================================================

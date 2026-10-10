@@ -472,6 +472,16 @@ void CamVoice::updateCam (int c, bool snap)
     for (int s = 0; s < numCams; ++s)
         setRamp (k.lift[s], k.liftStep[s], v[cfLift1 + s]);
 
+    // Silent: no path to the outputs carries anything, ramps included (a
+    // fade to zero is played to its end). A send tapped before the volume
+    // carries the cam whatever its volume.
+    auto off = [] (float value, float step) { return isZero (value) && isZero (step); };
+    const bool gainOff = off (k.gain, k.gainStep);
+    bool quiet = k.dryMuted || gainOff;
+    for (int a = 0; a < numAux; ++a)
+        quiet = quiet && (off (k.send[a], k.sendStep[a]) || (k.tap[a] == 2 && gainOff));
+    k.silent = quiet;
+
     // Filters.
     k.parallel = v[cfFilterRouting] > 0.5f;
     const float bal = v[cfFilterBalance];
@@ -523,7 +533,7 @@ void CamVoice::updateRange (int c, bool snap)
     const float* v = k.cur;
     const double n = (double) source->numSamples();
     double start, len;
-    camRange (v[cfStart], v[cfLength], n, start, len);
+    camRange (v[cfOpening], v[cfDuration], n, start, len);
 
     const int snapMode = (int) v[cfSnap];
     if (snapMode == 1)
@@ -634,10 +644,25 @@ void CamVoice::renderSpan (const Buses& out, int offset, int n, float* const* di
 void CamVoice::renderCam (int c, const Buses& out, int offset, int n, float* const* display, const float* steal)
 {
     auto& k = cams[c];
+    const bool feeds = state->camFeeds[c];
+
+    // Its amp envelope finished (cams release at their own pace): nothing to
+    // hear, unless it modulates another cam.
+    if (! feeds && ! k.env.isActive())
+    {
+        skipCam (k, c, offset, n, display);
+        return;
+    }
 
     float env[controlBlock];
     for (int i = 0; i < n; ++i)
         env[i] = k.env.getNextSample();
+
+    if (! feeds && k.silent && state->camNeeded[c])
+    {
+        skipCam (k, c, offset, n, display);
+        return;
+    }
 
     if (! state->camNeeded[c] || ! k.rangeValid || k.cylinders <= 0)
     {
@@ -832,6 +857,35 @@ void CamVoice::renderCam (int c, const Buses& out, int offset, int n, float* con
         for (int a = 0; a < numAux; ++a)
             k.send[a] += k.sendStep[a];
     }
+}
+
+void CamVoice::skipCam (Cam& k, int c, int offset, int n, float* const* display)
+{
+    // Nothing rendered, nothing heard; the ramps still move on, so the cam
+    // comes back where its settings are. Its phases wait (a cycle's phase is
+    // arbitrary), and its first-cylinder output is silence for anyone reading
+    // it (no one does: it feeds no cam).
+    k.out0 = 0.0f;
+    std::memset (k.outBuf, 0, sizeof (float) * (size_t) n);
+    if (display != nullptr)
+        std::memset (display[c] + offset, 0, sizeof (float) * (size_t) n);
+
+    const float fn = (float) n;
+    k.start += k.startStep * (double) n;
+    k.cycle += k.cycleStep * (double) n;
+    k.overlap += k.overlapStep * (double) n;
+    for (int u = 0; u < k.cylinders; ++u)
+    {
+        k.inc[u] += k.incStep[u] * (double) n;
+        k.level[u] += k.levelStep[u] * fn;
+    }
+    k.gain += k.gainStep * fn;
+    k.panL += k.panLStep * fn;
+    k.panR += k.panRStep * fn;
+    for (int a = 0; a < numAux; ++a)
+        k.send[a] += k.sendStep[a] * fn;
+    for (int s = 0; s < numCams; ++s)
+        k.lift[s] += k.liftStep[s] * fn;
 }
 
 template <int InterpolationMode, bool Stereo>

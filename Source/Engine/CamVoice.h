@@ -2,6 +2,11 @@
   ------------------------------------------------------------------------------
     CamVoice.h
 
+    A cam that cannot be heard in this voice (its amp envelope finished, or
+    its volume off with no send that could carry it) and modulates no other
+    cam is not rendered: its oscillator, filters and gains stop until it can
+    be heard again.
+
     One note of Camshaft: the four cams (each a wavetable oscillator with up
     to four cylinders, two filters, its amp envelope, its gain, pan and
     sends), their cross-modulation, and the voice's own modulators.
@@ -142,6 +147,7 @@ private:
         bool dryMuted = false;
         float lift[numCams] {}, liftStep[numCams] {};
 
+        bool silent = false;                // nothing of it can be heard this span (volume off, no send): not rendered unless it feeds another cam
         float out0 = 0.0f;                  // first cylinder's last output, for self FM
         float outBuf[controlBlock] {};      // first cylinder's output over the span, for the cams it modulates
         float velocityGain = 1.0f;
@@ -154,6 +160,7 @@ private:
     void updateRange (int c, bool snap);
     void renderSpan (const Buses& out, int offset, int n, float* const* display, const float* steal);
     void renderCam (int c, const Buses& out, int offset, int n, float* const* display, const float* steal);
+    void skipCam (Cam& k, int c, int offset, int n, float* const* display);
     template <int Interpolation, bool Stereo>
     void renderCylinders (Cam& k, int n, float* fm, const float* selfLift, float* left, float* right);
 

@@ -2,6 +2,28 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Range parameter IDs follow their names (2026-10-10)
+
+`r<n>_start` and `r<n>_length` became `r<n>_opening` and `r<n>_duration`, so
+IDs, names, presets and code use the same words before the IDs freeze at the
+first release. Schema 3 migrates sessions and presets saved with the previous
+IDs exactly (and those with the plan's centre and width through schema 2 as
+before); the factory presets were regenerated.
+
+## Silent cams are not rendered (2026-10-10)
+
+Per voice, a cam that cannot be heard and modulates no other cam is skipped
+(oscillator, filters, gains): when its amp envelope has finished (cams release
+at their own pace, so in a long pad the short cams stop early), or when its
+volume is off (-60 dB) and no send can carry it (a send tapped before the
+volume still can). The decision uses the voice's modulated values and waits
+for a fade to zero to end; the ramps move on while it is skipped, so it comes
+back where its settings are. Two of four cams at -60 dB: half the CPU (8 voices
+x 4 cams x 4 cylinders, 22 % to 11 %). The output of a patch where nothing is
+silent is unchanged. Checked in the engine test (rendered when heard, when
+feeding another cam, when sending before its volume; skipped when its volume is
+off, when sending after it, after its envelope ended).
+
 ## CPU, first pass (2026-10-10)
 
 About 30 % less CPU at the same sound, measured against the previous code

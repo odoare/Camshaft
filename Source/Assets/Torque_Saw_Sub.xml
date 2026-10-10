@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Torque - Saw Sub" schemaVersion="2">
+<Parameters presetName="Torque - Saw Sub" schemaVersion="3">
   <PARAM id="polymode" value="2.0" />
   <PARAM id="glide_time" value="60.0" />
   <PARAM id="glide_mode" value="1.0" />
-  <PARAM id="r1_start" value="0.3021875" />
+  <PARAM id="r1_opening" value="0.3021875" />
   <PARAM id="r1_att" value="2.0" />
   <PARAM id="r1_dec" value="400.0" />
   <PARAM id="r1_sus" value="0.6" />
@@ -16,7 +16,7 @@
   <PARAM id="r1_f1_envamt" value="0.45" />
   <PARAM id="r1_f1_keytrk" value="0.5" />
   <PARAM id="r2_audible" value="1.0" />
-  <PARAM id="r2_start" value="0.0421875" />
+  <PARAM id="r2_opening" value="0.0421875" />
   <PARAM id="r2_coarse" value="-12.0" />
   <PARAM id="r2_volume" value="-8.0" />
   <PARAM id="r2_att" value="2.0" />

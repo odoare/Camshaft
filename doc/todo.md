@@ -19,9 +19,9 @@ Numbered for reference; numbers are never reused (finished items move to
 ## Decisions to confirm
 
 25. **Ranges by opening and duration** (decision, made 2026-10-10 on request;
-   names to confirm: "Opening" is valve-timing vocabulary, "Start" is the
-   alternative). The plan's centre and width (lobe) became `r<n>_start`
-   ("Opening") and `r<n>_length` ("Duration"): dragging an edge moves that edge
+   names confirmed, the IDs follow them since schema 3). The plan's centre and
+   width (lobe) became `r<n>_opening` ("Opening") and `r<n>_duration`
+   ("Duration"): dragging an edge moves that edge
    alone, and a duration past the end of the file is cut short there. Schema 2
    migrates older sessions and presets, approximately (the old centre becomes
    the opening, so a range moves right by half its width: the recording's
@@ -57,8 +57,10 @@ Numbered for reference; numbers are never reused (finished items move to
     -47 to -28 dB, most on high notes: a slight dulling at the very top), or
     read one octave without blending (31 % faster; the top of the band then
     steps by up to an octave as the speed changes, and more aliasing passes).
-    Without a trade-off: SIMD across the cylinders, processing the 4 cams'
-    control updates more lazily. Measure in a host too (the GUI timers and
+    Eco mode not wanted (2026-10-10). Silent cams are now skipped (done.md).
+    Left without a trade-off: SIMD across the cylinders, lazier control
+    updates, fixed-point read positions, ending voices whose release has
+    fallen below about -100 dB. Measure in a host too (the GUI timers and
     repaints were trimmed in the same pass).
 11. **FM and pyramid levels** (low, confirmed 2026-10-10). The level follows the read speed without
     FM; strong FM on high notes can alias. Raise the level by the FM index when

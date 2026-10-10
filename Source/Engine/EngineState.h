@@ -83,6 +83,7 @@ struct EngineState
     int xmodType[numCams][numCams] {};
     int camOrder[numCams] { 0, 1, 2, 3 };
     bool camNeeded[numCams] {};
+    bool camFeeds[numCams] {};      // modulates another cam that is computed (its oscillator is needed even when silent)
     bool camAudible[numCams] {};
 
     // Drawn curves, one per modulator.

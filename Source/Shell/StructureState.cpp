@@ -145,6 +145,27 @@ void StructureState::migrate (juce::ValueTree& state)
         version = 2;
     }
 
+    if (version < 3)
+    {
+        // Schema 3: the IDs follow the names, r<n>_start -> r<n>_opening and
+        // r<n>_length -> r<n>_duration (same values, exact).
+        auto renamed = [] (const juce::String& id)
+        {
+            const auto key = id.fromFirstOccurrenceOf ("_", false, false);
+            if (! id.startsWith ("r") || ! id.contains ("_") || (key != "start" && key != "length"))
+                return juce::String();
+            return id.upToFirstOccurrenceOf ("_", true, false) + (key == "start" ? "opening" : "duration");
+        };
+        for (auto child : state)
+            if (child.hasType ("PARAM"))
+                if (const auto to = renamed (child.getProperty ("id").toString()); to.isNotEmpty())
+                    child.setProperty ("id", to, nullptr);
+        for (auto route : state.getChildWithName (structureType).getChildWithName (routesType))
+            if (const auto to = renamed (route.getProperty ("dst").toString()); to.isNotEmpty())
+                route.setProperty ("dst", to, nullptr);
+        version = 3;
+    }
+
     state.setProperty (versionProperty, version, nullptr);
 }
 

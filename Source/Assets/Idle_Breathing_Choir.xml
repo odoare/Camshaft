@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<Parameters presetName="Idle - Breathing Choir" schemaVersion="2">
-  <PARAM id="r1_start" value="0.6721875" />
+<Parameters presetName="Idle - Breathing Choir" schemaVersion="3">
+  <PARAM id="r1_opening" value="0.6721875" />
   <PARAM id="r1_cyl" value="3.0" />
   <PARAM id="r1_detune" value="14.0" />
   <PARAM id="r1_spread" value="0.7" />

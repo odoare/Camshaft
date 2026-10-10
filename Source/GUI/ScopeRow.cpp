@@ -44,7 +44,7 @@ void CamProfileView::rebuild()
 
     fxme::WavetableBuildSettings s;
     double start, length;
-    camRange (value (cfStart), value (cfLength), (double) source->numSamples, start, length);
+    camRange (value (cfOpening), value (cfDuration), (double) source->numSamples, start, length);
     s.centre = start + 0.5 * length;
     s.width = length;
     s.overlap = value (cfOverlap) * 0.01f;

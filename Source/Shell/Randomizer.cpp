@@ -79,8 +79,8 @@ namespace
             auto id = [c] (int f) { return ids::cam (c, f); };
             auto r = [&] (int f, float lo, float hi) { x.range (id (f), camSpecs[f], lo, hi); };
 
-            r (cfStart, 0.0f, 0.95f);
-            r (cfLength, 128.0f, 16384.0f);
+            r (cfOpening, 0.0f, 0.95f);
+            r (cfDuration, 128.0f, 16384.0f);
             r (cfOverlap, 0.0f, 30.0f);
             x.choice (id (cfOverlapShape), camSpecs[cfOverlapShape]);
             x.choice (id (cfSnap), camSpecs[cfSnap]);

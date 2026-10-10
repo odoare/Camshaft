@@ -125,7 +125,7 @@ inline constexpr bool isZero (float v) noexcept { return ! (v > 0.0f || v < 0.0f
 
 enum CamField
 {
-    cfAudible = 0, cfStart, cfLength, cfOverlap, cfOverlapShape, cfSnap,
+    cfAudible = 0, cfOpening, cfDuration, cfOverlap, cfOverlapShape, cfSnap,
     cfCoarse, cfFine, cfCylinders, cfDetune, cfSpread, cfRandomPhase,
     cfVolume, cfPan, cfSend1, cfSend2, cfTap1, cfTap2,
     cfAttack, cfDecay, cfSustain, cfRelease, cfAttackCurve, cfDecayCurve, cfReleaseCurve, cfVelocity,
@@ -140,8 +140,8 @@ constexpr int filterFieldStride = cfF2On - cfF1On;   // offset from filter 1's f
 
 inline constexpr ParamSpec camSpecs[numCamFields] = {
     { "audible",     "Audible",        Mapping::boolean, 0, 1, 1, 1, false, "", offOn, 2 },
-    { "start",       "Opening",        Mapping::linear,  0, 1, 0.5f, 1, true, "" },
-    { "length",      "Duration",       Mapping::log,     16, 1048576, 2048, 1, true, "smp" },
+    { "opening",     "Opening",        Mapping::linear,  0, 1, 0.5f, 1, true, "" },
+    { "duration",    "Duration",       Mapping::log,     16, 1048576, 2048, 1, true, "smp" },
     { "overlap",     "Overlap",        Mapping::linear,  0, 50, 10, 1, true, "%" },
     { "xfshape",     "Overlap shape",  Mapping::choice,  0, 1, 1, 1, false, "", overlapShapes, 2 },
     { "snap",        "Snap",           Mapping::choice,  0, 2, 0, 1, false, "", snapModes, 3 },

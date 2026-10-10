@@ -195,6 +195,10 @@ their current level, legato only moves the pitch. Glide: time in ms or a tempo
 division, always or legato only, from the last note played. A voice ends when
 every cam's amp envelope is idle and no curve release region is still playing.
 
+Silent cams: per voice, a cam that cannot be heard (its amp envelope finished,
+or its volume off with no send that could carry it) and modulates no other cam
+is skipped, its ramps moving on (`CamVoice::skipCam`).
+
 Rendering order: per control block, one cam at a time over the whole span, in
 the timing belt's order (a cam's first-cylinder output is complete, in
 `outBuf`, before the cams it modulates read it; self FM is computed inside the
