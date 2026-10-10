@@ -29,17 +29,19 @@ SourceChip::SourceChip (CamshaftAudioProcessor& p, int s, juce::Colour c)
     name = sourceName (p.getAPVTS(), s);
     setTooltip (s >= srcModFirst && s < srcModFirst + numModulators ? tips::mods::slotChip : tips::mods::fixedChip);
     setMouseCursor (juce::MouseCursor::DraggingHandCursor);
-    startTimerHz (15);
+    startTimerHz (30);
 }
 
 void SourceChip::timerCallback()
 {
     const float v = processor.getEngine().getDisplay().source[(size_t) source].load (std::memory_order_relaxed);
     const auto n = sourceName (processor.getAPVTS(), source);
-    if (std::abs (v - level) > 0.005f || n != name)
+    const bool bi = sourceIsBipolar (processor.getAPVTS(), source);
+    if (std::abs (v - level) > 0.002f || n != name || bi != bipolar)
     {
         level = v;
         name = n;
+        bipolar = bi;
         repaint();
     }
 }
@@ -52,14 +54,22 @@ void SourceChip::paint (juce::Graphics& g)
     g.setColour (selected ? colour : theme::panelLine);
     g.drawRoundedRectangle (b, 3.0f, 1.0f);
 
-    // Live output: a bar along the bottom, from the centre for negative values.
+    // Live output: a bar along the bottom. A bipolar source grows from the
+    // centre, -1 at the left edge and +1 at the right; a unipolar one from
+    // the left edge, 0 to 1. One scale throughout, so the bar moves as
+    // continuously as the value.
     const auto bar = b.removeFromBottom (3.0f).reduced (3.0f, 0.0f);
-    const float v = juce::jlimit (-1.0f, 1.0f, level);
     g.setColour (colour.withAlpha (0.9f));
-    if (v >= 0.0f)
-        g.fillRect (bar.withWidth (bar.getWidth() * v));
+    if (bipolar)
+    {
+        const float v = juce::jlimit (-1.0f, 1.0f, level);
+        const float x0 = bar.getCentreX(), x1 = bar.getCentreX() + 0.5f * bar.getWidth() * v;
+        g.fillRect (juce::Rectangle<float>::leftTopRightBottom (juce::jmin (x0, x1), bar.getY(), juce::jmax (x0, x1), bar.getBottom()));
+        g.setColour (colour.withAlpha (0.35f));
+        g.fillRect (juce::Rectangle<float> (x0 - 0.5f, bar.getY() - 1.0f, 1.0f, bar.getHeight() + 1.0f));   // the zero mark
+    }
     else
-        g.fillRect (bar.withWidth (bar.getWidth() * -v * 0.5f).withX (bar.getCentreX() - bar.getWidth() * -v * 0.5f));
+        g.fillRect (bar.withWidth (bar.getWidth() * juce::jlimit (0.0f, 1.0f, level)));
 
     g.setColour (theme::text);
     g.setFont (theme::labelFont (10.5f));

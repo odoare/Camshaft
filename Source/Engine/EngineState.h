@@ -5,7 +5,7 @@
     What every voice reads from the engine during a control block: the base
     (unmodulated) values of the cams' and modulators' parameters, the active
     modulation routes sorted by destination, the global source values, the
-    cross-modulation graph, the curve shapes and the table caches. Written by
+    cross-modulation graph, the curve shapes and the audio source. Written by
     CamEngine on the audio thread at the start of each block or control
     block, read by the voices right after; nothing here is shared with
     another thread.
@@ -22,7 +22,7 @@
 #include <FxmeTools/synth/BreakpointCurve.h>
 #include <FxmeTools/synth/ModGraph.h>
 #include <FxmeTools/synth/ModMatrix.h>
-#include <FxmeTools/synth/WavetableCache.h>
+#include "EngineSource.h"
 #include <FxmeTools/synth/WavetableReader.h>
 #include <array>
 
@@ -89,10 +89,8 @@ struct EngineState
     float glideSeconds = 0.0f;
     bool glideLegatoOnly = false;
 
-    // Tables.
-    std::array<fxme::WavetableCache*, numCams> caches {};
-    int sourceGeneration = 0;
-    int sourceLength = 0;
+    // The audio the cams read (valid for the block; see CamEngine::setSource).
+    const EngineSource* source = nullptr;
 
     bool auxDryMute[numAux] {};
 };
@@ -100,27 +98,9 @@ struct EngineState
 /** FM index (radians) at full lift. */
 constexpr float fmIndexAtFullLift = 8.0f;
 
-/** Samples of the crossfade between two table sets. */
-constexpr int tableCrossfadeSamples = 256;
-
-/** Quantises a cam's position into a cache key (see doc/architecture.md,
-    "Moving ranges"): width on a 1/96-octave grid, centre on a grid of a
-    64th of the width, overlap in steps of 0.5 %. */
-inline fxme::WavetableCache::Key makeTableKey (const EngineState& s, float centreNorm, float width,
-                                               float overlapPercent, int overlapShape, int snap) noexcept
-{
-    const int n = s.sourceLength;
-    if (n < 16)
-        return {};
-    double len = width < 16.0f ? 16.0 : (double) width;
-    len = std::pow (2.0, std::round (std::log2 (len) * 96.0) / 96.0);
-    int lenQ = (int) std::lround (len);
-    lenQ = lenQ < 16 ? 16 : (lenQ > n ? n : lenQ);
-    const int step = lenQ / 64 > 1 ? lenQ / 64 : 1;
-    const double centre = (double) (centreNorm < 0.0f ? 0.0f : (centreNorm > 1.0f ? 1.0f : centreNorm)) * (double) n;
-    const int centreQ = (int) std::lround (centre / (double) step) * step;
-    const float overlap = std::round (overlapPercent * 0.01f * 200.0f) / 200.0f;
-    return fxme::WavetableCache::makeKey (s.sourceGeneration, centreQ, lenQ, overlap, overlapShape, snap);
-}
+/** Time constant of the smoothing of a cam's range (start, cycle, overlap)
+    on top of the per-sample ramps: absorbs stepped automation and the jumps
+    of a snapped range. */
+constexpr double rangeSmoothingSeconds = 0.004;
 
 } // namespace cam

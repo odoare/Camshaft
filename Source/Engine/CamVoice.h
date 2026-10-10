@@ -11,6 +11,13 @@
     increments, filter settings and gain ramps; render() then runs the
     samples, ramping every gain linearly over the block.
 
+    The oscillator reads the cam's range straight from the source pyramid
+    (fxme::RangeLoop over fxme::MipmappedBuffer): start, cycle length and
+    overlap are smoothed and ramped per sample, so moving a range is a
+    continuous scan, and the pyramid level follows the read speed (cycle
+    length x frequency), blended between octaves, so reading stays
+    band-limited at any width and pitch.
+
     Signal order per cam: oscillator (FM inside the read) -> ring / AM ->
     filters -> amp envelope -> volume -> pan. The send taps are pre-filter
     (oscillator x envelope), post-filter (x envelope) or post-gain; every tap
@@ -73,8 +80,8 @@ public:
         no fade in progress. The engine then frees the voice. */
     bool hasFinished() const noexcept;
 
-    /** Lets go of the table slots (on finishing, or on a source change). */
-    void releaseTables() noexcept;
+    /** Silences the voice at once (the engine frees it). */
+    void stop() noexcept { active = false; }
 
     //==========================================================================
     /** Modulation and derived settings for the next control block. */
@@ -89,7 +96,9 @@ public:
     // For the displays (read by the engine for the newest voice).
     const float* getSourceValues() const noexcept { return src; }
     float getCamValue (int c, int field) const noexcept { return cams[c].cur[field]; }
-    double getCamPhase (int c) const noexcept { return cams[c].phase[0]; }
+    /** Phase of the first cylinder in the original cycle (the table's
+        phase alignment undone), for the waveform's playhead. */
+    double getCamPhase (int c) const noexcept;
     float getCurvePosition (int m) const noexcept;
 
 private:
@@ -98,17 +107,20 @@ private:
         fxme::CurveAdsr env;
         float cur[numCamFields] {};
 
-        // Tables: the slot played and, during a crossfade, the one left.
-        int slot = -1, oldSlot = -1;
-        fxme::WavetableCache::Key key, wanted;
-        float setFade = 1.0f;
+        // The range read, in source samples: smoothed targets, and the
+        // values ramped per sample towards them over each control block.
+        double start = 0.0, cycle = 2048.0, overlap = 0.0;
+        double startStep = 0.0, cycleStep = 0.0, overlapStep = 0.0;
+        double smoothStart = 0.0, smoothCycle = 2048.0, smoothOverlap = 0.0;
+        bool rangeValid = false, equalPower = true;
+        const EngineSource* sourceSeen = nullptr;
 
         // Cylinders.
         int cylinders = 1;
         double phase[maxCylinders] {};
         double inc[maxCylinders] {}, incStep[maxCylinders] {};
-        int level[maxCylinders] {}, prevLevel[maxCylinders] {};
-        float levelFade[maxCylinders] {};
+        float level[maxCylinders] {}, levelStep[maxCylinders] {};   // pyramid level, fractional
+        float dcX[2] {}, dcY[2] {};                                  // DC blocker state
         float cylGainL[maxCylinders] {}, cylGainR[maxCylinders] {};
         float unisonNorm = 1.0f;
 
@@ -133,7 +145,7 @@ private:
     void updateModulators();
     void applyCamModulation();
     void updateCam (int c, bool snap);
-    void updateTables (int c);
+    void updateRange (int c, bool snap);
     float stealGain() noexcept;
 
     const EngineState* state = nullptr;

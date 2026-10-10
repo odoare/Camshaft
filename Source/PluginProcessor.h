@@ -84,9 +84,6 @@ public:
 
     void randomize (camshaft::RandomSection section) { camshaft::randomize (section, apvts, structure); }
 
-    /** Table sets per cam (8 .. 64); reallocates the caches. Message thread. */
-    void setCacheSlots (int slots);
-
     /** Keep the current audio when a preset is loaded (per instance, not saved). */
     void setKeepAudioOnPresetLoad (bool keep) noexcept { keepAudioOnPresetLoad = keep; }
     bool getKeepAudioOnPresetLoad() const noexcept      { return keepAudioOnPresetLoad; }

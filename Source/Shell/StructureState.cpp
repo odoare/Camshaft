@@ -425,14 +425,4 @@ void StructureState::setLocked (const juce::String& paramID, bool locked)
     sendChangeMessage();
 }
 
-int StructureState::getCacheSlots() const
-{
-    return juce::jlimit (8, 64, (int) getSection (settingsType).getProperty ("cacheSlots", defaultCacheSlots));
-}
-
-void StructureState::setCacheSlots (int slots)
-{
-    getSection (settingsType).setProperty ("cacheSlots", juce::jlimit (8, 64, slots), nullptr);
-}
-
 } // namespace camshaft

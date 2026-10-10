@@ -20,7 +20,7 @@
 namespace camshaft::tips::bar
 {
     inline constexpr auto kickStart = "Kick-start: randomize everything (cams, filters, modulators, effects). Locked knobs, the output and the rev limiter are left alone.";
-    inline constexpr auto gear      = "Settings: voices, glide, interpolation, table cache, MIDI, hover help.";
+    inline constexpr auto gear      = "Settings: voices, glide, interpolation, MIDI, hover help.";
 }
 
 namespace camshaft::tips::file
@@ -179,8 +179,7 @@ namespace camshaft::tips::global
     inline constexpr auto glideDivision = "Glide time as a note length at the host tempo.";
     inline constexpr auto glideMode     = "Glide always, or only between notes played legato.";
     inline constexpr auto pitchBend     = "Pitch bend range in semitones.";
-    inline constexpr auto interpolation = "How the tables are read: linear (cheapest), cubic, or sinc (flattest).";
-    inline constexpr auto cache         = "Tables kept ready per cam, for per-voice modulation of the centre and lobe (about 180 kB each).";
+    inline constexpr auto interpolation = "How the audio is read between its samples: linear (cheapest), cubic, or sinc (flattest).";
     inline constexpr auto ccNumber      = "Controller number of this CC source.";
     inline constexpr auto saveLearn     = "New instances will start with the current MIDI learn map.";
     inline constexpr auto clearLearn    = "New instances will start with no MIDI learn map.";

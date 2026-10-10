@@ -61,11 +61,8 @@ juce::PopupMenu sourcesMenu (juce::AudioProcessorValueTreeState& apvts, int tick
     return menu;
 }
 
-namespace
+bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int s)
 {
-    /** Whether a source can go negative (its route then spans both ways). */
-    bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int s)
-    {
         if (s >= srcModFirst && s < srcModFirst + numModulators)
         {
             const int m = s - srcModFirst;
@@ -73,8 +70,10 @@ namespace
             return type != 1 && apvts.getRawParameterValue (ids::mod (m, mfBipolar))->load() > 0.5f;
         }
         return s == srcPitchBend || s == srcKeyTrack || s == srcRandom;
-    }
+}
 
+namespace
+{
     /** FxmeSlider's right-click value entry, reachable from the menu. */
     void showValueEditor (juce::Slider& slider)
     {

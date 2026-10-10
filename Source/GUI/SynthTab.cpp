@@ -144,6 +144,9 @@ void SynthTab::changeListenerCallback (juce::ChangeBroadcaster*)
         exportButton.setEnabled (! view->builtIn);
         builtInButton.setEnabled (! view->builtIn);
     }
+
+    if (const auto error = sources.getLastError(); error.isNotEmpty())
+        showMessage (error);
 }
 
 void SynthTab::showMessage (const juce::String& text)

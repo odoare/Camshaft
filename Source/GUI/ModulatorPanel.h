@@ -58,7 +58,7 @@ private:
     juce::Colour colour;
     juce::String name;
     float level = 0.0f;
-    bool selected = false, dragging = false;
+    bool bipolar = false, selected = false, dragging = false;
 };
 
 /** The editor of one modulator slot (remade when another slot is chosen). */

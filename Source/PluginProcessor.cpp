@@ -128,7 +128,7 @@ CamshaftAudioProcessor::CamshaftAudioProcessor()
                     section.appendChild (child.createCopy(), nullptr);
         }
         structure.refreshFromState();
-        sources.reload();
+        sources.reloadFromState();
     };
 
     midiLearn.applyDefaultIfEmpty();
@@ -137,7 +137,6 @@ CamshaftAudioProcessor::CamshaftAudioProcessor()
 CamshaftAudioProcessor::~CamshaftAudioProcessor()
 {
     effectLoader.stopThread (-1);   // before the chains it reads go away
-    engine.stopWorker();
 }
 
 void CamshaftAudioProcessor::createEffectPresets()
@@ -200,7 +199,7 @@ void CamshaftAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     effectLoader.stopThread (-1);
 
     preparedBlock = juce::jmax (1, samplesPerBlock);
-    engine.prepare (sampleRate, preparedBlock, structure.getCacheSlots());
+    engine.prepare (sampleRate, preparedBlock);
 
     dryBuffer.setSize (2, preparedBlock, false, true, false);
     for (auto& b : auxBuffers)
@@ -234,17 +233,6 @@ bool CamshaftAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts)
 {
     const auto out = layouts.getMainOutputChannelSet();
     return out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo();
-}
-
-void CamshaftAudioProcessor::setCacheSlots (int slots)
-{
-    structure.setCacheSlots (slots);
-    if (preparedBlock > 0)
-    {
-        suspendProcessing (true);
-        engine.prepare (getSampleRate(), preparedBlock, structure.getCacheSlots());
-        suspendProcessing (false);
-    }
 }
 
 //==============================================================================
@@ -470,7 +458,7 @@ void CamshaftAudioProcessor::setStateInformation (const void* data, int sizeInBy
             }
 
     apvts.replaceState (tree);
-    sources.reload();
+    sources.reloadFromState();
 }
 
 //==============================================================================

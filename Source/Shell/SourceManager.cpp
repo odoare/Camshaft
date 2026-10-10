@@ -104,7 +104,8 @@ SourceManager::SourceManager (juce::AudioProcessorValueTreeState& state, cam::Ca
 
 SourceManager::~SourceManager()
 {
-    loader->stopThread (4000);
+    alive->store (false);
+    loader->stopThread (10000);
 }
 
 bool SourceManager::canImport (const juce::String& fileName)
@@ -142,6 +143,12 @@ void SourceManager::setNormalise (bool shouldNormalise)
     reload();
 }
 
+juce::String SourceManager::getLastError() const
+{
+    const std::lock_guard<std::mutex> lock (viewLock);
+    return lastError;
+}
+
 std::shared_ptr<const SourceManager::View> SourceManager::getView() const
 {
     const std::lock_guard<std::mutex> lock (viewLock);
@@ -159,6 +166,34 @@ juce::String SourceManager::importFile (const juce::File& file)
     if (reader->lengthInSamples < 16)
         return file.getFileName() + " is too short.";
 
+    inFlightImport = file;
+    Job job;
+    job.importFile = file;
+    job.name = file.getFileName();
+    job.mode = getChannelMode();
+    job.normalise = getNormalise();
+    job.serial = ++serial;
+    importSerial.store (job.serial);
+    loading.store (true);
+    loader->post (job);
+    sendChangeMessage();
+    return {};
+}
+
+bool SourceManager::embedInto (const juce::File& file, juce::ValueTree& holder, double& rate, int& channels,
+                               juce::String& error)
+{
+    juce::AudioFormatManager formats;
+    formats.registerBasicFormats();
+    std::unique_ptr<juce::AudioFormatReader> reader (formats.createReaderFor (file));
+    if (reader == nullptr)
+    {
+        error = "Cannot read " + file.getFileName() + " as audio.";
+        return false;
+    }
+    rate = reader->sampleRate;
+    channels = (int) reader->numChannels;
+
     const auto maxSamples = (juce::int64) (maxSeconds * reader->sampleRate);
     bool ok;
     if (reader->lengthInSamples > maxSamples)
@@ -166,25 +201,25 @@ juce::String SourceManager::importFile (const juce::File& file)
         // Keep the first maxSeconds only: embed a trimmed copy.
         juce::TemporaryFile trimmed (".wav");
         ok = writeWav (*reader, trimmed.getFile(), maxSamples)
-             && fxme::EmbeddedAudio::embedFile (apvts.state, slotId, trimmed.getFile());
+             && fxme::EmbeddedAudio::embedFile (holder, slotId, trimmed.getFile());
     }
     else
-        ok = fxme::EmbeddedAudio::embedFile (apvts.state, slotId, file);
+        ok = fxme::EmbeddedAudio::embedFile (holder, slotId, file);
 
     if (! ok)
-        return "Could not embed " + file.getFileName() + ".";
-
+    {
+        error = "Could not embed " + file.getFileName() + ".";
+        return false;
+    }
     // The display name is the original file's, whatever was embedded.
-    findEmbeddedEntry (apvts.state).setProperty (fxme::EmbeddedAudio::nameProperty, file.getFileName(), nullptr);
-    options().setProperty ("originalRate", reader->sampleRate, nullptr);
-    options().setProperty ("originalChannels", (int) reader->numChannels, nullptr);
-
-    reload();
-    return {};
+    findEmbeddedEntry (holder).setProperty (fxme::EmbeddedAudio::nameProperty, file.getFileName(), nullptr);
+    return true;
 }
 
 void SourceManager::clear()
 {
+    inFlightImport = juce::File();
+    importSerial.store (-1);
     fxme::EmbeddedAudio::removeEmbedded (apvts.state, slotId);
     reload();
 }
@@ -195,8 +230,20 @@ bool SourceManager::exportOriginal (const juce::File& destination) const
     return reader != nullptr && writeWav (*reader, destination, reader->lengthInSamples);
 }
 
+void SourceManager::reloadFromState()
+{
+    importSerial.store (-1);   // a session or preset replaces any import in flight
+    reload();
+}
+
 void SourceManager::reload()
 {
+    if (importSerial.load() > 0 && inFlightImport != juce::File())
+    {
+        importFile (inFlightImport);
+        return;
+    }
+
     Job job;
     const auto entry = findEmbeddedEntry (apvts.state);
     if (entry.isValid())
@@ -217,14 +264,53 @@ void SourceManager::reload()
 }
 
 //==============================================================================
-void SourceManager::run (const Job& job)
+void SourceManager::run (Job job)
 {
+    // An import: embed the file into a detached tree first, and hand the
+    // embedded copy to the state on the message thread once it is decoded.
+    double importRate = 0.0;
+    int importChannels = 0;
+    if (job.importFile != juce::File())
+    {
+        juce::ValueTree holder ("Holder");
+        juce::String error;
+        if (! embedInto (job.importFile, holder, importRate, importChannels, error))
+        {
+            if (job.serial == serial.load())
+            {
+                {
+                    const std::lock_guard<std::mutex> lock (viewLock);
+                    lastError = error;
+                }
+                loading.store (false);
+                sendChangeMessage();
+            }
+            return;
+        }
+        job.audio = holder;
+    }
+
     auto result = std::make_shared<View>();
     std::shared_ptr<fxme::WavetableSource> src;
 
     if (job.audio.isValid())
     {
-        if (auto reader = fxme::EmbeddedAudio::createReader (job.audio, slotId))
+        auto reader = fxme::EmbeddedAudio::createReader (job.audio, slotId);
+        if (reader == nullptr || reader->lengthInSamples < 16)
+        {
+            // Keep playing what was there rather than fall back to the
+            // built-in source without a word.
+            if (job.serial == serial.load())
+            {
+                {
+                    const std::lock_guard<std::mutex> lock (viewLock);
+                    lastError = "Could not decode the audio of " + (job.name.isNotEmpty() ? job.name : juce::String ("this patch")) + ".";
+                }
+                loading.store (false);
+                sendChangeMessage();
+            }
+            return;
+        }
         {
             const auto maxSamples = (juce::int64) (maxSeconds * reader->sampleRate);
             const int n = (int) juce::jmin (reader->lengthInSamples, maxSamples);
@@ -290,7 +376,7 @@ void SourceManager::run (const Job& job)
     if (job.serial != serial.load())
         return;
 
-    engine.setSource (src);
+    engine.setSource (cam::EngineSource::make (src));   // the pyramid and the analysis, built here
 
     result->source = src;
     result->overview.resize (src->channels.size());
@@ -300,6 +386,24 @@ void SourceManager::run (const Job& job)
     {
         const std::lock_guard<std::mutex> lock (viewLock);
         view = result;
+        lastError.clear();
+    }
+
+    if (job.importFile != juce::File())
+    {
+        // Into the state, on the message thread (the state is not thread-safe).
+        const auto entry = findEmbeddedEntry (job.audio).createCopy();
+        juce::MessageManager::callAsync ([this, flag = alive, entry, importRate, importChannels, serialNow = job.serial]
+        {
+            if (! flag->load() || serialNow != importSerial.load())
+                return;
+            inFlightImport = juce::File();
+            fxme::EmbeddedAudio::removeEmbedded (apvts.state, slotId);
+            auto state = apvts.state;
+            state.getOrCreateChildWithName (fxme::EmbeddedAudio::containerType, nullptr).appendChild (entry, nullptr);
+            options().setProperty ("originalRate", importRate, nullptr);
+            options().setProperty ("originalChannels", importChannels, nullptr);
+        });
     }
     loading.store (false);
     sendChangeMessage();

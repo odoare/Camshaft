@@ -65,7 +65,10 @@ public:
     //==========================================================================
     // Message thread
 
-    /** Embeds `file` and loads it. Returns an error message, empty on success. */
+    /** Embeds `file` and loads it, on the loader thread (encoding a long
+        file takes a while); the embedded copy lands in the state when it is
+        ready. Returns an error message for a file that cannot be read at
+        all; a later failure shows in getLastError(). */
     juce::String importFile (const juce::File& file);
 
     /** Back to the built-in source (removes the embedded audio). */
@@ -84,9 +87,16 @@ public:
 
     bool isLoading() const noexcept { return loading.load(); }
 
+    /** Why the last decode failed (empty when it worked). Message thread. */
+    juce::String getLastError() const;
+
     /** Decodes the state's audio again (after a session or preset load). Any
         thread that owns the state at that moment. */
     void reload();
+
+    /** As reload(), for a whole new state (session or preset load): an import
+        still in flight is dropped. */
+    void reloadFromState();
 
     static bool canImport (const juce::String& fileName);
 
@@ -94,6 +104,7 @@ private:
     struct Job
     {
         juce::ValueTree audio;       // detached copy of the EmbeddedAudio container
+        juce::File importFile;       // a file to embed first (an import)
         juce::String name;
         ChannelMode mode = ChannelMode::stereo;
         bool normalise = true;
@@ -101,7 +112,8 @@ private:
     };
 
     class Loader;
-    void run (const Job& job);
+    void run (Job job);
+    bool embedInto (const juce::File& file, juce::ValueTree& holder, double& rate, int& channels, juce::String& error);
     juce::ValueTree options() const;
 
     juce::AudioProcessorValueTreeState& apvts;
@@ -109,10 +121,17 @@ private:
 
     std::unique_ptr<Loader> loader;
     std::atomic<bool> loading { false };
+    std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
+
+    // An import still being encoded (message thread): a reload meanwhile
+    // re-runs it with the new options rather than decode the old audio.
+    juce::File inFlightImport;
+    std::atomic<int> importSerial { 0 };
     std::atomic<int> serial { 0 };
 
     mutable std::mutex viewLock;
     std::shared_ptr<const View> view;
+    juce::String lastError;              // guarded by viewLock
 };
 
 } // namespace camshaft

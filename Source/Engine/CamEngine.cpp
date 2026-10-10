@@ -23,11 +23,6 @@ namespace cam
 
 CamEngine::CamEngine()
 {
-    for (auto& c : caches)
-        c = std::make_unique<fxme::WavetableCache>();
-    for (int c = 0; c < numCams; ++c)
-        state.caches[(size_t) c] = caches[(size_t) c].get();
-
     // Fixed capacity, made once: the editor may be reading them at any time.
     for (auto& s : display.scopes)
         s.prepare (8192);
@@ -42,25 +37,12 @@ CamEngine::CamEngine()
     fxme::WavetableReader::warmUp();
 }
 
-CamEngine::~CamEngine()
-{
-    stopWorker();
-}
+CamEngine::~CamEngine() = default;
 
-void CamEngine::stopWorker()
+void CamEngine::prepare (double sampleRate, int maxBlock)
 {
-    worker.stop();
-}
-
-void CamEngine::prepare (double sampleRate, int maxBlock, int cacheSlots)
-{
-    stopWorker();
-
     state.sampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
     maxBlockSize = std::max (1, maxBlock);
-
-    for (auto& c : caches)
-        c->prepare (cacheSlots);
 
     for (int v = 0; v < maxVoices; ++v)
         voices[(size_t) v].prepare (state, v);
@@ -75,24 +57,35 @@ void CamEngine::prepare (double sampleRate, int maxBlock, int cacheSlots)
 
     samplesToControl = 0;
     numPlayingVoices = 0;
-
-    std::vector<fxme::WavetableCache*> list;
-    for (auto& c : caches)
-        list.push_back (c.get());
-    worker.start (list);
 }
 
-void CamEngine::setSource (std::shared_ptr<fxme::WavetableSource> source)
+void CamEngine::setSource (std::shared_ptr<const EngineSource> source)
 {
-    const int length = source != nullptr ? source->numSamples : 0;
-    for (auto& c : caches)
-        c->setSource (source);
-    sourceLength.store (length, std::memory_order_release);
+    const std::lock_guard<std::mutex> lock (sourceLock);
+    ownedSources.push_back (source);
+    published.store (source.get(), std::memory_order_seq_cst);
+    freeRetiredSources();
+}
+
+void CamEngine::freeRetiredSources()
+{
+    // Called with sourceLock held. Keep the published source and the one the
+    // audio thread holds; the rest can go (see beginBlock for the handshake).
+    const auto* pub = published.load (std::memory_order_seq_cst);
+    const auto* held = inUse.load (std::memory_order_seq_cst);
+    ownedSources.erase (std::remove_if (ownedSources.begin(), ownedSources.end(),
+                                        [&] (const auto& s) { return s.get() != pub && s.get() != held; }),
+                        ownedSources.end());
 }
 
 std::shared_ptr<const fxme::WavetableSource> CamEngine::getSource() const
 {
-    return caches[0]->getSource();
+    const std::lock_guard<std::mutex> lock (sourceLock);
+    const auto* pub = published.load();
+    for (const auto& s : ownedSources)
+        if (s.get() == pub)
+            return s->raw;
+    return {};
 }
 
 void CamEngine::setRoute (int i, int source, int destination, int via) noexcept
@@ -123,7 +116,10 @@ void CamEngine::beginBlock (const BlockSettings& s)
     state.bpm = s.bpm > 1.0 ? s.bpm : 120.0;
     state.ppq = s.ppq;
     state.playing = s.playing;
-    ppqNow = s.ppq;
+    // The host position at the next control update, which comes
+    // samplesToControl samples into this block (control blocks do not line
+    // up with the host's blocks).
+    ppqNow = s.ppq + (double) samplesToControl * beatsPerSample();
     state.glideSeconds = s.glideSeconds;
     state.glideLegatoOnly = s.glideLegatoOnly;
     state.pitchBendRange = s.pitchBendRange;
@@ -167,21 +163,21 @@ void CamEngine::beginBlock (const BlockSettings& s)
         updateRoutes (s.routeDepths);
     updateGraph();
 
-    state.sourceGeneration = caches[0]->getGeneration();
-    state.sourceLength = sourceLength.load (std::memory_order_acquire);
-
-    // Keep the tables for the unmodulated positions built, so a note starts
-    // on the right table and a knob move is picked up with no note held.
-    for (int c = 0; c < numCams; ++c)
+    // The source for this block. Hazard pointer: announce it, then check it
+    // is still the published one; the owner frees only sources that are
+    // neither published nor announced, so the one used here stays alive.
+    const EngineSource* src = published.load (std::memory_order_seq_cst);
+    bool stable = false;
+    for (int attempt = 0; attempt < 16 && ! stable; ++attempt)
     {
-        caches[(size_t) c]->beginBlock();
-        if (! state.camNeeded[c])
-            continue;
-        const float* v = state.camValue[c];
-        const auto key = makeTableKey (state, v[cfCentre], v[cfWidth], v[cfOverlap],
-                                       (int) v[cfOverlapShape], (int) v[cfSnap]);
-        caches[(size_t) c]->request (key, c);
+        inUse.store (src, std::memory_order_seq_cst);
+        const auto* again = published.load (std::memory_order_seq_cst);
+        stable = again == src;
+        src = again;
     }
+    // Never stable (sources published faster than blocks run): skip a block
+    // rather than read one that may be gone.
+    state.source = stable ? src : nullptr;
 }
 
 void CamEngine::updateRoutes (const float* depths)
@@ -388,7 +384,9 @@ void CamEngine::updateGlobalModulators()
             lfo.setParameters (p);
             if (state.playing)
             {
-                lfo.syncToPpq (ppqNow);
+                // At the end of the control span, where the per-voice values
+                // land too (destinations ramp towards them over the span).
+                lfo.syncToPpq (ppqNow + (double) controlBlock * beatsPerSample());
                 out = lfo.output();
             }
             else
@@ -401,7 +399,7 @@ void CamEngine::updateGlobalModulators()
             const double speed = (double) value (mfSpeed);
             double& pos = globalCurvePos[(size_t) m];
             if (state.playing)
-                pos = ppqNow / std::max (0.01, beats) * speed;
+                pos = (ppqNow + (double) controlBlock * beatsPerSample()) / std::max (0.01, beats) * speed;
             else
                 pos += (double) controlBlock / sr * state.bpm / 60.0 / std::max (0.01, beats) * speed;
             pos -= std::floor (pos);
@@ -431,7 +429,7 @@ void CamEngine::controlUpdate()
         if (v.isActive())
             v.control();
 
-    ppqNow += (double) controlBlock / state.sampleRate * state.bpm / 60.0;
+    ppqNow += (double) controlBlock * beatsPerSample();
 }
 
 //==============================================================================
@@ -484,7 +482,7 @@ void CamEngine::render (const Buses& buses, int offset, int n)
             auto& voice = voices[(size_t) v];
             if (voice.isActive() && voice.hasFinished())
             {
-                voice.releaseTables();
+                voice.stop();
                 allocator.voiceStopped (v);
             }
         }

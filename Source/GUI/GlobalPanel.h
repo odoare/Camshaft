@@ -6,7 +6,7 @@
 
       Voices        polyphony, poly / mono / legato, glide (time or tempo
                     division, always or legato only), pitch bend range
-      Engine        interpolation quality, table cache size per cam
+      Engine        interpolation quality
       MIDI          the CC numbers of the four CC sources, the MIDI learn
                     default (save the current map, or clear it)
       Instance      keep the audio when loading presets
@@ -50,7 +50,6 @@ private:
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>> attachments;
     juce::ComboBox *polyMode = nullptr, *glideDiv = nullptr, *glideMode = nullptr, *interp = nullptr;
 
-    juce::ComboBox cacheBox;
     std::array<juce::ComboBox, 4> ccBoxes;
     juce::TextButton saveLearn { "Save MIDI map as default" }, clearLearn { "Clear default" };
     juce::ToggleButton keepAudio { "Keep audio when loading presets" };

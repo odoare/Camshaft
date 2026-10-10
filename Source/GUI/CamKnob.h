@@ -37,6 +37,11 @@ namespace camshaft
 /** "LFO 3", "ADSR 1", "Curve 7", "Velocity", "Cam 2 env"... */
 juce::String sourceName (juce::AudioProcessorValueTreeState& apvts, int source);
 
+/** Whether a source can go negative (an LFO or curve set to bipolar, pitch
+    bend, key track, random): its routes span both ways, its meter grows
+    from the centre. */
+bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int source);
+
 /** Drag description of a modulation source chip: "modsrc:<index>". */
 juce::String sourceDragDescription (int source);
 int sourceFromDragDescription (const juce::var& description);

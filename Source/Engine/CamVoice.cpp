@@ -53,10 +53,10 @@ void CamVoice::prepare (const EngineState& s, int voiceIndex)
         for (auto& f : k.filters)
             for (auto& ch : f)
                 ch.prepare (s.sampleRate);
-        k.slot = k.oldSlot = -1;
-        k.key = k.wanted = {};
-        k.setFade = 1.0f;
+        k.rangeValid = false;
         k.out0 = 0.0f;
+        for (int ch = 0; ch < 2; ++ch)
+            k.dcX[ch] = k.dcY[ch] = 0.0f;
     }
 
     for (int m = 0; m < numModulators; ++m)
@@ -70,7 +70,6 @@ void CamVoice::prepare (const EngineState& s, int voiceIndex)
 //==============================================================================
 void CamVoice::start (int newNote, float newVelocity, float glideFromPitch)
 {
-    const bool wasActive = active;
     active = true;
     gated = true;
     stealing = false;
@@ -105,13 +104,10 @@ void CamVoice::start (int newNote, float newVelocity, float glideFromPitch)
             for (auto& ch : f)
                 ch.reset();
         k.out0 = 0.0f;
-        k.cylinders = 0;    // re-initialised by updateCam
-        if (! wasActive)
-        {
-            k.slot = k.oldSlot = -1;
-            k.setFade = 1.0f;
-            k.key = {};
-        }
+        k.cylinders = 0;        // re-initialised by updateCam
+        k.rangeValid = false;   // a new note starts on its range, no glide to it
+        for (int ch = 0; ch < 2; ++ch)
+            k.dcX[ch] = k.dcY[ch] = 0.0f;
     }
 
     for (auto& a : adsrs)
@@ -203,22 +199,9 @@ bool CamVoice::hasFinished() const noexcept
     return true;
 }
 
-void CamVoice::releaseTables() noexcept
+double CamVoice::getCamPhase (int c) const noexcept
 {
-    for (int c = 0; c < numCams; ++c)
-    {
-        auto& k = cams[c];
-        auto* cache = state->caches[(size_t) c];
-        if (cache != nullptr)
-        {
-            if (k.slot >= 0)    cache->release (k.slot);
-            if (k.oldSlot >= 0) cache->release (k.oldSlot);
-        }
-        k.slot = k.oldSlot = -1;
-        k.key = {};
-        k.setFade = 1.0f;
-    }
-    active = false;
+    return cams[c].phase[0];
 }
 
 float CamVoice::getCurvePosition (int m) const noexcept
@@ -399,14 +382,21 @@ void CamVoice::updateCam (int c, bool snap)
         for (int u = fxme::jmax (0, k.cylinders); u < n; ++u)
         {
             if (k.cylinders > 0)
+            {
                 k.phase[u] = randomPhase ? (double) random.nextFloat() : k.phase[0];
-            k.levelFade[u] = 1.0f;
+                k.level[u] = k.level[0];
+                k.inc[u] = k.inc[0];
+            }
         }
         if (k.cylinders <= 0)
             snap = true;
         k.cylinders = n;
         k.unisonNorm = 1.0f / std::sqrt ((float) n);
     }
+
+    // The range first: the read speed, so the pyramid level, depends on it.
+    updateRange (c, snap);
+    const auto* source = state->source;
 
     for (int u = 0; u < n; ++u)
     {
@@ -421,18 +411,16 @@ void CamVoice::updateCam (int c, bool snap)
         else
             k.incStep[u] = (target - k.inc[u]) / (double) controlBlock;
 
-        const int newLevel = (int) fxme::WavetableSet::levelFor (f, sr);
+        // Pyramid level for the read speed (source samples per output
+        // sample), ramped like everything else so it never jumps.
+        const float newLevel = source != nullptr ? source->buffer.levelForSpeed (k.smoothCycle * f / sr) : 0.0f;
         if (snap)
         {
             k.level[u] = newLevel;
-            k.levelFade[u] = 1.0f;
+            k.levelStep[u] = 0.0f;
         }
-        else if (newLevel != k.level[u] && k.levelFade[u] >= 1.0f)
-        {
-            k.prevLevel[u] = k.level[u];
-            k.level[u] = newLevel;
-            k.levelFade[u] = 0.0f;
-        }
+        else
+            k.levelStep[u] = (newLevel - k.level[u]) / (float) controlBlock;
 
         const float position = n > 1 ? fxme::UnisonSpread::detuneFraction (u, n) * v[cfSpread] : 0.0f;
         panGains (position, k.cylGainL[u], k.cylGainR[u]);
@@ -488,56 +476,78 @@ void CamVoice::updateCam (int c, bool snap)
         k.filters[fi][0].setParameters (p);
         k.filters[fi][1].setParameters (p);
     }
-
-    updateTables (c);
 }
 
-void CamVoice::updateTables (int c)
+void CamVoice::updateRange (int c, bool snap)
 {
     auto& k = cams[c];
-    auto* cache = state->caches[(size_t) c];
-    if (cache == nullptr)
+    const auto* source = state->source;
+    if (source == nullptr || source->numSamples() < 16)
+    {
+        k.rangeValid = false;
         return;
+    }
+    if (source != k.sourceSeen)
+    {
+        // Another recording: start on it, no glide from positions in the old one.
+        k.sourceSeen = source;
+        k.rangeValid = false;
+    }
 
     const float* v = k.cur;
-    const auto key = makeTableKey (*state, v[cfCentre], v[cfWidth], v[cfOverlap],
-                                   (int) v[cfOverlapShape], (int) v[cfSnap]);
-    if (! key.isValid())
-        return;
+    const double n = (double) source->numSamples();
+    const double centre = (double) fxme::jlimit (0.0f, 1.0f, v[cfCentre]) * n;
+    double len = fxme::jlimit (16.0, n, (double) v[cfWidth]);
+    double start = fxme::jlimit (0.0, n - len, centre - 0.5 * len);
 
-    const int stream = numCams + index * numCams + c;
-
-    if (k.slot < 0)
+    const int snapMode = (int) v[cfSnap];
+    if (snapMode == 1)
     {
-        int s = cache->tryAcquire (key);
-        if (s < 0)
+        // Both edges on the nearest rising zero crossings.
+        const double radius = fxme::jmin (2048.0, fxme::jmax (1.0, len * 0.25));
+        const double a = source->analysis.nearestRisingZeroCrossing (start, radius);
+        const double b = source->analysis.nearestRisingZeroCrossing (start + len, radius);
+        if (b - a >= 16.0 && b <= n)
         {
-            cache->request (key, stream);
-            s = cache->acquireNearest (key);
+            start = a;
+            len = b - a;
         }
-        if (s >= 0)
+    }
+    else if (snapMode == 2)
+    {
+        // A whole number of the periods detected around the centre, starting
+        // on a rising zero crossing.
+        const double period = source->analysis.periodAt (centre);
+        if (period > 0.0)
         {
-            k.slot = s;
-            k.key = cache->getKey (s);
-            k.setFade = 1.0f;
+            len = fxme::jlimit (16.0, n, fxme::jmax (1.0, std::round (len / period)) * period);
+            start = fxme::jlimit (0.0, n - len, centre - 0.5 * len);
+            start = fxme::jlimit (0.0, n - len, source->analysis.nearestRisingZeroCrossing (start, 0.5 * period));
         }
+    }
+
+    const double overlap = fxme::jlimit (0.0, 0.5 * len, (double) v[cfOverlap] * 0.01 * len);
+    const double cycle = len - overlap;
+    k.equalPower = (int) v[cfOverlapShape] == 1;
+
+    if (snap || ! k.rangeValid)
+    {
+        k.start = k.smoothStart = start;
+        k.cycle = k.smoothCycle = cycle;
+        k.overlap = k.smoothOverlap = overlap;
+        k.startStep = k.cycleStep = k.overlapStep = 0.0;
+        k.rangeValid = true;
         return;
     }
 
-    if (key == k.key || k.setFade < 1.0f)
-        return;   // nothing new, or finish the crossfade in progress first
-
-    const int s = cache->tryAcquire (key);
-    if (s < 0)
-    {
-        cache->request (key, stream);
-        return;
-    }
-
-    k.oldSlot = k.slot;
-    k.slot = s;
-    k.key = key;
-    k.setFade = 0.0f;
+    // Smoothed (one pole per control block), then ramped per sample.
+    const double a = 1.0 - std::exp (-(double) controlBlock / (rangeSmoothingSeconds * state->sampleRate));
+    k.smoothStart += (start - k.smoothStart) * a;
+    k.smoothCycle += (cycle - k.smoothCycle) * a;
+    k.smoothOverlap += (overlap - k.smoothOverlap) * a;
+    k.startStep = (k.smoothStart - k.start) / (double) controlBlock;
+    k.cycleStep = (k.smoothCycle - k.cycle) / (double) controlBlock;
+    k.overlapStep = (k.smoothOverlap - k.overlap) / (double) controlBlock;
 }
 
 float CamVoice::stealGain() noexcept
@@ -561,9 +571,14 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
         return;
 
     const auto interp = state->interpolation;
-    const float setFadeStep = 1.0f / (float) tableCrossfadeSamples;
-    const float levelFadeStep = 1.0f / (float) controlBlock;
     constexpr double toCycles = 1.0 / twoPi;
+    const auto* source = state->source;
+    if (source == nullptr)
+        return;
+    const auto& buffer = source->buffer;
+    const bool stereo = buffer.getNumChannels() > 1;
+    // DC blocker, about 8 Hz: a range of real audio rarely averages to zero.
+    const float dcPole = 1.0f - (float) (twoPi * 8.0 / state->sampleRate);
 
     for (int i = 0; i < n; ++i)
     {
@@ -576,15 +591,13 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
             auto& k = cams[c];
             const float env = k.env.getNextSample();
 
-            if (! state->camNeeded[c] || k.slot < 0 || k.cylinders <= 0)
+            if (! state->camNeeded[c] || ! k.rangeValid || k.cylinders <= 0)
             {
                 k.out0 = 0.0f;
                 if (display != nullptr)
                     display[c][pos] = 0.0f;
                 continue;
             }
-
-            auto* cache = state->caches[(size_t) c];
 
             // Frequency modulation: a phase offset from the sources' first
             // cylinders (this sample) or from itself (previous sample).
@@ -594,8 +607,8 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
                     fm += k.lift[s] * cams[s].out0;
             const double fmCycles = (double) (fm * fmIndexAtFullLift) * toCycles;
 
-            const auto& set = cache->getSet (k.slot);
-            const fxme::WavetableSet* old = (k.setFade < 1.0f && k.oldSlot >= 0) ? &cache->getSet (k.oldSlot) : nullptr;
+            const fxme::RangeLoop::Range range { k.start, k.cycle, k.overlap, k.equalPower };
+            const bool wrapStep = k.overlap < 1.0;   // no overlap: band-limit the step at the wrap
 
             float l = 0.0f, r = 0.0f, o0 = 0.0f;
             for (int u = 0; u < k.cylinders; ++u)
@@ -603,23 +616,18 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
                 double ph = k.phase[u] + fmCycles;
                 ph -= std::floor (ph);
 
-                float a, b;
-                fxme::WavetableReader::readStereo (set, k.level[u], ph, interp, a, b);
-                if (k.levelFade[u] < 1.0f)
+                const float lv = k.level[u];
+                float a = fxme::RangeLoop::read (buffer, 0, lv, range, ph, interp);
+                float b = stereo ? fxme::RangeLoop::read (buffer, 1, lv, range, ph, interp) : a;
+
+                if (wrapStep)
                 {
-                    float pa, pb;
-                    fxme::WavetableReader::readStereo (set, k.prevLevel[u], ph, interp, pa, pb);
-                    const float t = k.levelFade[u];
-                    a = pa + (a - pa) * t;
-                    b = pb + (b - pb) * t;
-                    k.levelFade[u] = fxme::jmin (1.0f, t + levelFadeStep);
-                }
-                if (old != nullptr)
-                {
-                    float oa, ob;
-                    fxme::WavetableReader::readStereo (*old, k.level[u], ph, interp, oa, ob);
-                    a = oa + (a - oa) * k.setFade;
-                    b = ob + (b - ob) * k.setFade;
+                    const float residual = fxme::RangeLoop::polyBlep (ph, k.inc[u]);
+                    if (residual > 0.0f || residual < 0.0f)
+                    {
+                        a += 0.5f * residual * fxme::RangeLoop::wrapStep (buffer, 0, lv, range, interp);
+                        b = stereo ? b + 0.5f * residual * fxme::RangeLoop::wrapStep (buffer, 1, lv, range, interp) : a;
+                    }
                 }
 
                 if (u == 0)
@@ -631,17 +639,20 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
                 if (k.phase[u] >= 1.0)
                     k.phase[u] -= std::floor (k.phase[u]);
                 k.inc[u] += k.incStep[u];
+                k.level[u] += k.levelStep[u];
             }
 
-            if (old != nullptr)
+            // The range moves on, one sample of its ramp.
+            k.start += k.startStep;
+            k.cycle += k.cycleStep;
+            k.overlap += k.overlapStep;
+
+            // DC blocker.
             {
-                k.setFade += setFadeStep;
-                if (k.setFade >= 1.0f)
-                {
-                    k.setFade = 1.0f;
-                    cache->release (k.oldSlot);
-                    k.oldSlot = -1;
-                }
+                const float yl = l - k.dcX[0] + dcPole * k.dcY[0];
+                const float yr = r - k.dcX[1] + dcPole * k.dcY[1];
+                k.dcX[0] = l;  k.dcY[0] = yl;  l = yl;
+                k.dcX[1] = r;  k.dcY[1] = yr;  r = yr;
             }
 
             l *= k.unisonNorm;

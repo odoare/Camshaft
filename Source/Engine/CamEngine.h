@@ -5,7 +5,7 @@
     Camshaft's sound engine, independent of any plugin framework: the voices,
     the voice allocation (poly / mono / legato, glide), the modulation
     matrix and the global modulators, the cross-modulation graph, and the
-    per-cam table caches with their worker thread.
+    hand-over of the audio the cams read (EngineSource).
 
     The plugin shell drives it each audio block:
 
@@ -35,7 +35,7 @@
 #include <FxmeTools/synth/BreakpointCurve.h>
 #include <FxmeTools/synth/ModulationLfo.h>
 #include <FxmeTools/synth/VoiceAllocator.h>
-#include <FxmeTools/synth/WavetableCache.h>
+#include <mutex>
 #include <array>
 #include <atomic>
 #include <memory>
@@ -67,18 +67,18 @@ public:
     CamEngine();
     ~CamEngine();
 
-    /** Allocates everything for `sampleRate` and up to `maxBlock` samples,
-        with `cacheSlots` table sets per cam. Stops and restarts the table
-        worker. Not concurrently with render(). */
-    void prepare (double sampleRate, int maxBlock, int cacheSlots);
-    void stopWorker();
+    /** Allocates everything for `sampleRate` and up to `maxBlock` samples.
+        Not concurrently with render(). */
+    void prepare (double sampleRate, int maxBlock);
 
     //==========================================================================
-    // Message thread
+    // Any thread but the audio thread
 
-    /** Replaces the audio the cams are cut from. Voices crossfade to the new
-        tables as they are built. */
-    void setSource (std::shared_ptr<fxme::WavetableSource> source);
+    /** Replaces the audio the cams read. The audio thread picks it up at its
+        next block; the previous source is freed once it no longer reads it. */
+    void setSource (std::shared_ptr<const EngineSource> source);
+
+    /** The recording currently handed to the engine (for displays). */
     std::shared_ptr<const fxme::WavetableSource> getSource() const;
 
     /** Route i: source, destination (flat index), via. Depth comes with each
@@ -159,14 +159,20 @@ private:
     void updateGraph();
     void computeGlobalOffsets (int newest);
     void publishDisplay (int newest);
+    double beatsPerSample() const noexcept { return state.bpm / 60.0 / state.sampleRate; }
 
     EngineState state;
     std::array<CamVoice, maxVoices> voices;
     fxme::VoiceAllocator allocator;
 
-    std::array<std::unique_ptr<fxme::WavetableCache>, numCams> caches;
-    fxme::WavetableWorker worker;
-    std::atomic<int> sourceLength { 0 };
+    // The source: owned here, published to the audio thread through an
+    // atomic pointer; `inUse` is the audio thread's hazard pointer, so a
+    // replaced source is only freed once the audio thread has moved on.
+    void freeRetiredSources();
+    mutable std::mutex sourceLock;                         // owners only, never the audio thread
+    std::vector<std::shared_ptr<const EngineSource>> ownedSources;
+    std::atomic<const EngineSource*> published { nullptr };
+    std::atomic<const EngineSource*> inUse { nullptr };
 
     // Hand-overs from the message thread.
     fxme::RouteSet<maxRoutes> routes;

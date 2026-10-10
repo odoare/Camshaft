@@ -40,10 +40,11 @@ every generic piece it is built from went into FxmeTools.
 
 | Header | Half | Role in Camshaft |
 |---|---|---|
-| `synth/WavetableSet.h` | core | 2048-sample table, 11 mip levels (one per octave), 1 or 2 channels |
-| `synth/WavetableBuilder.h/.cpp` | core | range of the source to a table set: snap, overlap, resample, FFT mipmaps |
-| `synth/WavetableCache.h/.cpp` | core | per-cam pool of built sets; worker thread; lock-free reads |
-| `synth/WavetableReader.h` | core | linear / cubic / sinc reads |
+| `synth/MipmappedBuffer.h/.cpp` | core | the source as an octave pyramid; `RangeLoop`: reading a range as a loop |
+| `synth/SourceAnalysis.h/.cpp` | core | zero crossings and period track, for snapping |
+| `synth/WavetableReader.h` | core | linear / cubic / sinc interpolation (shared by the pyramid) |
+| `synth/WavetableSet.h`, `WavetableBuilder.h/.cpp` | core | the cam profile display (a table from the unmodulated range) |
+| `synth/WavetableCache.h/.cpp` | core | no longer used by Camshaft (first design; see "Reading the ranges") |
 | `synth/CurveAdsr.h` | core | amp envelopes and ADSR modulators |
 | `synth/ModulationLfo.h` | core | LFO modulators |
 | `synth/BreakpointCurve.h` | core | curve modulators (shape, lock-free hand-over, playhead) |
@@ -65,7 +66,7 @@ Tests: `core/tests/CoreSynthTests.cpp` (58 checks, all pass).
 Per voice, per cam (in the timing belt's topological order, sample by sample):
 
 ```
-table read (cylinders, FM as a phase offset) -> ring / AM from other cams
+range read (cylinders, FM as a phase offset) -> DC blocker -> ring / AM from other cams
   -> filter 1, filter 2 (series, or parallel with a balance)
   -> amp envelope x velocity -> volume -> pan -> dry bus
 taps (pre-filter = osc x env, post-filter = filtered x env, post-gain), panned,
@@ -83,46 +84,53 @@ anything cost nothing but their envelope.
 
 "Dry mute" on a Turbo silences the dry signal of every cam sending to it.
 
-## Wavetables and moving ranges
+## Reading the ranges
 
-The source is kept at its original sample rate: a cam's width is in source
-samples, so a patch sounds the same at any session rate. (The plan said to
-resample on import; that would make a width in samples mean a different time
-span, and so a different timbre, at each session rate. The original is embedded
-anyway, so the sample player, which will need resampling, can do it later.)
+**No precomputed tables.** The plan's design (a band-limited wavetable per range
+position, rebuilt when a range moves, with a per-voice cache) was implemented
+first and dropped after testing (2026-10-09): a moving range became a series of
+crossfades between tables cut from different places, and for real audio two
+such tables are different waveforms whose crossfade partly cancels. Faster
+fades, finer quantisation and phase alignment reduced the glitches but could not
+remove them. The voice now reads its range straight from the source.
 
-Building (`WavetableBuilder`): range clamped to the file, optional snap (zero
-crossings, or a whole number of periods detected around the centre), loop
-overlap blended into the start (the cycle becomes `(1 - overlap) x width`),
-resampled to a power-of-two work size (2048 to 32768; cubic up, box average
-down), one forward FFT, then an inverse 2048 FFT per mip level keeping the
-harmonics that level allows. DC removed.
+The source (`Engine/EngineSource.h`, made on the loader thread):
 
-Mip level per cylinder from its frequency (`WavetableSet::levelFor`, with a bias
-of half an octave: the top harmonic may reach 1.4 x Nyquist, folding back above
-0.29 fs at most, the usual trade between aliasing and dullness). A level change
-crossfades over one control block.
+- `fxme::MipmappedBuffer`: the recording as an octave pyramid (each level the
+  previous one low-passed by a 63-tap windowed sinc and decimated by two).
+- `fxme::SourceAnalysis`: every rising zero crossing and a period track (one
+  period estimate every 2048 samples), for snapping.
 
-**Per-voice position (decided: build the cache in v1).** Every cam has its own
-`WavetableCache` (32 sets by default, 8 to 64 in the settings, about 180 kB
-each). Positions are quantised into keys (width on a 1/96-octave grid, centre on
-a 64th of the width, overlap in 0.5 % steps). Each control block a voice computes
-its cam's modulated position; when its key changes it asks the cache: if ready it
-takes it and crossfades from its current set over 256 samples; if not, it posts a
-request (stream = voice and cam; only the latest request per stream is built) and
-keeps playing what it has. A note that starts before its exact table exists
-takes the nearest ready one. The engine also requests every cam's unmodulated
-position each block, so tables are ready before notes arrive. One worker thread
-builds for all four caches.
+Per cylinder, per sample (`fxme::RangeLoop`): the cycle is
+`[start, start + cycle)` of the source, read at `start + phase x cycle`, the
+`overlap` samples after it crossfaded into its start (live, so the wrap is
+continuous); with no overlap a polyBLEP band-limits the step at the wrap. The
+pyramid level follows the read speed (`cycle x frequency / sampleRate` source
+samples per output sample), fractional and blended between two octaves, with the
+same half-octave bias as before (the top of the band may fold back above 0.29 fs
+at worst). A DC blocker (8 Hz) follows, since a range of real audio rarely
+averages to zero.
 
-Concurrency: a slot carries a sequence counter (odd while being written) and a
-reference count. A reader increments the count then rechecks the counter; the
-worker makes the counter odd then checks the count, and backs off if anyone
-holds the slot. A held slot is never rebuilt. Sequentially consistent atomics
-make the two checks exclusive.
+Moving ranges: each control block the voice computes its cam's range from the
+(modulated) centre, lobe, overlap and snap, smooths it with a one-pole of 4 ms
+(this absorbs stepped automation and the jumps of a snapped range), and ramps
+start, cycle and overlap per sample towards it. A moving range is therefore a
+continuous scan of the source. Per-voice modulation of the range costs nothing
+extra: there is no cache, no worker and no build latency. A new note starts on
+its range directly; a new recording too (no glide across files).
 
-A new source bumps the cache generation (part of the key): voices crossfade to
-tables of the new source as they are built; old sets are recycled first.
+Snap: zero crossing moves both edges to the nearest rising zero crossings
+(within a quarter of the lobe, at most 2048 samples); period sets the lobe to a
+whole number of the periods detected at the centre and starts it on a zero
+crossing. Both are lookups in the precomputed analysis.
+
+The source reaches the audio thread through an atomic pointer with a hazard
+pointer (`CamEngine::setSource` / `beginBlock`): a replaced source is freed only
+once the audio thread has announced it uses the new one.
+
+The FxmeTools wavetable classes (`WavetableBuilder`, `WavetableCache`...) stay
+in the library and are still used for the cam profile display (built on the
+message thread from the unmodulated range).
 
 ## Modulation
 
@@ -135,7 +143,8 @@ aftertouch (channel and poly), pitch bend, mod wheel, 4 assignable CCs (CC 20 to
 23 by default), the 4 cams' amp envelopes, a per-voice random value.
 
 Slots: LFO (per voice or global free-running, locked to the host while it
-plays), ADSR (per voice), curve (per voice, or global when "stick to DAW time":
+plays: its phase is the host position, taken at the end of each control span
+like every modulator value, and kept exact whatever the host's block size), ADSR (per voice), curve (per voice, or global when "stick to DAW time":
 its position comes from the host's PPQ). Each has an output level.
 
 Destinations: one flat index space (`CamParams.h`): cam fields and modulator
@@ -166,8 +175,9 @@ division, always or legato only, from the last note played. A voice ends when
 every cam's amp envelope is idle and no curve release region is still playing.
 
 Cost (`tests/EngineTest.cpp`, this machine, -O2): 24 voices x 4 cams x 4
-cylinders with both filters on, 45 to 55 % of one core; a 3-note chord of two
-cams, under 3 %.
+cylinders with both filters on, about 90 % of one core (reading from the
+pyramid blends two octaves, so two reads per channel where a table needed one);
+a 3-note chord of two cams, a few percent.
 
 ## Cross-modulation (timing belt)
 
@@ -184,7 +194,7 @@ The APVTS state root ("Parameters") carries:
 
 - the host parameters (`PARAM` children);
 - `<Structure>`: routes, belt, curves, CC numbers, MIDI learn map, randomize
-  locks, the cache size, and the sample player's markers (reserved in schema 1);
+  locks, and the sample player's markers (reserved in schema 1);
 - `<EmbeddedAudio>` (fxme::EmbeddedAudio: the original file, deflated float WAV
   in Base64; the plan said FLAC, which EmbeddedAudio dropped because it clamps
   peaks above full scale) and `<SourceOptions>` (channels, normalise, original
@@ -207,10 +217,11 @@ holds every FxmeFX effect, as in MechanOdd.
 
 - Audio: `processBlock` (engine render, effects, limiter). No locks, no
   allocation once prepared.
-- Table worker (`fxme::WavetableWorker`, std::thread): builds table sets.
-- Source loader (`SourceManager::Loader`): decodes the embedded audio from a
-  detached copy of the state, applies the options, hands the source to the
-  engine and the editor.
+- Source loader (`SourceManager::Loader`): imports a file (embeds it into a
+  detached tree, handed to the state on the message thread when done), decodes
+  the embedded audio from a detached copy of the state, applies the options,
+  hands the source to the engine and the editor. A failed decode keeps the
+  current audio and reports why.
 - Effect loader (as in MechanOdd): IR loading for Cab / Reverb slots.
 - Message thread: editor, structure edits, MIDI learn assignments (fed from the
   audio thread through a FIFO), presets.

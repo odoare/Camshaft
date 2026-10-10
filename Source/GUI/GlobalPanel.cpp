@@ -29,13 +29,9 @@ namespace
         "moves the pitch). Glide slides from one note to the next, in "
         "milliseconds or in a tempo division, always or only between notes "
         "played legato.\n\n"
-        "Interpolation: how the tables are read between their samples. Cubic is "
+        "Interpolation: how the audio is read between its samples. Cubic is "
         "clean everywhere; sinc is the flattest for bright sounds, linear the "
         "cheapest.\n\n"
-        "Table cache: how many prebuilt tables each cam keeps. Modulating a "
-        "cam's centre or lobe per voice (velocity, key, a per-voice LFO) builds "
-        "a table per position; a larger cache keeps more of them ready (about "
-        "180 kB each).\n\n"
         "CC sources: the controller numbers of the four CC modulation sources.\n\n"
         "MIDI learn: right-click any knob, Learn MIDI, move a controller. The "
         "map is saved with the session and presets; saved as default, new "
@@ -63,14 +59,6 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
     glideDiv = &combo (ids::glideDiv, tips::global::glideDivision);
     glideMode = &combo (ids::glideMode, tips::global::glideMode);
     interp = &combo (ids::interp, tips::global::interpolation);
-
-    for (int slots : { 16, 32, 48, 64 })
-        cacheBox.addItem (juce::String (slots) + " tables per cam", slots);
-    cacheBox.setSelectedId (processor.getStructure().getCacheSlots(), juce::dontSendNotification);
-    cacheBox.setTooltip (tips::global::cache);
-    cacheBox.onChange = [this] { processor.setCacheSlots (cacheBox.getSelectedId()); };
-    theme::accentCombo (cacheBox, theme::accent);
-    addAndMakeVisible (cacheBox);
 
     for (int i = 0; i < 4; ++i)
     {
@@ -160,7 +148,6 @@ void GlobalPanel::resized()
     r.removeFromTop (16);
     line = r.removeFromTop (24);
     interp->setBounds (line.removeFromLeft (line.getWidth() / 2).reduced (2, 1));
-    cacheBox.setBounds (line.reduced (2, 1));
     r.removeFromTop (6);
 
     r.removeFromTop (16);

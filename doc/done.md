@@ -2,6 +2,72 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Modulator meters drawn on one scale (2026-10-09)
+
+The small bars under the modulator chips jumped at every zero crossing of a
+bipolar LFO: positive values were drawn from the left edge over the full width,
+negative ones from the centre at half scale. A bipolar source now grows from
+the centre both ways (-1 at the left edge, +1 at the right), a unipolar one from
+the left edge, refreshed at 30 Hz instead of 15. The engine side was checked
+first: a new engine test samples the published value of a 2 Hz LFO under a held
+note, and its largest step per block stays within the sine's own slope.
+
+## Ranges read live from the source; LFO phase fixes (2026-10-09)
+
+- **Moving ranges still glitched** after the first fix. The cause was the
+  design: one precomputed table per range position, so a moving range was a
+  series of crossfades between different waveforms. The engine now reads each
+  range straight from the source (an octave pyramid built at load, the level
+  following the read speed, the overlap crossfaded live, a polyBLEP at the wrap
+  when there is no overlap), with start, cycle and overlap smoothed and ramped
+  per sample: a moving range is a continuous scan. The table cache, its worker
+  and the "table cache" setting are gone; snapping uses zero crossings and a
+  period track computed at load. Checked: the sweep test (mid-sweep sound
+  matches a held note), new core tests (the pyramid does not alias at speed 8,
+  its levels line up with the source, an overlapped loop wraps without a step,
+  the period track and zero crossings). Cost: the full-load test now takes
+  about 90 % of one core (two octaves blended per read); see todo 10.
+- **LFO phase.** The phase knob was ignored at note-on: the voice restarted
+  its LFOs before giving them that block's parameters, so a note started from
+  the previous note's phase. `ModulationLfo::noteOn` now takes the start phase
+  at the next advance. And a global LFO locked to the host jittered by up to
+  32 samples per block with host block sizes that are not multiples of 32 (it
+  took the block's start position for the first control update, which comes
+  later); it now uses the exact position, at the end of each control span like
+  every other modulator. Both pinned by tests (the host-lock test with
+  441-sample blocks fails with the old code, error 1.6e-2, against 4e-7).
+
+Existing sessions: they sound the same but for these fixes; the "table cache"
+property left in older states is ignored.
+
+## Smooth range moves; imported files load reliably (2026-10-09)
+
+From the first test in a host.
+
+- **Moving a centre or a lobe while playing stepped.** A voice only took the
+  table of the exact position it wanted; during a sweep that position changes
+  every control block and was never ready in time, so the voice kept its old
+  table until the sweep stopped, then jumped. It now moves to any ready table
+  closer to where it should be (`WavetableCache::distance`), while asking for
+  the exact one. And every table is now phase-aligned in the builder, so the
+  crossfade between two neighbouring tables no longer combs. Checked by a new
+  sweep test in `tests/EngineTest.cpp` (mid-sweep, the sound matches a note
+  held at that centre; with the old logic it was still the starting sine).
+- **A new file kept the built-in length, or did not load.** The cause was in
+  FxmeTools: `EmbeddedAudio::createReader` inflated from a destroyed
+  temporary, so large files failed at random, and `SourceManager` then fell
+  back to the built-in source without a word. Fixed in FxmeTools (see its
+  `api-changes.md`: ConvolReverb's external IRs and SuperMoTo had the same
+  latent bug). A decode failure now keeps the current audio and shows a
+  message. The import itself (encoding up to 60 s of float audio) moved off
+  the message thread, so the editor no longer freezes during it; the
+  embedded copy lands in the state when ready, and changing the channel or
+  normalise option meanwhile re-runs the import, while a session or preset
+  load cancels it.
+
+Existing sessions: none affected (playheads aside, a table's rotation is not
+audible on a held note).
+
 ## First implementation of the v1 plan (2026-10-09)
 
 The whole of `doc/Range wavetable synth - development plan.md`, milestones 1

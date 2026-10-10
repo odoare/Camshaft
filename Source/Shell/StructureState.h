@@ -12,7 +12,7 @@
         <CcSources   cc1="20" cc2="21" cc3="22" cc4="23"/>
         <MidiLearn>  <Map cc="74" param="r1_f1_cutoff"/> ...
         <Locks>      <Lock param="r1_volume"/> ...                (randomize locks)
-        <Settings    cacheSlots="32"/>
+        <Settings/>                                              (reserved)
         <Cams>       <Cam index="0" mode="wavetable" attack="0" loopStart="0"
                           loopEnd="0" release="0" rootKey="60"/> (reserved for the
                                                                   sample player)
@@ -52,7 +52,6 @@ class StructureState : public juce::ChangeBroadcaster,
 {
 public:
     static constexpr int schemaVersion = 1;
-    static constexpr int defaultCacheSlots = 32;
 
     StructureState (juce::AudioProcessorValueTreeState& apvts, cam::CamEngine& engine, const Destinations& destinations);
     ~StructureState() override;
@@ -107,8 +106,6 @@ public:
     bool isLocked (const juce::String& paramID) const;
     void setLocked (const juce::String& paramID, bool locked);
 
-    int getCacheSlots() const;
-    void setCacheSlots (int slots);
 
     //==========================================================================
     /** The <Structure> child (made, with its sections, if missing). */

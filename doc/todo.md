@@ -34,6 +34,11 @@ Numbered for reference; numbers are never reused (finished items move to
    lose their dry signal. The plan lists it under the aux chains without saying
    whose dry path it mutes.
 
+24. **Live reading instead of the table cache** (decision, made 2026-10-09 to
+   stop the glitches; confirm). The plan's "When the range moves" section (table
+   rebuilds, crossfades, a per-voice cache) no longer applies: see
+   architecture.md, "Reading the ranges".
+
 6. **Engine location** (decision). The voice and engine are JUCE-free but live in
    `Source/Engine`, not FxmeTools' `core/synth` as the plan said: they are
    Camshaft-specific, and every reusable piece went into FxmeTools. Confirm.
@@ -58,14 +63,17 @@ Numbered for reference; numbers are never reused (finished items move to
 
 ## Engine
 
-10. **CPU** (medium). 45 to 55 % of one core at full load (this machine). Candidates: skip the old-set
-    read when a table crossfade is not running for a cylinder, a cheaper segment
-    curve than two `exp` per sample in `CurveAdsr`, vectorising the cylinder
-    loop, processing cams outside the sample loop when no belt link exists.
+10. **CPU** (medium). About 90 % of one core at full load (24 voices x 4 cams x
+    4 cylinders, this machine), since ranges are read live from the pyramid,
+    blending two octaves. Candidates: read one level when the speed is steady
+    and blend only while it moves, linear reads on the upper levels (heavily
+    oversampled), a cheaper segment curve than two `exp` per sample in
+    `CurveAdsr`, vectorising the cylinder loop, processing cams outside the
+    sample loop when no belt link exists.
 
-11. **FM and mip levels** (low). The level follows the cylinder's frequency, not
-    the FM sidebands: strong FM on high notes can alias. Raise the level by the
-    FM index when a cam is an FM target.
+11. **FM and pyramid levels** (low). The level follows the read speed without
+    FM; strong FM on high notes can alias. Raise the level by the FM index when
+    a cam is an FM target.
 
 12. **Velocity curve** (low). Velocity is linear everywhere.
 
