@@ -85,6 +85,10 @@ public:
     /** The routes into `paramID`. */
     juce::Array<int> routesTo (const juce::String& paramID) const;
 
+    /** Changes whenever a route changes (or a whole state is loaded): a
+        display can keep what it derived from the routes until it moves. */
+    int getRoutesVersion() const noexcept { return routesVersion; }
+
     //==========================================================================
     // Timing belt (cross-modulation between cams)
 
@@ -146,6 +150,7 @@ private:
 
     // Read by the editor many times a second: kept out of the tree.
     std::array<Route, cam::maxRoutes> routeCache;
+    int routesVersion = 0;
     std::set<juce::String> lockCache;
 };
 

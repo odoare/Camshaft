@@ -174,22 +174,7 @@ void WaveformView::paint (juce::Graphics& g)
         return;
     }
 
-    // The waveform: min / max per pixel column, channels overlaid.
-    const int w = (int) area.getWidth();
-    const float mid = area.getCentreY(), half = area.getHeight() * 0.48f;
-    for (size_t ch = 0; ch < view->overview.size(); ++ch)
-    {
-        g.setColour ((ch == 0 ? theme::text : theme::steel).withAlpha (ch == 0 ? 0.55f : 0.35f));
-        const auto& pyramid = view->overview[ch];
-        for (int x = 0; x < w; ++x)
-        {
-            const int a = (int) (viewStart + viewLength * (double) x / (double) w);
-            const int b = juce::jmax (a + 1, (int) (viewStart + viewLength * (double) (x + 1) / (double) w));
-            float lo, hi;
-            pyramid.rangeAt (a, b, lo, hi);
-            g.drawVerticalLine ((int) area.getX() + x, mid - hi * half, mid - lo * half + 1.0f);
-        }
-    }
+    drawWaveform (g, area);
 
     // The cams' ranges, cam 1 on top.
     for (int c = numCams; --c >= 0;)
@@ -370,6 +355,41 @@ void WaveformView::paintProbe (juce::Graphics& g) const
         marker (x0, moves[0]);
         marker (x1, true);
     }
+}
+
+void WaveformView::drawWaveform (juce::Graphics& g, juce::Rectangle<float> area)
+{
+    const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+    const int w = juce::jmax (1, juce::roundToInt (area.getWidth() * scale));
+    const int h = juce::jmax (1, juce::roundToInt (area.getHeight() * scale));
+    const bool stale = ! waveImage.isValid() || waveImage.getWidth() != w || waveImage.getHeight() != h
+                    || std::abs (imageStart - viewStart) > 1.0e-9 || std::abs (imageLength - viewLength) > 1.0e-9
+                    || std::abs (imageScale - scale) > 1.0e-6f || imageSource != view.get();
+    if (stale)
+    {
+        // Min / max per pixel column (physical pixels), channels overlaid.
+        waveImage = juce::Image (juce::Image::ARGB, w, h, true);
+        juce::Graphics ig (waveImage);
+        const float mid = (float) h * 0.5f, half = (float) h * 0.48f;
+        for (size_t ch = 0; ch < view->overview.size(); ++ch)
+        {
+            ig.setColour ((ch == 0 ? theme::text : theme::steel).withAlpha (ch == 0 ? 0.55f : 0.35f));
+            const auto& pyramid = view->overview[ch];
+            for (int x = 0; x < w; ++x)
+            {
+                const int a = (int) (viewStart + viewLength * (double) x / (double) w);
+                const int b = juce::jmax (a + 1, (int) (viewStart + viewLength * (double) (x + 1) / (double) w));
+                float lo, hi;
+                pyramid.rangeAt (a, b, lo, hi);
+                ig.drawVerticalLine (x, mid - hi * half, mid - lo * half + 1.0f);
+            }
+        }
+        imageStart = viewStart;
+        imageLength = viewLength;
+        imageScale = scale;
+        imageSource = view.get();
+    }
+    g.drawImage (waveImage, area, juce::RectanglePlacement::stretchToFit);
 }
 
 void WaveformView::resized() {}

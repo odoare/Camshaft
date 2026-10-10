@@ -2,6 +2,46 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## CPU, first pass (2026-10-10)
+
+About 30 % less CPU at the same sound, measured against the previous code
+(alternating runs, best of each, this laptop's clock varies with its heat): 8
+voices x 1 cam from 3.3 to 2.2 % of one core, 8 voices x 4 cams x 4 cylinders
+with both filters from 32 to 23 %, the full load from 97 to 70 %.
+
+- The voice renders one cam at a time over the control block (in the timing
+  belt's order, so a cam's output is complete before the cams it modulates
+  read it), one cylinder at a time inside it, the loop compiled per
+  interpolation and per mono / stereo source: about 22 %. Checked against the
+  previous code on a patch with FM, ring, AM, self FM, stealing, both send
+  taps and a stereo source: the same output within 2e-5 of full scale (strong
+  self FM is chaotic and drifts apart from any change of rounding, as it
+  would from one build to another).
+- Stereo files read both channels with the position arithmetic shared, the
+  cubic as four weights shared by the channels (FxmeTools
+  `MipmappedBuffer::readPair`): about 7 %.
+- The equal-power crossfade of the overlap uses a polynomial instead of sin
+  and cos; the amp envelopes carry their exponential from sample to sample
+  instead of two `exp` per sample (FxmeTools `CurveAdsr`, in double so a
+  long segment does not drift); a filter pair computes its coefficients once
+  and only when they change; a cylinder's pyramid level comes from its pitch
+  without a logarithm.
+- GUI: the waveform is drawn once into an image (it was redrawn column by
+  column 30 times a second while notes played); the knobs on hidden pages
+  skip their timer, and the others keep their list of routes until the routes
+  change.
+
+## Decisions settled (2026-10-10)
+
+- **1. First build and run**: done; it works as expected.
+- **4. Source rate**: the recording keeps its own rate. It is read at any
+  speed through the pyramid, so resampling it to the session rate would gain
+  nothing, and a duration in samples means the same sound at any session rate.
+- **5. Dry mute**: per Turbo, as implemented.
+- **6. Engine location**: stays in `Source/Engine` for now.
+- **24. Live range reading**: kept.
+- **17. On-screen keyboard**: dropped, not wanted.
+
 ## Curve editor beat grid (2026-10-10)
 
 When a curve modulator's duration is in beats, its editor draws the beat grid

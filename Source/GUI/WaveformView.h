@@ -127,6 +127,15 @@ private:
 
     int probeSlot = -1;
     float probeValue = 0.0f;
+
+    // The waveform drawn once into an image, redrawn only when the view, the
+    // size, the scale or the recording changes: repaints while notes play
+    // (the live lanes, 30 times a second) only draw what is on top of it.
+    juce::Image waveImage;
+    double imageStart = -1.0, imageLength = -1.0;
+    float imageScale = 0.0f;
+    const void* imageSource = nullptr;
+    void drawWaveform (juce::Graphics& g, juce::Rectangle<float> area);
 };
 
 } // namespace camshaft

@@ -160,12 +160,22 @@ float CamKnob::liveValue() const
 
 void CamKnob::timerCallback()
 {
+    // A knob on a hidden page or tab has nothing to show.
+    if (! isShowing())
+        return;
+
     auto& structure = processor.getStructure();
     auto& apvts = processor.getAPVTS();
 
+    if (structure.getRoutesVersion() != routesSeen)
+    {
+        routesIn = structure.routesTo (paramID);
+        routesSeen = structure.getRoutesVersion();
+    }
+
     float lo = 0.0f, hi = 0.0f;
     bool ring = false;
-    for (int i : structure.routesTo (paramID))
+    for (int i : routesIn)
     {
         const auto r = structure.getRoute (i);
         const float d = apvts.getRawParameterValue (ids::routeDepth (i))->load();

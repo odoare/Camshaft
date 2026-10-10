@@ -195,10 +195,18 @@ their current level, legato only moves the pitch. Glide: time in ms or a tempo
 division, always or legato only, from the last note played. A voice ends when
 every cam's amp envelope is idle and no curve release region is still playing.
 
-Cost (`tests/EngineTest.cpp`, this machine, -O2): 24 voices x 4 cams x 4
-cylinders with both filters on, about 90 % of one core (reading from the
-pyramid blends two octaves, so two reads per channel where a table needed one);
-a 3-note chord of two cams, a few percent.
+Rendering order: per control block, one cam at a time over the whole span, in
+the timing belt's order (a cam's first-cylinder output is complete, in
+`outBuf`, before the cams it modulates read it; self FM is computed inside the
+first cylinder's loop from its previous sample), one cylinder at a time inside
+it, the loop compiled per interpolation and per mono / stereo source. Stereo
+reads share their position arithmetic (`MipmappedBuffer::readPair`).
+
+Cost (best of alternating runs, -O3, a laptop i7-10810U whose clock varies with
+its heat): 8 voices x 4 cams x 4 cylinders with both filters, 21 to 23 % of one
+core on a stereo file; the full load (24 voices), 63 to 70 %. The cylinder
+reads are 70 % of that, a third of each read being the second octave of the
+blend; control-rate updates about 9 %. See todo 10 for what is left.
 
 ## Cross-modulation (timing belt)
 

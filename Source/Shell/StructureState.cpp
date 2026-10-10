@@ -169,6 +169,7 @@ void StructureState::refreshCaches()
 {
     for (int i = 0; i < maxRoutes; ++i)
         routeCache[(size_t) i] = readRoute (i);
+    ++routesVersion;
 
     lockCache.clear();
     for (const auto& lock : getSection (locksType))
@@ -217,6 +218,7 @@ void StructureState::setRoute (int i, const Route& r)
         node.setProperty ("via", ids::sourceKey (r.via), nullptr);
     }
     routeCache[(size_t) i] = r.isUsed() ? r : Route();
+    ++routesVersion;
     pushRoute (i);
 
     // Routing from (or through) a modulator that is off switches it on, as

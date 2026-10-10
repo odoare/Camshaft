@@ -82,6 +82,8 @@ private:
 
     // What is drawn, refreshed by the timer.
     float ringLo = 0.0f, ringHi = 0.0f;
+    juce::Array<int> routesIn;     // the routes into this knob, kept until the routes change
+    int routesSeen = -1;
     bool hasRing = false;
     float live = -1.0f;
     bool mapped = false, locked = false, learning = false, dropHover = false;

@@ -9,7 +9,12 @@
     Per control block (cam::controlBlock samples) control() evaluates the
     voice's modulators and the matrix and turns the result into oscillator
     increments, filter settings and gain ramps; render() then runs the
-    samples, ramping every gain linearly over the block.
+    samples, ramping every gain linearly over the block. It renders one cam
+    at a time over the whole span (in the timing belt's order, so a cam's
+    output is complete before the cams it modulates read it), one cylinder
+    at a time inside it: the inner loops stay short and keep their state in
+    registers, and are compiled per interpolation and per mono / stereo
+    source.
 
     The oscillator reads the cam's range straight from the source pyramid
     (fxme::RangeLoop over fxme::MipmappedBuffer): start, cycle length and
@@ -137,7 +142,8 @@ private:
         bool dryMuted = false;
         float lift[numCams] {}, liftStep[numCams] {};
 
-        float out0 = 0.0f;           // first cylinder's oscillator output, for cross-modulation
+        float out0 = 0.0f;                  // first cylinder's last output, for self FM
+        float outBuf[controlBlock] {};      // first cylinder's output over the span, for the cams it modulates
         float velocityGain = 1.0f;
     };
 
@@ -146,7 +152,10 @@ private:
     void applyCamModulation();
     void updateCam (int c, bool snap);
     void updateRange (int c, bool snap);
-    float stealGain() noexcept;
+    void renderSpan (const Buses& out, int offset, int n, float* const* display, const float* steal);
+    void renderCam (int c, const Buses& out, int offset, int n, float* const* display, const float* steal);
+    template <int Interpolation, bool Stereo>
+    void renderCylinders (Cam& k, int n, float* fm, const float* selfLift, float* left, float* right);
 
     const EngineState* state = nullptr;
     int index = 0;
