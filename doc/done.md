@@ -2,6 +2,16 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Knob read-outs fitted; lighter waveform (2026-10-11)
+
+- A knob's or bar's value no longer ends in "..." when it is too wide: its
+  font shrinks to a readable floor, then its unit goes ("2048 smp" reads
+  "2048"), and only then is it drawn small across the whole control (FxmeTools
+  `FxmeLookAndFeel::drawFittedText`, so the FxmeFX plugins get it too).
+- The waveform is drawn in a light grey (it was too dark to read).
+- The duration knob shows its number of samples without "smp" (the tooltip
+  names the unit), so it stays at full size.
+
 ## Effects in the bottom band; FxmeReverb; compact effect panels (2026-10-11)
 
 - The Effects tab and the top tabs are gone: Turbo 1, Turbo 2 and the Exhaust

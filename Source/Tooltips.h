@@ -48,7 +48,7 @@ namespace camshaft::tips::cam
     inline constexpr auto pageMix      = "Volume, pan, the Turbo sends, and the lift of the belts driving this cam.";
 
     inline constexpr auto start        = "Opening (range start): where in the file the range begins (0 = start of the file, 100 % = end).";
-    inline constexpr auto length       = "Duration (range length): how long the range lasts, in samples of the file, from its opening (cut short at the end of the file). The whole range is one cycle of the wave.";
+    inline constexpr auto length       = "Duration (range length), in samples of the file: how long the range lasts from its opening (cut short at the end of the file). The whole range is one cycle of the wave.";
     inline constexpr auto overlap      = "Overlap: loop crossfade length, as a share of the duration. Blends the end of the range into its start so the cycle wraps smoothly.";
     inline constexpr auto overlapShape = "Overlap shape: linear or equal-power crossfade.";
     inline constexpr auto snap         = "Snap: move the edges to zero crossings, or make the duration a whole number of periods of the sound.";

@@ -40,7 +40,7 @@ juce::String formatValue (const ParamSpec& spec, float v)
     if (unit == "st")
         return (v > 0 ? "+" : "") + juce::String (juce::roundToInt (v)) + " st";
     if (unit == "smp")
-        return juce::String (juce::roundToInt (v)) + " smp";
+        return juce::String (juce::roundToInt (v));   // the number alone, to stay large on the knob; the tooltip names the unit
     if (unit == "x")
         return juce::String (v, 2) + " x";
     if (unit == "beats")
