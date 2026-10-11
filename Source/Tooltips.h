@@ -134,7 +134,7 @@ namespace camshaft::tips::matrix
 
 namespace camshaft::tips::belt
 {
-    inline constexpr auto view = "Timing belt: cams modulating cams. Drag from one pulley to another to connect them (FM); click a belt's badge to change it (FM, ring, AM, off); double-click a pulley for feedback FM. Loops are refused.";
+    inline constexpr auto view = "Timing belt: cams modulating cams. Drag from one pulley to another to connect them (FM); click a belt's badge to change it (FM, ring, AM, sync, opening, off); double-click a pulley for feedback FM. Loops are refused. Sync restarts the driven cam's cycle at each cycle of the driving one (its lift sweeps the driven cam up to three octaves); Opening moves the driven cam's read position with the driving cam's output.";
     inline constexpr auto lift = "Lift: the amount of this connection.";
 }
 

@@ -12,7 +12,7 @@ lasts) as one cycle of a wave and play
 it as a band-limited wavetable at the note's pitch. Each cam has its own
 cylinders (unison), two filters, amp envelope, mix and sends; 16 modulators and
 the MIDI sources drive any parameter through a 64-route matrix; cams modulate
-each other on the timing belt (FM, ring, AM); two aux effect chains and a master
+each other on the timing belt (FM, ring, AM, sync, opening); two aux effect chains and a master
 chain reuse FxmeFX's effects, and a look-ahead rev limiter ends the chain.
 
 ## Layout and what lives where
@@ -214,9 +214,20 @@ blend; control-rate updates about 9 %. See todo 10 for what is left.
 
 ## Cross-modulation (timing belt)
 
-Per pair src -> dst: FM (phase offset of dst's read, index up to 8 rad at full
-lift), ring (`x (1 - lift + lift x src)`) or AM (`x (1 + lift x src)`), from the
-source's first cylinder (decided). Feedback FM on itself only. Lift is the
+Per pair src -> dst, from the source's first cylinder (decided):
+
+- FM: a phase offset of dst's read, index up to 8 rad at full lift.
+- Ring `x (1 - lift + lift x src)` and AM `x (1 + lift x src)`: the same
+  sidebands, ring removing dst's own pitch as the lift rises, AM keeping it.
+- Sync: each time src's cycle begins, dst's cylinders restart theirs from the
+  sub-sample moment it began (src records its cycle starts per sample,
+  `Cam::syncBuf`, before dst is rendered). The jump is band-limited with a
+  polyBLEP, its first half added on the sample before from a look-ahead
+  (missed only across a span boundary). The lift raises dst's pitch by up to
+  three octaves while synced: the classic sync sweep.
+- Opening: dst's read position moves by `lift x src x cycle` samples, at
+  audio rate (outside the range's smoothing).
+ Feedback FM on itself only. Lift is the
 destination cam's `xm<src>_lift` parameter (automatable, modulatable). Cycles are
 refused in the editor (`StructureState::setXmod`) and, if one ever reached the
 engine, all links but feedback would be dropped.

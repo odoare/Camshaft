@@ -113,7 +113,10 @@ inline constexpr const char* const durationModes[]  = { "Seconds", "Beats" };
 inline constexpr const char* const voiceModes[]     = { "Poly", "Mono", "Legato" };
 inline constexpr const char* const glideModes[]     = { "Always", "Legato only" };
 inline constexpr const char* const interpolations[] = { "Linear", "Cubic", "Sinc" };
-inline constexpr const char* const xmodTypes[]      = { "Off", "FM", "Ring", "AM" };
+inline constexpr const char* const xmodTypes[]      = { "Off", "FM", "Ring", "AM", "Sync", "Opening" };
+
+/** The timing belt's connection types (xmodTypes; stored by name). */
+enum XmodType { xmOff = 0, xmFm, xmRing, xmAm, xmSync, xmOpening, numXmodTypes };
 
 template <typename T, std::size_t N> constexpr int countOf (T (&)[N]) { return (int) N; }
 

@@ -79,7 +79,7 @@ struct EngineState
     // overwritten by each voice in its own copy.
     float globalSources[numSources] {};
 
-    // Cross-modulation: type of src -> dst (0 off, 1 FM, 2 ring, 3 AM).
+    // Cross-modulation: type of src -> dst (XmodType).
     int xmodType[numCams][numCams] {};
     int camOrder[numCams] { 0, 1, 2, 3 };
     bool camNeeded[numCams] {};

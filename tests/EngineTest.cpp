@@ -498,6 +498,64 @@ int main()
                "modulator progress published while a note plays");
     }
 
+    {
+        // Sync: cam 1, detuned by an interval no small ratio explains, synced
+        // to cam 2 repeats at cam 2's period; unsynced it does not. Opening:
+        // the belt changes the sound, and does nothing at zero lift.
+        auto render = [] (int type, float lift, std::vector<float>& out)
+        {
+            Rig rig;
+            rig.camVals[0][cfCoarse] = 5.0f;
+            rig.camVals[0][cfFine] = 37.0f;
+            rig.camVals[0][cfRandomPhase] = 0.0f;
+            rig.camVals[0][cfOverlap] = 0.0f;
+            rig.camVals[0][cfLift2] = lift;
+            rig.camVals[1][cfAudible] = 0.0f;      // drives only
+            rig.camVals[1][cfOpening] = 0.3f;
+            if (type != 0)
+                rig.engine.setXmod (1, 0, type);
+            bool finite = true;
+            rig.run (finite);
+            rig.engine.noteOn (69, 0.8f);         // 440 Hz: a period of 109.09 samples
+            out.clear();
+            for (int b = 0; b < 30; ++b)
+            {
+                rig.run (finite);
+                if (b >= 10)
+                    out.insert (out.end(), rig.buf[0].begin(), rig.buf[0].end());
+            }
+            return finite;
+        };
+        auto correlation = [] (const std::vector<float>& x, double lag)
+        {
+            double xy = 0.0, xx = 0.0, yy = 0.0;
+            const int whole = (int) lag;
+            const double frac = lag - whole;
+            for (size_t i = 0; i + (size_t) whole + 1 < x.size(); ++i)
+            {
+                const double a = x[i], b = x[i + (size_t) whole] * (1.0 - frac) + x[i + (size_t) whole + 1] * frac;
+                xy += a * b; xx += a * a; yy += b * b;
+            }
+            return xy / std::sqrt (xx * yy + 1.0e-30);
+        };
+        const double period = 48000.0 / 440.0;
+        std::vector<float> free, synced, opened, still;
+        const bool ok = render (0, 0.4f, free) && render (xmSync, 0.4f, synced)
+                     && render (xmOpening, 0.6f, opened) && render (xmOpening, 0.0f, still);
+        const double cFree = correlation (free, period), cSync = correlation (synced, period);
+        double diff = 0.0, diffStill = 0.0, energy = 0.0;
+        for (size_t i = 0; i < free.size(); ++i)
+        {
+            diff += (opened[i] - free[i]) * (opened[i] - free[i]);
+            diffStill += (still[i] - free[i]) * (still[i] - free[i]);
+            energy += free[i] * free[i];
+        }
+        check (ok, "sync and opening stay finite");
+        check (cSync > 0.95 && cFree < 0.8, "a synced cam repeats at its driver's period");
+        check (diff > 0.01 * energy && diffStill < 1.0e-8 * energy, "opening modulation moves the sound, not at zero lift");
+        std::printf ("  sync: correlation at the driver's period %.3f (unsynced %.3f)\n", cSync, cFree);
+    }
+
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);
     return failures == 0 ? 0 : 1;
 }

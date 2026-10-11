@@ -86,8 +86,9 @@ public:
         block (an automatable parameter). destination < 0 clears it. */
     void setRoute (int i, int source, int destination, int via) noexcept;
 
-    /** Cross-modulation from cam `src` to cam `dst` (0 off, 1 FM, 2 ring,
-        3 AM). The caller keeps the graph acyclic (fxme::ModGraph). */
+    /** Cross-modulation from cam `src` to cam `dst` (cam::XmodType: off,
+        FM, ring, AM, sync, opening). The caller keeps the graph acyclic
+        (fxme::ModGraph). */
     void setXmod (int src, int dst, int type) noexcept { xmod[(size_t) (src * numCams + dst)].store (type); }
     int getXmod (int src, int dst) const noexcept    { return xmod[(size_t) (src * numCams + dst)].load(); }
 

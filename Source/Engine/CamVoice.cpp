@@ -405,7 +405,14 @@ void CamVoice::updateCam (int c, bool snap)
 
     // Pitch and cylinders.
     const float semis = pitch + v[cfCoarse] + v[cfFine] * 0.01f + src[srcPitchBend] * state->pitchBendRange;
-    const double baseOctaves = ((double) semis - 69.0) / 12.0;     // relative to 440 Hz
+    // Synced by another cam: the belt's lift sweeps this one up to three
+    // octaves (the classic sync sweep: the pitch stays the driver's, the
+    // timbre moves).
+    double syncOctaves = 0.0;
+    for (int s = 0; s < numCams; ++s)
+        if (s != c && state->xmodType[s][c] == xmSync)
+            syncOctaves = fxme::jmax (syncOctaves, 3.0 * (double) v[cfLift1 + s]);
+    const double baseOctaves = ((double) semis - 69.0) / 12.0 + syncOctaves;     // relative to 440 Hz
     const int n = fxme::jlimit (1, maxCylinders, (int) std::lround (v[cfCylinders]));
     if (n != k.cylinders)
     {
@@ -684,6 +691,8 @@ void CamVoice::renderCam (int c, const Buses& out, int offset, int n, float* con
     {
         k.out0 = 0.0f;
         std::memset (k.outBuf, 0, sizeof (float) * (size_t) n);
+        std::fill (k.syncBuf, k.syncBuf + n, -1.0f);
+        k.syncCarry = -1.0f;
         if (display != nullptr)
             std::memset (display[c] + offset, 0, sizeof (float) * (size_t) n);
         return;
@@ -717,6 +726,31 @@ void CamVoice::renderCam (int c, const Buses& out, int offset, int n, float* con
             selfLift[i] = (k.lift[c] + k.liftStep[c] * (float) i) * toCycles;
     }
 
+    // Sync from a cam before this one: its cycle starts restart this one's.
+    const float* sync = nullptr;
+    for (int s = 0; s < numCams && sync == nullptr; ++s)
+        if (s != c && state->xmodType[s][c] == xmSync)
+            sync = cams[s].syncBuf;
+
+    // Opening modulation: the read position moves with the drivers' output,
+    // up to a cycle either way at full lift.
+    float opening[controlBlock];
+    bool anyOpening = false;
+    for (int s = 0; s < numCams; ++s)
+    {
+        if (s == c || state->xmodType[s][c] != xmOpening)
+            continue;
+        if (! anyOpening)
+            std::memset (opening, 0, sizeof (float) * (size_t) n);
+        anyOpening = true;
+        const float* from = cams[s].outBuf;
+        const float l0 = k.lift[s], dl = k.liftStep[s];
+        const float cycleSamples = (float) k.cycle;
+        for (int i = 0; i < n; ++i)
+            opening[i] += (l0 + dl * (float) i) * from[i] * cycleSamples;
+    }
+    const float* openingPtr = anyOpening ? opening : nullptr;
+
     // The cylinders, summed.
     float l[controlBlock] {}, r[controlBlock] {};
     const bool stereo = state->source->buffer.getNumChannels() > 1;
@@ -726,17 +760,17 @@ void CamVoice::renderCam (int c, const Buses& out, int offset, int n, float* con
     switch (state->interpolation)
     {
         case I::linear:
-            if (stereo) renderCylinders<(int) I::linear, true> (k, n, fmp, slp, l, r);
-            else        renderCylinders<(int) I::linear, false> (k, n, fmp, slp, l, r);
+            if (stereo) renderCylinders<(int) I::linear, true> (k, n, fmp, slp, sync, openingPtr, l, r);
+            else        renderCylinders<(int) I::linear, false> (k, n, fmp, slp, sync, openingPtr, l, r);
             break;
         case I::sinc:
-            if (stereo) renderCylinders<(int) I::sinc, true> (k, n, fmp, slp, l, r);
-            else        renderCylinders<(int) I::sinc, false> (k, n, fmp, slp, l, r);
+            if (stereo) renderCylinders<(int) I::sinc, true> (k, n, fmp, slp, sync, openingPtr, l, r);
+            else        renderCylinders<(int) I::sinc, false> (k, n, fmp, slp, sync, openingPtr, l, r);
             break;
         case I::cubic:
         default:
-            if (stereo) renderCylinders<(int) I::cubic, true> (k, n, fmp, slp, l, r);
-            else        renderCylinders<(int) I::cubic, false> (k, n, fmp, slp, l, r);
+            if (stereo) renderCylinders<(int) I::cubic, true> (k, n, fmp, slp, sync, openingPtr, l, r);
+            else        renderCylinders<(int) I::cubic, false> (k, n, fmp, slp, sync, openingPtr, l, r);
             break;
     }
 
@@ -883,6 +917,8 @@ void CamVoice::skipCam (Cam& k, int c, int offset, int n, float* const* display)
     // it (no one does: it feeds no cam).
     k.out0 = 0.0f;
     std::memset (k.outBuf, 0, sizeof (float) * (size_t) n);
+    std::fill (k.syncBuf, k.syncBuf + n, -1.0f);
+    k.syncCarry = -1.0f;
     if (display != nullptr)
         std::memset (display[c] + offset, 0, sizeof (float) * (size_t) n);
 
@@ -905,11 +941,18 @@ void CamVoice::skipCam (Cam& k, int c, int offset, int n, float* const* display)
 }
 
 template <int InterpolationMode, bool Stereo>
-void CamVoice::renderCylinders (Cam& k, int n, float* fm, const float* selfLift, float* left, float* right)
+void CamVoice::renderCylinders (Cam& k, int n, float* fm, const float* selfLift, const float* sync,
+                                const float* openingOffset, float* left, float* right)
 {
     constexpr auto mode = (fxme::WavetableReader::Interpolation) InterpolationMode;
     const auto& buffer = state->source->buffer;
     const bool equalPower = k.equalPower;
+
+    // This cam's own cycle starts, for the cams it syncs.
+    std::fill (k.syncBuf, k.syncBuf + n, -1.0f);
+    if (k.syncCarry >= 0.0f)
+        k.syncBuf[0] = k.syncCarry;
+    k.syncCarry = -1.0f;
 
     for (int u = 0; u < k.cylinders; ++u)
     {
@@ -925,9 +968,36 @@ void CamVoice::renderCylinders (Cam& k, int n, float* fm, const float* selfLift,
         // added to the FM in its loop; the other cylinders read the total.
         const bool addSelf = first && selfLift != nullptr;
         float prev = k.out0;
+        float pendingStepA = 0.0f, pendingStepB = 0.0f;   // a sync jump announced on the previous sample
 
         for (int i = 0; i < n; ++i)
         {
+            const double readStart = openingOffset != nullptr ? start + (double) openingOffset[i] : start;
+            const fxme::RangeLoop::Range range { readStart, cycle, overlap, equalPower };
+            auto valueAt = [&] (double p, float& va, float& vb)
+            {
+                if constexpr (Stereo)
+                    fxme::RangeLoop::readPair (buffer, level, range, p, mode, va, vb);
+                else
+                    vb = va = fxme::RangeLoop::read (buffer, 0, level, range, p, mode);
+            };
+
+            // Synced: this sample comes `since` samples after the driver's
+            // cycle began, so the cycle restarts from there. The jump in the
+            // waveform is band-limited like the loop's wrap: half of a
+            // polyBLEP before it (added on the previous sample, from the
+            // look-ahead below), half after.
+            float afterA = 0.0f, afterB = 0.0f;
+            if (sync != nullptr && sync[i] >= 0.0f)
+            {
+                const float since = sync[i];
+                phase = (double) since * inc;
+                const float r = -(1.0f - since) * (1.0f - since);
+                afterA = 0.5f * r * pendingStepA;
+                afterB = 0.5f * r * pendingStepB;
+            }
+            pendingStepA = pendingStepB = 0.0f;
+
             double ph = phase;
             if (fm != nullptr)
             {
@@ -937,12 +1007,25 @@ void CamVoice::renderCylinders (Cam& k, int n, float* fm, const float* selfLift,
                 ph -= std::floor (ph);
             }
 
-            const fxme::RangeLoop::Range range { start, cycle, overlap, equalPower };
             float a, b;
-            if constexpr (Stereo)
-                fxme::RangeLoop::readPair (buffer, level, range, ph, mode, a, b);
-            else
-                b = a = fxme::RangeLoop::read (buffer, 0, level, range, ph, mode);
+            valueAt (ph, a, b);
+            a += afterA;
+            b += afterB;
+
+            if (sync != nullptr && i + 1 < n && sync[i + 1] >= 0.0f)
+            {
+                // The next sample restarts the cycle: its jump is the
+                // restarted value minus the value it would have had.
+                const double next = phase + inc;
+                float ra, rb, ca, cb;
+                valueAt ((double) sync[i + 1] * inc, ra, rb);
+                valueAt (next - std::floor (next), ca, cb);
+                pendingStepA = ra - ca;
+                pendingStepB = rb - cb;
+                const float d2 = sync[i + 1] * sync[i + 1];
+                a += 0.5f * d2 * pendingStepA;
+                b += 0.5f * d2 * pendingStepB;
+            }
 
             if (overlap < 1.0)
             {
@@ -970,7 +1053,18 @@ void CamVoice::renderCylinders (Cam& k, int n, float* fm, const float* selfLift,
 
             phase += inc;
             if (phase >= 1.0)
+            {
                 phase -= std::floor (phase);
+                if (first)
+                {
+                    // A new cycle began between this sample and the next.
+                    const float since = (float) fxme::jmin (0.999, phase / fxme::jmax (1.0e-12, inc));
+                    if (i + 1 < n)
+                        k.syncBuf[i + 1] = since;
+                    else
+                        k.syncCarry = since;
+                }
+            }
             inc += incStep;
             level += levelStep;
             start += startStep;

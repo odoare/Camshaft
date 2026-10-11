@@ -9,7 +9,11 @@
         the second. A connection that would close a loop (A -> B -> A) is
         refused, and the belt flashes red.
       - Double-click a pulley: feedback FM on itself (on / off).
-      - Click a belt's badge: FM -> Ring -> AM -> removed.
+      - Click a belt's badge: FM -> Ring -> AM -> Sync -> Opening -> removed.
+        Sync restarts the driven cam's cycle at each cycle of the driving one
+        (its lift sweeps the driven cam up to three octaves, the classic sync
+        sweep); Opening moves the driven cam's read position with the
+        driving cam's output (its lift: up to one cycle either way).
       - The small knob on each belt is its lift (amount), the cfLift
         parameter of the cam it drives, so it is automatable and can be
         modulated.

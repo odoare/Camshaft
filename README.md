@@ -8,7 +8,8 @@ whatever its length, so a slice of a voice, a drum loop or a field recording
 becomes an oscillator. Each range (a "cam") has its own unison, two filters,
 amp envelope, mix and effect sends; sixteen modulators (LFOs, envelopes, drawn
 curves) and the MIDI sources can drive any knob, including where each range
-sits in the file, per voice; the cams can modulate each other (FM, ring, AM);
+sits in the file, per voice; the cams can modulate each other (FM, ring, AM, hard sync, and opening
+modulation, which moves a cam's read position at audio rate);
 two effect chains and a master chain reuse the FxmeFX effects.
 
 The audio is stored inside the session and the presets, so a patch never

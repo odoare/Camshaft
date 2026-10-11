@@ -39,12 +39,10 @@ const juce::Identifier StructureState::versionProperty ("schemaVersion");
 
 namespace
 {
-    const char* const xmodNames[] = { "Off", "FM", "Ring", "AM" };
-
     int xmodFromName (const juce::String& s)
     {
-        for (int i = 1; i < 4; ++i)
-            if (s == xmodNames[i])
+        for (int i = 1; i < numXmodTypes; ++i)
+            if (s == xmodTypes[i])
                 return i;
         return 0;
     }
@@ -357,7 +355,7 @@ bool StructureState::setXmod (int src, int dst, int type)
         juce::ValueTree link (linkType);
         link.setProperty ("src", src, nullptr);
         link.setProperty ("dst", dst, nullptr);
-        link.setProperty ("type", xmodNames[juce::jlimit (0, 3, type)], nullptr);
+        link.setProperty ("type", xmodTypes[juce::jlimit (0, numXmodTypes - 1, type)], nullptr);
         belt.appendChild (link, nullptr);
     }
     engine.setXmod (src, dst, type);

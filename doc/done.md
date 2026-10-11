@@ -2,6 +2,21 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Timing belt: sync and opening modulation (2026-10-11)
+
+Two new belt types (appended to `XmodType`, stored by name):
+- **Sync**: the driven cam's cycle restarts at each cycle of the driving cam,
+  at the sub-sample moment it began, the jump band-limited (polyBLEP, half
+  before from a look-ahead, half after). The lift sweeps the driven cam up to
+  three octaves while synced. Checked: a cam detuned by an irrational interval
+  repeats at its driver's period once synced (correlation 0.999 against
+  -0.34 free).
+- **Opening**: the driving cam's output moves the driven cam's read position
+  at audio rate, up to a cycle either way at full lift. Checked: it changes
+  the sound, and nothing at zero lift.
+
+Patches without them are unchanged (same output as before within 2e-5).
+
 ## Modulator shape displays; short labels (2026-10-11)
 
 - The LFO and ADSR editors keep their controls on the left half and show the

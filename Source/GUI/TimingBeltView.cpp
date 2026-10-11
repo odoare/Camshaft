@@ -30,7 +30,7 @@ using namespace cam;
 
 namespace
 {
-    const char* const typeNames[] = { "", "FM", "RING", "AM" };
+    const char* const typeNames[] = { "", "FM", "RING", "AM", "SYNC", "OPEN" };
 }
 
 TimingBeltView::TimingBeltView (CamshaftAudioProcessor& p) : processor (p)
@@ -269,10 +269,11 @@ void TimingBeltView::mouseDown (const juce::MouseEvent& e)
     const auto [s, d] = badgeAt (e.position);
     if (s >= 0)
     {
-        // Cycle FM -> Ring -> AM -> removed (feedback can only be FM).
+        // Cycle FM -> Ring -> AM -> Sync -> Opening -> removed (feedback can
+        // only be FM).
         auto& structure = processor.getStructure();
         const int type = structure.getXmod (s, d);
-        const int next = (s == d) ? 0 : (type + 1) % 4;
+        const int next = (s == d) ? 0 : (type + 1) % numXmodTypes;
         structure.setXmod (s, d, next);
         return;
     }

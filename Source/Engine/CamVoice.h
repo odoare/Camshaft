@@ -154,6 +154,12 @@ private:
         bool silent = false;                // nothing of it can be heard this span (volume off, no send): not rendered unless it feeds another cam
         float out0 = 0.0f;                  // first cylinder's last output, for self FM
         float outBuf[controlBlock] {};      // first cylinder's output over the span, for the cams it modulates
+        // First cylinder's cycle starts over the span, for the cams it syncs:
+        // at sample i, how long ago (in samples, 0 to 1) its cycle began, or
+        // -1. A start between the span's last sample and the next span's
+        // first is carried over.
+        float syncBuf[controlBlock] {};
+        float syncCarry = -1.0f;
         float velocityGain = 1.0f;
     };
 
@@ -166,7 +172,8 @@ private:
     void renderCam (int c, const Buses& out, int offset, int n, float* const* display, const float* steal);
     void skipCam (Cam& k, int c, int offset, int n, float* const* display);
     template <int Interpolation, bool Stereo>
-    void renderCylinders (Cam& k, int n, float* fm, const float* selfLift, float* left, float* right);
+    void renderCylinders (Cam& k, int n, float* fm, const float* selfLift, const float* sync,
+                          const float* openingOffset, float* left, float* right);
 
     const EngineState* state = nullptr;
     int index = 0;
