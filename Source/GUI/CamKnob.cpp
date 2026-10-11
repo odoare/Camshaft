@@ -146,6 +146,14 @@ CamKnob::CamKnob (CamshaftAudioProcessor& p, const juce::String& id, const juce:
     startTimerHz (15);
 }
 
+void CamKnob::setBarStyle()
+{
+    setSliderStyle (juce::Slider::LinearHorizontal);
+    setColour (juce::Slider::trackColourId, accent.darker (0.9f));
+    setColour (juce::Slider::backgroundColourId, theme::plotBack);
+    setColour (juce::Slider::textBoxOutlineColourId, accent.darker (1.2f));
+}
+
 CamKnob::~CamKnob()
 {
     stopTimer();
@@ -192,7 +200,11 @@ void CamKnob::timerCallback()
     for (int i : routesIn)
     {
         const auto r = structure.getRoute (i);
-        const float d = apvts.getRawParameterValue (ids::routeDepth (i))->load();
+        // The route's reach: its depth times the source's own amplitude (a
+        // modulator's output level).
+        float d = apvts.getRawParameterValue (ids::routeDepth (i))->load();
+        if (r.source >= srcModFirst && r.source < srcModFirst + numModulators)
+            d *= apvts.getRawParameterValue (ids::mod (r.source - srcModFirst, mfLevel))->load();
         if (cam::isZero (d))
             continue;
         ring = true;
@@ -259,7 +271,11 @@ void CamKnob::paint (juce::Graphics& g)
     };
 
     const float base = param != nullptr ? param->getValue() : 0.0f;
-    const float ringR = radius + 2.5f;
+    // Just outside the knob's arc, but inside the component: when the knob
+    // fills its height, the outlines move in rather than get cut off.
+    const float room = juce::jmin (cx - b.getX(), b.getRight() - cx, cy - b.getY()) - 1.5f;
+    const int shown = juce::jmin (4, (int) rings.size());
+    const float ringR = juce::jmin (radius + 2.5f, room - 3.0f * (float) juce::jmax (0, shown - 1));
 
     // The modulations, an outline per route in its source's colour, the
     // first one closest to the knob.

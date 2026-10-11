@@ -110,7 +110,7 @@ CamStrip::CamStrip (CamshaftAudioProcessor& p, int c)
         t.setButtonText (names[i]);
         t.setClickingTogglesState (false);
         t.setTooltip (tabTips[i]);
-        t.setColour (juce::TextButton::buttonOnColourId, colour.withAlpha (0.8f));
+        t.setColour (juce::TextButton::buttonOnColourId, colour.brighter (0.35f));
         t.setColour (juce::TextButton::textColourOnId, theme::background);
         t.setMouseClickGrabsKeyboardFocus (false);
         t.onClick = [this, i] { showPage (i); };
@@ -184,7 +184,7 @@ void CamStrip::buildFilterPage()
 
     auto& routing = page.combo (apvts, ids::cam (cam, cfFilterRouting), colour, tips::cam::routing);
     balanceKnob = &knob (page, cfFilterBalance, tips::cam::balance, true);
-    balanceKnob->setSliderStyle (juce::Slider::LinearHorizontal);
+    balanceKnob->setBarStyle();
     page.addRow ({ &routing, balanceKnob }, 22);
 
     for (int fi = 0; fi < 2; ++fi)

@@ -72,10 +72,10 @@ EffectsTab::EffectsTab (CamshaftAudioProcessor& p)
     for (int a = 0; a < numAux; ++a)
     {
         returnKnobs[(size_t) a] = std::make_unique<CamKnob> (processor, ids::auxReturn (a), "Return", theme::auxColour (a));
-        returnKnobs[(size_t) a]->setSliderStyle (juce::Slider::LinearHorizontal);
+        returnKnobs[(size_t) a]->setBarStyle();
         returnKnobs[(size_t) a]->setTooltip (tips::effects::returnLevel);
         panKnobs[(size_t) a] = std::make_unique<CamKnob> (processor, ids::auxPan (a), "Pan", theme::auxColour (a), true);
-        panKnobs[(size_t) a]->setSliderStyle (juce::Slider::LinearHorizontal);
+        panKnobs[(size_t) a]->setBarStyle();
         panKnobs[(size_t) a]->setTooltip (tips::effects::returnPan);
         dryMutes[(size_t) a] = std::make_unique<fxme::FxmeButton> (apvts, ids::auxDryMute (a), "Dry mute", theme::auxColour (a));
         dryMutes[(size_t) a]->button.setTooltip (tips::effects::dryMute);
@@ -84,7 +84,7 @@ EffectsTab::EffectsTab (CamshaftAudioProcessor& p)
         addAndMakeVisible (*dryMutes[(size_t) a]);
     }
 
-    outputKnob.setSliderStyle (juce::Slider::LinearHorizontal);
+    outputKnob.setBarStyle();
     outputKnob.setTooltip (tips::effects::output);
     limiterButton.button.setTooltip (tips::effects::limiter);
     addAndMakeVisible (outputKnob);

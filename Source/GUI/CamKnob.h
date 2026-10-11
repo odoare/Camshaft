@@ -58,6 +58,11 @@ class CamKnob : public fxme::FxmeSlider,
                 private juce::Timer
 {
 public:
+    /** A horizontal bar instead of a knob, filled in a dark shade of its
+        accent so its value reads over it; the bright tone stays on the
+        line at the value's end (as FxmeFX's bars). */
+    void setBarStyle();
+
     CamKnob (CamshaftAudioProcessor& processor, const juce::String& paramID,
              const juce::String& label, juce::Colour accent, bool bipolar = false);
     ~CamKnob() override;

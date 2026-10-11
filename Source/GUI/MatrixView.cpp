@@ -91,7 +91,7 @@ MatrixRow::MatrixRow (CamshaftAudioProcessor& p, int i)
     : processor (p), index (i),
       depth (p, ids::routeDepth (i), "Depth", theme::steel, true)
 {
-    depth.setSliderStyle (juce::Slider::LinearHorizontal);
+    depth.setBarStyle();
     depth.setTooltip (tips::matrix::depth);
     sourceButton.setTooltip (tips::matrix::source);
     destButton.setTooltip (tips::matrix::destination);

@@ -282,9 +282,8 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     : processor (p), slot (s), colour (theme::modColour (s)), slotColour (theme::modColour (s)),
       shapeView (p, s, theme::modColour (s))
 {
-    // The header, the LFO's and the ADSR's controls in the slot's colour; the
-    // curve's in the plugin's accent (its sustain controls in the sustain
-    // region's blue).
+    // Every control in the slot's colour (the curve's sustain controls in
+    // the sustain region's blue).
     addChildComponent (shapeView);
     typeBox = &combo (mfType, tips::mods::type);
     level = &knob (mfLevel, tips::mods::level);
@@ -308,7 +307,6 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     releaseCurve = &knob (mfReleaseCurve, tips::mods::curve, true);
     velocity = &knob (mfVelocity, tips::mods::velocity);
 
-    colour = theme::accent;
     duration = &knob (mfDuration, tips::mods::duration);
     beats = &knob (mfBeats, tips::mods::beats);
     speed = &knob (mfSpeed, tips::mods::speed);
@@ -512,7 +510,7 @@ void ModulatorEditor::resized()
     header.removeFromLeft (80);
     typeBox->setBounds (header.removeFromLeft (90).reduced (2));
     level->setBounds (header.removeFromRight (120).reduced (2));
-    level->setSliderStyle (juce::Slider::LinearHorizontal);
+    level->setBarStyle();
     bipolar->setBounds (header.removeFromRight (80).reduced (2));
     area.removeFromTop (4);
 

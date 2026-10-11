@@ -2,6 +2,20 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## GUI: bars, modulation outlines, tab colours (2026-10-11)
+
+- Horizontal bars (modulator level, filter balance, route depths, Turbo
+  returns and pans, output) are filled in a dark shade of their accent, the
+  bright tone kept for the line at the value's end, so the value reads over
+  them (`CamKnob::setBarStyle`, as FxmeFX's bars).
+- The modulation outline around a knob spans the route's depth times the
+  modulator's output level (it showed the depth alone), and stays inside the
+  knob's bounds when the knob fills its height.
+- The curve editor's controls are in the slot's colour like the LFO's and the
+  ADSR's (its sustain controls stay blue).
+- The selected bottom tab (Belt & Viz, Modulators, Matrix) is lit in a light
+  orange, the cam pages' tabs in a lighter shade of their cam's colour.
+
 ## Timing belt: sync and opening modulation (2026-10-11)
 
 Two new belt types (appended to `XmodType`, stored by name):

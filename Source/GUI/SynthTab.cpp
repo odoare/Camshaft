@@ -97,7 +97,7 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
         auto& t = bottomTabs[(size_t) i];
         t.setButtonText (names[i]);
         t.setTooltip (tabTips[i]);
-        t.setColour (juce::TextButton::buttonOnColourId, theme::steel.withAlpha (0.7f));
+        t.setColour (juce::TextButton::buttonOnColourId, theme::accent.brighter (0.35f));
         t.setColour (juce::TextButton::textColourOnId, theme::background);
         t.setMouseClickGrabsKeyboardFocus (false);
         t.onClick = [this, i] { showBottom (i); };

@@ -114,7 +114,7 @@ private:
 
     CamshaftAudioProcessor& processor;
     int slot;
-    juce::Colour colour;                // the controls made next (the slot's colour, the accent for the curve's)
+    juce::Colour colour;                // the controls: the slot's colour
     juce::Colour slotColour;            // the modulator's own
     inline static const juce::Colour sustainBlue { 0xff40c0ff };
     int shownType = -1;
