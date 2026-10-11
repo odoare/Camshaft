@@ -615,7 +615,20 @@ void CamEngine::publishDisplay (int newest)
 
     display.newestVoice.store (newest, std::memory_order_relaxed);
     for (int m = 0; m < numModulators; ++m)
+    {
         display.modUsed[(size_t) m].store (state.modUsed[m], std::memory_order_relaxed);
+        float phase = -1.0f;
+        int stage = 0;
+        if (state.modUsed[m])
+        {
+            if (state.modIsGlobal[m] && (int) state.modValue[m][mfType] == mtLfo)
+                phase = (float) globalLfos[(size_t) m].getPhase();
+            else if (! state.modIsGlobal[m] && newest >= 0)
+                voices[(size_t) newest].getModulatorProgress (m, phase, stage);
+        }
+        display.modPhase[(size_t) m].store (phase, std::memory_order_relaxed);
+        display.modStage[(size_t) m].store (stage, std::memory_order_relaxed);
+    }
 
     for (int vi = 0; vi < maxVoices; ++vi)
     {

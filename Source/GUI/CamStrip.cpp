@@ -128,12 +128,25 @@ CamStrip::CamStrip (CamshaftAudioProcessor& p, int c)
 
 CamKnob& CamStrip::knob (ControlPage& page, int field, const char* tooltip, bool bipolar)
 {
-    // The filters' knobs sit in their filter's rows: "Cutoff", not "F1 cutoff".
+    // Short labels where the full names do not fit (the host names stay full).
     juce::String label (camSpecs[field].name);
-    if (label.startsWith ("F1 ") || label.startsWith ("F2 "))
+    const int filterField = field >= cfF2On ? field - filterFieldStride : field;
+    switch (filterField)
     {
-        label = label.substring (3);
-        label = label.substring (0, 1).toUpperCase() + label.substring (1);
+        case cfF1Cutoff:    label = "Cutoff"; break;
+        case cfF1Res:       label = "Res"; break;
+        case cfF1Gain:      label = "Gain"; break;
+        case cfF1KeyTrack:  label = "Ktr"; break;
+        case cfF1EnvAmount: label = "Env"; break;
+        case cfF1VowelPos:  label = "Vowel"; break;
+        default: break;
+    }
+    switch (field)
+    {
+        case cfAttackCurve:  label = "A curve"; break;
+        case cfDecayCurve:   label = "D curve"; break;
+        case cfReleaseCurve: label = "R curve"; break;
+        default: break;
     }
     auto& k = page.make<CamKnob> (processor, ids::cam (cam, field), label, colour, bipolar);
     k.setTooltip (tooltip);

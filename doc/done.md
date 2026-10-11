@@ -2,6 +2,19 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Modulator shape displays; short labels (2026-10-11)
+
+- The LFO and ADSR editors keep their controls on the left half and show the
+  modulator's shape on the right: one LFO cycle (random shapes as an example)
+  or the envelope (segments sized by their times, the sustain a quarter of the
+  width), with a dot where the newest voice (or the global LFO) is. The
+  engine publishes each modulator's phase, or envelope stage and position
+  (`Display::modPhase`, `modStage`; FxmeTools `CurveAdsr::getSegmentPosition`).
+- The LFO and ADSR controls are back in the slot's colour; the curve editor
+  keeps the accent for its controls and blue for its sustain ones.
+- Short knob labels: Cutoff, Res, Gain, Ktr, Env, Vowel on the filter pages;
+  A curve, D curve, R curve on the Amp page.
+
 ## GUI: larger cam knobs, curve colours, darker belt (2026-10-11)
 
 - The Cam, Amp and Mix pages' knob rows grow into the strip's spare height

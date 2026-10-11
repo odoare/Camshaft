@@ -166,6 +166,11 @@ public:
         std::atomic<int> steals { 0 };          // counts up at each stolen voice
         std::atomic<int> noteOns { 0 };         // counts up at each note received
         std::atomic<bool> sustainDown { false };
+        // Each modulator's progress, for its shape display: an LFO's phase,
+        // or an envelope's stage (CurveAdsr::State) and position in it; the
+        // newest voice's for a per-voice modulator. Phase < 0: not running.
+        std::array<std::atomic<float>, numModulators> modPhase {};
+        std::array<std::atomic<int>, numModulators> modStage {};
     };
 
     Display& getDisplay() noexcept { return display; }

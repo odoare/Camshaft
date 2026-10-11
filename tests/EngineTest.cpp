@@ -479,6 +479,25 @@ int main()
         check (d.voicesActive.load() == 0 && peak < 1.0e-6f && ! d.sustainDown.load(), "panic silences every voice at once");
     }
 
+    {
+        // The shape displays' dots: an LFO's phase, an envelope's stage.
+        Rig rig;
+        rig.modVals[0][mfType] = (float) mtLfo;
+        rig.modVals[1][mfType] = (float) mtAdsr;
+        rig.depths[0] = rig.depths[1] = 0.01f;
+        rig.engine.setRoute (0, srcModFirst, camDest (0, cfFine), 0);
+        rig.engine.setRoute (1, srcModFirst + 1, camDest (0, cfPan), 0);
+        bool finite = true;
+        rig.run (finite);
+        const auto& d = rig.engine.getDisplay();
+        const bool idleHidden = d.modPhase[0].load() < 0.0f && d.modPhase[1].load() < 0.0f;
+        rig.engine.noteOn (60, 0.8f);
+        rig.run (finite);
+        check (idleHidden && d.modPhase[0].load() >= 0.0f && d.modPhase[1].load() >= 0.0f
+                   && d.modStage[1].load() != (int) fxme::CurveAdsr::State::idle,
+               "modulator progress published while a note plays");
+    }
+
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);
     return failures == 0 ? 0 : 1;
 }

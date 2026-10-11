@@ -112,9 +112,180 @@ void SourceChip::mouseUp (const juce::MouseEvent&)
 }
 
 //==============================================================================
-ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
-    : processor (p), slot (s), colour (theme::accent), slotColour (theme::modColour (s))
+ModulatorShapeView::ModulatorShapeView (CamshaftAudioProcessor& p, int s, juce::Colour c)
+    : processor (p), slot (s), colour (c)
 {
+    setTooltip (tips::mods::shapeView);
+    startTimerHz (30);
+}
+
+float ModulatorShapeView::param (int field) const
+{
+    return processor.getAPVTS().getRawParameterValue (ids::mod (slot, field))->load();
+}
+
+void ModulatorShapeView::timerCallback()
+{
+    if (! isShowing())
+        return;
+    const auto& d = processor.getEngine().getDisplay();
+    const float ph = d.modPhase[(size_t) slot].load (std::memory_order_relaxed);
+    const int st = d.modStage[(size_t) slot].load (std::memory_order_relaxed);
+    const float level = param (mfLevel);
+    const float v = level > 1.0e-4f ? d.source[(size_t) (srcModFirst + slot)].load (std::memory_order_relaxed) / level : 0.0f;
+
+    // Redrawn when the dot moves or a setting changes (a cheap sum of them).
+    float key = 0.0f;
+    for (int f : { (int) mfType, (int) mfShape, (int) mfBipolar, (int) mfAttack, (int) mfDecay, (int) mfSustain,
+                   (int) mfRelease, (int) mfAttackCurve, (int) mfDecayCurve, (int) mfReleaseCurve })
+        key = key * 1.37f + param (f);
+    if (std::abs (ph - phase) > 1.0e-4f || st != stage || std::abs (v - value) > 1.0e-4f || std::abs (key - settingsKey) > 1.0e-6f)
+    {
+        phase = ph;
+        stage = st;
+        value = v;
+        settingsKey = key;
+        repaint();
+    }
+}
+
+void ModulatorShapeView::paint (juce::Graphics& g)
+{
+    const auto b = getLocalBounds().toFloat();
+    g.setColour (theme::plotBack);
+    g.fillRoundedRectangle (b, 4.0f);
+    const auto plot = b.reduced (10.0f, 10.0f);
+    g.setColour (theme::grid);
+    for (int i = 1; i < 4; ++i)
+        g.drawVerticalLine ((int) (plot.getX() + plot.getWidth() * (float) i / 4.0f), plot.getY(), plot.getBottom());
+
+    if ((int) param (mfType) == mtLfo)
+        paintLfo (g, plot);
+    else
+        paintAdsr (g, plot);
+}
+
+void ModulatorShapeView::paintLfo (juce::Graphics& g, juce::Rectangle<float> plot)
+{
+    const int shape = (int) param (mfShape);
+    const bool bipolarOut = param (mfBipolar) > 0.5f;
+    // -1 .. 1 over the whole height; a unipolar LFO uses the upper half.
+    auto yFor = [&] (float v) { return plot.getCentreY() - v * plot.getHeight() * 0.5f; };
+    g.setColour (theme::grid);
+    g.drawHorizontalLine ((int) plot.getCentreY(), plot.getX(), plot.getRight());
+
+    using M = fxme::ModulationLfo;
+    const bool random = shape == M::sampleAndHold || shape == M::smoothRandom;
+    auto shapeAt = [&] (float ph)
+    {
+        float v;
+        if (shape == M::sampleAndHold)
+            v = ph < 0.5f ? 0.55f : -0.35f;                       // an example: random values held
+        else if (shape == M::smoothRandom)
+            v = -0.35f + 0.9f * (0.5f - 0.5f * std::cos (juce::MathConstants<float>::pi * ph));
+        else
+        {
+            // ModulationLfo's shapes, named in fxme::Lfo's own order.
+            const int lfoShape = shape == M::triangle ? fxme::Lfo::triangle
+                               : shape == M::sawUp    ? fxme::Lfo::sawUp
+                               : shape == M::sawDown  ? fxme::Lfo::sawDown
+                               : shape == M::square   ? fxme::Lfo::square
+                                                      : fxme::Lfo::sine;
+            v = fxme::Lfo::eval (lfoShape, ph);
+        }
+        return bipolarOut ? v : 0.5f * (v + 1.0f);
+    };
+
+    juce::Path p;
+    const int w = juce::jmax (2, (int) plot.getWidth());
+    for (int i = 0; i <= w; ++i)
+    {
+        const float ph = (float) i / (float) w;
+        const auto pt = juce::Point<float> (plot.getX() + (float) i, yFor (shapeAt (ph)));
+        if (i == 0) p.startNewSubPath (pt); else p.lineTo (pt);
+    }
+    g.setColour (colour.withAlpha (random ? 0.45f : 1.0f));
+    g.strokePath (p, juce::PathStrokeType (2.0f));
+
+    if (phase >= 0.0f)
+    {
+        // On the curve for a periodic shape; the actual value for a random one.
+        const float x = plot.getX() + phase * plot.getWidth();
+        const float y = random ? yFor (value) : yFor (shapeAt (phase));
+        g.setColour (theme::text);
+        g.fillEllipse (juce::Rectangle<float> (8.0f, 8.0f).withCentre ({ x, y }));
+    }
+}
+
+void ModulatorShapeView::paintAdsr (juce::Graphics& g, juce::Rectangle<float> plot)
+{
+    // Attack, decay and release take their share of three quarters of the
+    // width by their times (each at least a little); the sustain a quarter.
+    const float a = param (mfAttack), d = param (mfDecay), r = param (mfRelease), s = param (mfSustain);
+    const float total = juce::jmax (1.0f, a + d + r);
+    const float span = plot.getWidth() * 0.75f;
+    auto share = [&] (float t) { return juce::jmax (span * 0.06f, span * t / total); };
+    float wa = share (a), wd = share (d), wr = share (r);
+    const float scale = span / (wa + wd + wr);
+    wa *= scale; wd *= scale; wr *= scale;
+    const float ws = plot.getWidth() - (wa + wd + wr);
+    const float x0 = plot.getX(), x1 = x0 + wa, x2 = x1 + wd, x3 = x2 + ws, x4 = x3 + wr;
+    auto yFor = [&] (float v) { return plot.getBottom() - v * plot.getHeight(); };
+
+    const float ca = param (mfAttackCurve), cd = param (mfDecayCurve), cr = param (mfReleaseCurve);
+    auto valueAt = [&] (float x)
+    {
+        if (x < x1) return fxme::CurveAdsr::shape ((x - x0) / juce::jmax (1.0f, wa), ca);
+        if (x < x2) return 1.0f + (s - 1.0f) * fxme::CurveAdsr::shape ((x - x1) / juce::jmax (1.0f, wd), cd);
+        if (x < x3) return s;
+        return s * (1.0f - fxme::CurveAdsr::shape ((x - x3) / juce::jmax (1.0f, wr), cr));
+    };
+
+    juce::Path p;
+    for (float x = x0; x <= x4 + 0.5f; x += 1.0f)
+    {
+        const auto pt = juce::Point<float> (x, yFor (valueAt (juce::jmin (x, x4 - 0.01f))));
+        if (x <= x0) p.startNewSubPath (pt); else p.lineTo (pt);
+    }
+    juce::Path fill (p);
+    fill.lineTo (x4, plot.getBottom());
+    fill.lineTo (x0, plot.getBottom());
+    fill.closeSubPath();
+    g.setColour (colour.withAlpha (0.12f));
+    g.fillPath (fill);
+    g.setColour (colour);
+    g.strokePath (p, juce::PathStrokeType (2.0f));
+
+    g.setColour (theme::grid);
+    for (float x : { x1, x2, x3 })
+        g.drawVerticalLine ((int) x, plot.getY(), plot.getBottom());
+
+    if (phase >= 0.0f)
+    {
+        using S = fxme::CurveAdsr::State;
+        float x = x0;
+        switch ((S) stage)
+        {
+            case S::attack:  x = x0 + phase * wa; break;
+            case S::decay:   x = x1 + phase * wd; break;
+            case S::sustain: x = 0.5f * (x2 + x3); break;
+            case S::release: x = x3 + phase * wr; break;
+            case S::idle:    x = x4; break;
+        }
+        g.setColour (theme::text);
+        g.fillEllipse (juce::Rectangle<float> (8.0f, 8.0f).withCentre ({ x, yFor (valueAt (juce::jmin (x, x4 - 0.01f))) }));
+    }
+}
+
+//==============================================================================
+ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
+    : processor (p), slot (s), colour (theme::modColour (s)), slotColour (theme::modColour (s)),
+      shapeView (p, s, theme::modColour (s))
+{
+    // The header, the LFO's and the ADSR's controls in the slot's colour; the
+    // curve's in the plugin's accent (its sustain controls in the sustain
+    // region's blue).
+    addChildComponent (shapeView);
     typeBox = &combo (mfType, tips::mods::type);
     level = &knob (mfLevel, tips::mods::level);
     bipolar = &toggle (mfBipolar, "Bipolar", tips::mods::bipolar);
@@ -137,6 +308,7 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     releaseCurve = &knob (mfReleaseCurve, tips::mods::curve, true);
     velocity = &knob (mfVelocity, tips::mods::velocity);
 
+    colour = theme::accent;
     duration = &knob (mfDuration, tips::mods::duration);
     beats = &knob (mfBeats, tips::mods::beats);
     speed = &knob (mfSpeed, tips::mods::speed);
@@ -299,6 +471,7 @@ void ModulatorEditor::layoutForType()
     for (auto& c : owned)
         c->setVisible (false);
     curveEditor.setVisible (false);
+    shapeView.setVisible (false);
     for (auto* t : { (juce::Component*) &sustainToggle, (juce::Component*) &sustainModeBox, (juce::Component*) &releaseToggle })
         t->setVisible (false);
 
@@ -307,9 +480,9 @@ void ModulatorEditor::layoutForType()
 
     std::vector<juce::Component*> visible;
     if (shownType == mtLfo)
-        visible = { bipolar, shapeBox, rate, sync, phase, delay, fade, modeBox };
+        visible = { bipolar, shapeBox, rate, sync, phase, delay, fade, modeBox, &shapeView };
     else if (shownType == mtAdsr)
-        visible = { attack, decay, sustain, release, attackCurve, decayCurve, releaseCurve, velocity };
+        visible = { attack, decay, sustain, release, attackCurve, decayCurve, releaseCurve, velocity, &shapeView };
     else if (shownType == mtCurve)
         visible = { bipolar, &curveEditor, duration, speed, durationMode, dawSync, &sustainToggle, &sustainModeBox, &releaseToggle };
     for (auto* c : visible)
@@ -355,6 +528,12 @@ void ModulatorEditor::resized()
         }
         area.removeFromTop (4);
     };
+
+    if (shownType == mtLfo || shownType == mtAdsr)
+    {
+        // Controls on the left half, the shape on the right.
+        shapeView.setBounds (area.removeFromRight (area.getWidth() / 2).reduced (4, 2));
+    }
 
     if (shownType == mtOff)
     {

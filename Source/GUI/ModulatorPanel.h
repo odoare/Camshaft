@@ -64,6 +64,31 @@ private:
     bool inUse = true;    // a modulator slot that feeds nothing (or is off) is drawn dimmed, without its bar
 };
 
+/** The shape of an LFO (one cycle) or of an ADSR envelope, drawn from the
+    slot's settings, with a dot where the newest voice (or the global LFO)
+    is on it. */
+class ModulatorShapeView : public juce::Component,
+                           public juce::SettableTooltipClient,
+                           private juce::Timer
+{
+public:
+    ModulatorShapeView (CamshaftAudioProcessor& processor, int slot, juce::Colour colour);
+    void paint (juce::Graphics&) override;
+
+private:
+    void timerCallback() override;
+    float param (int field) const;
+    void paintLfo (juce::Graphics&, juce::Rectangle<float> plot);
+    void paintAdsr (juce::Graphics&, juce::Rectangle<float> plot);
+
+    CamshaftAudioProcessor& processor;
+    int slot;
+    juce::Colour colour;
+    float phase = -1.0f, value = 0.0f;
+    int stage = 0;
+    float settingsKey = 0.0f;
+};
+
 /** The editor of one modulator slot (remade when another slot is chosen). */
 class ModulatorEditor : public juce::Component,
                         private juce::Timer
@@ -89,8 +114,8 @@ private:
 
     CamshaftAudioProcessor& processor;
     int slot;
-    juce::Colour colour;                // the controls: the plugin's accent
-    juce::Colour slotColour;            // the modulator's own: its name, its curve
+    juce::Colour colour;                // the controls made next (the slot's colour, the accent for the curve's)
+    juce::Colour slotColour;            // the modulator's own
     inline static const juce::Colour sustainBlue { 0xff40c0ff };
     int shownType = -1;
 
@@ -108,6 +133,7 @@ private:
     // ADSR
     CamKnob *attack = nullptr, *decay = nullptr, *sustain = nullptr, *release = nullptr,
             *attackCurve = nullptr, *decayCurve = nullptr, *releaseCurve = nullptr, *velocity = nullptr;
+    ModulatorShapeView shapeView;
     // Curve
     fxme::BreakpointCurveEditor curveEditor;
     CamKnob *duration = nullptr, *beats = nullptr, *speed = nullptr;

@@ -95,6 +95,7 @@ namespace camshaft::tips::mods
     inline constexpr auto slotChip      = "A modulator slot: click to edit it, drag it onto a knob to modulate that knob. The bar shows its live output; dimmed, the slot is off or modulates nothing, and is not computed.";
     inline constexpr auto fixedChip     = "A MIDI or voice source: drag it onto a knob to modulate that knob.";
     inline constexpr auto type          = "LFO, ADSR envelope, a drawn curve, or Off (the slot is not used).";
+    inline constexpr auto shapeView     = "The modulator's shape (one LFO cycle, or the envelope), the dot where the newest note is on it. Random shapes are drawn as an example; the dot shows the real value.";
     inline constexpr auto level         = "Output level of this modulator (a modulation destination itself).";
     inline constexpr auto bipolar       = "Bipolar: swings both ways around the knob's value; off, only upwards.";
     inline constexpr auto shape         = "LFO shape. S&H holds a new random value each cycle; smooth random glides between them.";

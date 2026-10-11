@@ -214,6 +214,22 @@ bool CamVoice::getCamRange (int c, double& start, double& cycle, double& overlap
     return true;
 }
 
+void CamVoice::getModulatorProgress (int m, float& phase, int& stage) const noexcept
+{
+    phase = -1.0f;
+    stage = 0;
+    if (! active || ! state->modUsed[m])
+        return;
+    const int type = (int) state->modValue[m][mfType];
+    if (type == mtLfo)
+        phase = (float) lfos[m].getPhase();
+    else if (type == mtAdsr && adsrs[m].isActive())
+    {
+        stage = (int) adsrs[m].getState();
+        phase = (float) adsrs[m].getSegmentPosition();
+    }
+}
+
 float CamVoice::getCurvePosition (int m) const noexcept
 {
     if (! active || (int) state->modValue[m][mfType] != mtCurve || state->modIsGlobal[m] || ! state->modUsed[m])

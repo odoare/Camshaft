@@ -110,6 +110,10 @@ public:
         cylinder's phase in the cycle; false when it reads none. */
     bool getCamRange (int c, double& start, double& cycle, double& overlap, double& phase) const noexcept;
     float getCurvePosition (int m) const noexcept;
+    /** Modulator m's progress: an LFO's phase, or an envelope's stage
+        (CurveAdsr::State as an int) and position in it; phase -1 when it
+        is neither or not running. */
+    void getModulatorProgress (int m, float& phase, int& stage) const noexcept;
 
 private:
     struct Cam
