@@ -26,8 +26,8 @@ namespace camshaft::tips::bar
 namespace camshaft::tips::file
 {
     inline constexpr auto import      = "Import an audio file (WAV, AIFF, FLAC, Ogg...). It is stored inside the session and the presets.";
-    inline constexpr auto exportAudio = "Export the imported audio as a WAV file, as it was imported.";
-    inline constexpr auto builtIn     = "Back to the built-in morph of waveforms (removes the imported audio).";
+    inline constexpr auto exportAudio = "Export the source audio as a WAV file: the imported file as it was imported, or the built-in sample.";
+    inline constexpr auto builtIn     = "Play a built-in source: the morph of waveforms, or one of the samples that come with Camshaft (replaces the imported audio; a preset made on a built-in sample stays small).";
     inline constexpr auto channels    = "Which channels of a stereo file the cams read: both, left, right, or their mid.";
     inline constexpr auto normalise   = "Normalise the file's peak to -1 dBFS (not destructive: off restores its level).";
     inline constexpr auto waveform    = "Drag inside a cam's range, or its numbered flag, to move it; drag an edge to move that edge only. The coloured bars along the bottom are the ranges every playing voice reads (modulation included), the bright lines where they read. Wheel: zoom; shift+wheel or drag on empty space: scroll; double-click: whole file (or zoom on a range). Drop a file here to import it.";

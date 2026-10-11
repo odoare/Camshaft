@@ -92,7 +92,8 @@ fxmefx_add_module_presets(Camshaft ${CAMSHAFT_FXMEFX_EFFECTS})
 file(GLOB CAMSHAFT_OWN_ASSETS
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.png
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.xml)
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.xml
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.wav)
 list(APPEND CAMSHAFT_ASSETS ${CAMSHAFT_OWN_ASSETS})
 
 juce_add_binary_data(CamshaftBinaryData SOURCES ${CAMSHAFT_ASSETS})

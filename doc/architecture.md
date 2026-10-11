@@ -242,7 +242,11 @@ The APVTS state root ("Parameters") carries:
 - `<EmbeddedAudio>` (fxme::EmbeddedAudio: the original file, deflated float WAV
   in Base64; the plan said FLAC, which EmbeddedAudio dropped because it clamps
   peaks above full scale) and `<SourceOptions>` (channels, normalise, original
-  rate);
+  rate, and `factory`: a bundled sample's ID). The source is the embedded
+  audio if there is some, else the bundled sample named by `factory`
+  (`Shell/FactorySamples.h`, the WAV files of `Source/Assets` in the binary
+  data, read from memory, never embedded), else the built-in morph. A state
+  naming a sample the build lacks plays the morph and says so;
 - `schemaVersion` (1). `StructureState::migrate` is where upgrades go. Unknown
   children and parameters are left in place.
 
@@ -303,8 +307,10 @@ Tooltips: `Tooltips.h`, behind the "?" switch (machine-wide, `AppSettings.h`).
 ## Presets
 
 `fxme::PresetManager` on `FX-Mechanics/Camshaft/Presets`, factory presets from
-`Source/Assets/*.xml` (made by `tools/make_factory_presets.py`, categories Idle,
-Torque, Rev, Backfire after the engine theme), the browser from the top bar.
+the XML files of `Source/Assets` (made by `tools/make_factory_presets.py`, or
+from a user preset by `tools/import_user_preset.py`, which replaces a bundled
+sample's embedded copy by its ID; categories Idle, Torque, Rev, Backfire after
+the engine theme), the browser from the top bar.
 Effect module presets in `FX-Mechanics/Modules/<Effect>/Presets`, shared with
 FxmeFX and MechanOdd. Recommendations followed (merged into the plan): see its
 "Presets" section.

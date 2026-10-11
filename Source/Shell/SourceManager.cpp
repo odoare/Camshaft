@@ -12,7 +12,9 @@
 */
 
 #include "SourceManager.h"
+#include "FactorySamples.h"
 #include "Engine/DemoSource.h"
+#include <BinaryData.h>
 
 namespace camshaft
 {
@@ -25,6 +27,21 @@ namespace
     {
         return state.getChildWithName (fxme::EmbeddedAudio::containerType)
                     .getChildWithProperty (fxme::EmbeddedAudio::slotProperty, SourceManager::slotId);
+    }
+
+    /** A reader on bundled sample `id`, or null. */
+    std::unique_ptr<juce::AudioFormatReader> factoryReader (const juce::String& id)
+    {
+        const auto* sample = findFactorySample (id);
+        if (sample == nullptr)
+            return {};
+        int size = 0;
+        const char* data = BinaryData::getNamedResource (sample->resource, size);
+        if (data == nullptr || size <= 0)
+            return {};
+        juce::WavAudioFormat wav;
+        return std::unique_ptr<juce::AudioFormatReader> (
+            wav.createReaderFor (new juce::MemoryInputStream (data, (size_t) size, false), true));
     }
 
     bool writeWav (juce::AudioFormatReader& reader, const juce::File& file, juce::int64 numSamples)
@@ -218,16 +235,41 @@ bool SourceManager::embedInto (const juce::File& file, juce::ValueTree& holder, 
 
 void SourceManager::clear()
 {
+    setFactorySample ({});
+}
+
+void SourceManager::setFactorySample (const juce::String& id)
+{
     inFlightImport = juce::File();
     importSerial.store (-1);
     fxme::EmbeddedAudio::removeEmbedded (apvts.state, slotId);
+    if (findFactorySample (id) != nullptr)
+        options().setProperty ("factory", id, nullptr);
+    else
+        options().removeProperty ("factory", nullptr);
     reload();
+}
+
+juce::String SourceManager::getFactorySample() const
+{
+    return options().getProperty ("factory").toString();
 }
 
 bool SourceManager::exportOriginal (const juce::File& destination) const
 {
     auto reader = fxme::EmbeddedAudio::createReader (apvts.state, slotId);
+    if (reader == nullptr && ! findEmbeddedEntry (apvts.state).isValid())
+        reader = factoryReader (getFactorySample());
     return reader != nullptr && writeWav (*reader, destination, reader->lengthInSamples);
+}
+
+juce::String SourceManager::getExportName() const
+{
+    if (const auto entry = findEmbeddedEntry (apvts.state); entry.isValid())
+        return entry.getProperty (fxme::EmbeddedAudio::nameProperty).toString();
+    if (const auto* sample = findFactorySample (getFactorySample()))
+        return sample->fileName;
+    return {};
 }
 
 void SourceManager::reloadFromState()
@@ -255,6 +297,12 @@ void SourceManager::reload()
         holder.appendChild (container, nullptr);
         job.audio = holder;
         job.name = entry.getProperty (fxme::EmbeddedAudio::nameProperty).toString();
+    }
+    else
+    {
+        job.factoryId = getFactorySample();
+        if (const auto* sample = findFactorySample (job.factoryId))
+            job.name = sample->name;
     }
     job.mode = getChannelMode();
     job.normalise = getNormalise();
@@ -293,9 +341,19 @@ void SourceManager::run (Job job)
     auto result = std::make_shared<View>();
     std::shared_ptr<fxme::WavetableSource> src;
 
+    juce::String missingSample;
+    std::unique_ptr<juce::AudioFormatReader> reader;
     if (job.audio.isValid())
+        reader = fxme::EmbeddedAudio::createReader (job.audio, slotId);
+    else if (job.factoryId.isNotEmpty())
     {
-        auto reader = fxme::EmbeddedAudio::createReader (job.audio, slotId);
+        reader = factoryReader (job.factoryId);
+        if (reader == nullptr)
+            missingSample = job.factoryId;   // named by the patch, not in this build: the morph, and a word
+    }
+
+    if (job.audio.isValid() || reader != nullptr)
+    {
         if (reader == nullptr || reader->lengthInSamples < 16)
         {
             // Keep playing what was there rather than fall back to the
@@ -361,7 +419,8 @@ void SourceManager::run (Job job)
             }
 
             result->name = job.name.isNotEmpty() ? job.name : juce::String ("Imported audio");
-            result->builtIn = false;
+            result->builtIn = ! job.audio.isValid();
+            result->factoryId = job.audio.isValid() ? juce::String() : job.factoryId;
         }
     }
 
@@ -386,7 +445,9 @@ void SourceManager::run (Job job)
     {
         const std::lock_guard<std::mutex> lock (viewLock);
         view = result;
-        lastError.clear();
+        lastError = missingSample.isEmpty() ? juce::String()
+                                            : "This patch uses a built-in sample (\"" + missingSample
+                                                  + "\") this version does not have: playing the morph.";
     }
 
     if (job.importFile != juce::File())
@@ -399,6 +460,7 @@ void SourceManager::run (Job job)
                 return;
             inFlightImport = juce::File();
             fxme::EmbeddedAudio::removeEmbedded (apvts.state, slotId);
+            options().removeProperty ("factory", nullptr);
             auto state = apvts.state;
             state.getOrCreateChildWithName (fxme::EmbeddedAudio::containerType, nullptr).appendChild (entry, nullptr);
             options().setProperty ("originalRate", importRate, nullptr);

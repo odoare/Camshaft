@@ -13,7 +13,9 @@ modulation, which moves a cam's read position at audio rate);
 two effect chains and a master chain reuse the FxmeFX effects.
 
 The audio is stored inside the session and the presets, so a patch never
-depends on a file path. Without a file, a built-in morph of waveforms plays.
+depends on a file path. Without a file, a built-in source plays: a morph of
+waveforms, or one of the samples that come with Camshaft (the "Built-in..."
+menu).
 
 See [doc/architecture.md](doc/architecture.md) for how it works.
 

@@ -15,6 +15,7 @@
 #include "PluginProcessor.h"
 #include "Theme.h"
 #include "Tooltips.h"
+#include "Shell/FactorySamples.h"
 
 namespace camshaft
 {
@@ -46,7 +47,7 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     builtInButton.setTooltip (tips::file::builtIn);
     importButton.onClick = [this] { importDialog(); };
     exportButton.onClick = [this] { exportDialog(); };
-    builtInButton.onClick = [this] { processor.getSources().clear(); };
+    builtInButton.onClick = [this] { builtInMenu(); };
     for (auto* b : { &importButton, &exportButton, &builtInButton })
     {
         b->setMouseClickGrabsKeyboardFocus (false);
@@ -146,11 +147,10 @@ void SynthTab::changeListenerCallback (juce::ChangeBroadcaster*)
         juce::String info = view->name + "   " + juce::String ((double) s.numSamples / s.sampleRate, 2) + " s, "
                           + juce::String (s.sampleRate / 1000.0, 1) + " kHz, "
                           + (s.getNumChannels() > 1 ? "stereo" : "mono");
-        if (! view->builtIn && sources.getNormalise())
+        if ((! view->builtIn || view->factoryId.isNotEmpty()) && sources.getNormalise())
             info << ", normalised " << juce::String (view->normaliseGainDb, 1) << " dB";
         fileLabel.setText (info, juce::dontSendNotification);
-        exportButton.setEnabled (! view->builtIn);
-        builtInButton.setEnabled (! view->builtIn);
+        exportButton.setEnabled (! view->builtIn || view->factoryId.isNotEmpty());
     }
 
     if (const auto error = sources.getLastError(); error.isNotEmpty())
@@ -176,9 +176,37 @@ void SynthTab::importDialog()
     });
 }
 
+void SynthTab::builtInMenu()
+{
+    // The morph and the bundled samples (FactorySamples.h), the current one ticked.
+    auto& sources = processor.getSources();
+    const auto view = sources.getView();
+    const bool imported = view != nullptr && ! view->builtIn;
+    const auto current = imported ? juce::String ("-") : sources.getFactorySample();
+
+    juce::PopupMenu menu;
+    menu.addItem (1, "Built-in morph", true, ! imported && current.isEmpty());
+    int id = 2;
+    for (const auto& s : factorySamples)
+        menu.addItem (id++, s.name, true, current == s.id);
+
+    juce::Component::SafePointer<SynthTab> safe (this);
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&builtInButton), [safe] (int result)
+    {
+        if (safe == nullptr || result <= 0)
+            return;
+        const int index = result - 2;
+        safe->processor.getSources().setFactorySample (index >= 0 && index < (int) std::size (factorySamples)
+                                                           ? juce::String (factorySamples[(size_t) index].id)
+                                                           : juce::String());
+    });
+}
+
 void SynthTab::exportDialog()
 {
-    chooser = std::make_unique<juce::FileChooser> ("Export the imported audio", juce::File(), "*.wav");
+    const auto suggested = juce::File::getSpecialLocation (juce::File::userHomeDirectory)
+                               .getChildFile (processor.getSources().getExportName());
+    chooser = std::make_unique<juce::FileChooser> ("Export the source audio", suggested, "*.wav");
     chooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
                           [this] (const juce::FileChooser& fc)
     {
@@ -222,7 +250,7 @@ void SynthTab::resized()
         auto line = fileHeader.withTrimmedLeft (54);
         importButton.setBounds (line.removeFromLeft (78).reduced (2, 1));
         exportButton.setBounds (line.removeFromLeft (78).reduced (2, 1));
-        builtInButton.setBounds (line.removeFromLeft (72).reduced (2, 1));
+        builtInButton.setBounds (line.removeFromLeft (84).reduced (2, 1));
         line.removeFromLeft (8);
         channelBox.setBounds (line.removeFromLeft (110).reduced (2, 1));
         normaliseButton.setBounds (line.removeFromLeft (96).reduced (2, 1));

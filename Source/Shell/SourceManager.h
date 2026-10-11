@@ -21,9 +21,18 @@
     doc/architecture.md, "Sample handling", for why this departs from the
     plan's resampling on import).
 
-    Without any embedded audio the built-in demo source is used
-    (Engine/DemoSource.h): the plugin sounds from the first note, and the
-    factory presets need no audio of their own.
+    Three kinds of source, chosen in this order on every load:
+
+      imported   audio embedded in the state (an imported file)
+      bundled    one of the samples bundled with the plugin (FactorySamples.h),
+                 named in the state (SourceOptions factory="<id>"), not
+                 embedded: the factory presets use them, and a preset made
+                 on one stays small
+      morph      neither: the built-in demo source (Engine/DemoSource.h),
+                 so the plugin sounds from the first note
+
+    Importing a file replaces a bundled sample; choosing a bundled sample or
+    the morph removes the imported audio.
 
     Author: Olivier Doaré, github.com/odoare
     Dual-licensed, mirroring the JUCE framework it depends on: under the GNU
@@ -54,8 +63,9 @@ public:
     {
         std::shared_ptr<const fxme::WavetableSource> source;
         std::vector<fxme::MinMaxPyramid> overview;   // one per channel
-        juce::String name;                           // file name, or "Built-in"
-        bool builtIn = true;
+        juce::String name;                           // file name, sample name, or "Built-in morph"
+        bool builtIn = true;                         // nothing imported: the morph or a bundled sample
+        juce::String factoryId;                      // the bundled sample, when it is one
         float normaliseGainDb = 0.0f;
     };
 
@@ -71,11 +81,23 @@ public:
         all; a later failure shows in getLastError(). */
     juce::String importFile (const juce::File& file);
 
-    /** Back to the built-in source (removes the embedded audio). */
+    /** Back to the built-in morph (removes the embedded audio and any
+        bundled sample). */
     void clear();
 
-    /** Writes the embedded audio as it was imported. */
+    /** Plays bundled sample `id` (FactorySamples.h), removing the embedded
+        audio; an empty or unknown id is the morph. */
+    void setFactorySample (const juce::String& id);
+
+    /** The bundled sample the state names, empty when none. */
+    juce::String getFactorySample() const;
+
+    /** Writes the source as it was imported, or the bundled sample's file;
+        false for the morph. */
     bool exportOriginal (const juce::File& destination) const;
+
+    /** The file name an export would suggest (empty for the morph). */
+    juce::String getExportName() const;
 
     ChannelMode getChannelMode() const;
     void setChannelMode (ChannelMode mode);
@@ -106,6 +128,7 @@ private:
         juce::ValueTree audio;       // detached copy of the EmbeddedAudio container
         juce::File importFile;       // a file to embed first (an import)
         juce::String name;
+        juce::String factoryId;      // a bundled sample, when there is no embedded audio
         ChannelMode mode = ChannelMode::stereo;
         bool normalise = true;
         int serial = 0;

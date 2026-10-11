@@ -64,12 +64,13 @@ private:
     void showBottom (int index);
     void importDialog();
     void exportDialog();
+    void builtInMenu();
     void showMessage (const juce::String& text);
 
     CamshaftAudioProcessor& processor;
 
     // File band.
-    juce::TextButton importButton { "Import..." }, exportButton { "Export..." }, builtInButton { "Built-in" };
+    juce::TextButton importButton { "Import..." }, exportButton { "Export..." }, builtInButton { "Built-in..." };
     juce::ComboBox channelBox;
     juce::ToggleButton normaliseButton { "Normalise" };
     juce::Label fileLabel, messageLabel;

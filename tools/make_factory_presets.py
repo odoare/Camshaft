@@ -19,6 +19,10 @@ A cam's range is set by its opening (r<n>_opening, 0 to 1 of the recording) and
 its duration (r<n>_duration, samples); mid (position, length) gives the opening
 of a range centred on a position of the built-in source.
 
+A preset can play one of the samples bundled with Camshaft instead
+(Source/Shell/FactorySamples.h): source="camshaft" or "absurde". A user preset
+made in the plugin becomes a factory preset with tools/import_user_preset.py.
+
 A modulator slot is off by default; preset() makes every slot a preset uses
 (a route from it, or any of its parameters set) an LFO unless its type is
 given.
@@ -47,7 +51,7 @@ def mid (centre, length=2048):
     start = min (max (0.0, centre * DEMO_SAMPLES - 0.5 * length), DEMO_SAMPLES - length)
     return start / DEMO_SAMPLES
 
-def preset (name, params, routes=(), belt=(), curves=()):
+def preset (name, params, routes=(), belt=(), curves=(), source=None):
     params = dict (params)
     slot = lambda key: int (key[3:]) if key.startswith ("mod") and key[3:].isdigit() else None
     used = { slot (pid.split ("_")[0]) for pid in params } | { slot (src) for src, *rest in routes }
@@ -70,6 +74,9 @@ def preset (name, params, routes=(), belt=(), curves=()):
         attrs = { "mod": str (mod), "points": ";".join ("%g,%g,%g" % p for p in points) }
         attrs.update ({ k: str (v) for k, v in extra.items() })
         ET.SubElement (c, "Curve", attrs)
+    if source is not None:
+        # A bundled sample (Source/Shell/FactorySamples.h), named, not embedded.
+        ET.SubElement (root, "SourceOptions", { "factory": source })
     ET.indent (root, "  ")
     file = os.path.join (OUT, name.replace (" - ", "_").replace (" ", "_") + ".xml")
     ET.ElementTree (root).write (file, encoding="UTF-8", xml_declaration=True)

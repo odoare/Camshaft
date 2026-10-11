@@ -2,6 +2,30 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Bundled samples (2026-10-11)
+
+- Two samples come with Camshaft, Camshaft and Absurde (the WAV files of
+  `Source/Assets`, in the binary data; `Shell/FactorySamples.h`). The
+  "Built-in..." menu plays the morph or one of them. A patch on a sample names
+  it in its state (`SourceOptions factory="<id>"`) instead of embedding it,
+  so factory presets can use them and a user preset made on one stays small.
+  Order on load: embedded audio, else the named sample, else the morph; a
+  sample this build lacks plays the morph with a message. Export writes a
+  sample's file as well as imported audio. A new instance still starts on the
+  morph.
+- `tools/import_user_preset.py` turns a user preset into a factory preset:
+  the embedded copy of a bundled sample becomes its ID, the MIDI learn map and
+  locks are left out. `make_factory_presets.py` takes `source=` per preset.
+
+## Formant filter level (2026-10-11)
+
+The formant filter lost most of the signal's level (a 110 Hz sawtooth: 7 to
+12 dB at resonance 0, 19 to 24 dB at full resonance). Its make-up gain now
+grows with the resonance, as the bands narrow (FxmeTools `MultiModeFilter`,
+documented in its header): the sawtooth comes out within about 4 dB of its
+input level at every vowel and resonance (pinned in the core tests). Formant
+patches are 10 to 20 dB louder than before.
+
 ## Knob read-outs fitted; lighter waveform (2026-10-11)
 
 - A knob's or bar's value no longer ends in "..." when it is too wide: its
