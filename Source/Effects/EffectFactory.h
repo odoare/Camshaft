@@ -36,9 +36,8 @@ struct EffectTypeInfo
 
     std::function<std::unique_ptr<Effect>()> create;
     std::function<void (ParameterList&, const juce::String&)> addParameters;
+    // The effect's controls, in their compact layout.
     std::function<std::unique_ptr<juce::Component> (Effect&, juce::AudioProcessorValueTreeState&, const juce::String&)> createComponent;
-    int preferredWidth  = 600;
-    int preferredHeight = 400;
 };
 
 namespace EffectFactory

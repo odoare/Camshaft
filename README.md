@@ -41,8 +41,12 @@ See [doc/architecture.md](doc/architecture.md) for how it works.
   ring, AM or off. Beside it, the dashboard: output level, spectrum and
   stereo image, warning lights, free voices and DSP load, the voice mode (P
   M L) and a hazard button that silences every voice.
-- **Effects.** Turbo 1 and 2 are fed by the cams' sends, the Exhaust takes the
-  whole mix, the rev limiter (a safety limiter at -0.3 dBFS) is always last.
+- **Effects** (bottom band: Turbo 1, Turbo 2, Exhaust). Turbo 1 and 2 are fed
+  by the cams' sends and returned at their level and pan, the Exhaust takes
+  the whole mix, the rev limiter (a safety limiter at -0.3 dBFS) is always
+  last. Each holds two effects (delay, tube, EQ, compressor, cab, chorus,
+  flanger, phaser, reverb), each with its presets, shared with its FxmeFX
+  plugin. The output level is also the dashboard's throttle pedal.
 - **Presets** (the "Garage", top bar): the arrows step through them, "..."
   opens the browser to save, rename and delete. The dice ("Kick-start")
   randomize a section, or everything from the top bar; right-click a knob to

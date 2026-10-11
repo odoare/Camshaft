@@ -150,6 +150,97 @@ void GearSelector::paint (juce::Graphics& g)
 }
 
 //==============================================================================
+ThrottlePedal::ThrottlePedal (CamshaftAudioProcessor& p)
+    : param (*p.getAPVTS().getParameter (ids::masterOut)),
+      attachment (param, [this] (float v) { value = v; repaint(); })
+{
+    setTooltip (tips::dash::throttle);
+    setMouseCursor (juce::MouseCursor::UpDownResizeCursor);
+    attachment.sendInitialUpdate();
+}
+
+void ThrottlePedal::mouseDown (const juce::MouseEvent&)
+{
+    dragStartNorm = param.convertTo0to1 (value);
+    attachment.beginGesture();
+}
+
+void ThrottlePedal::mouseDrag (const juce::MouseEvent& e)
+{
+    // Down presses the pedal: the full travel over the pedal's own height.
+    const float travel = (float) e.getDistanceFromDragStartY() / juce::jmax (40.0f, (float) getHeight() * 0.8f);
+    const float norm = juce::jlimit (0.0f, 1.0f, dragStartNorm + travel * (e.mods.isShiftDown() ? 0.2f : 1.0f));
+    attachment.setValueAsPartOfGesture (param.convertFrom0to1 (norm));
+}
+
+void ThrottlePedal::mouseUp (const juce::MouseEvent&)
+{
+    attachment.endGesture();
+}
+
+void ThrottlePedal::mouseDoubleClick (const juce::MouseEvent&)
+{
+    attachment.setValueAsCompleteGesture (param.convertFrom0to1 (param.getDefaultValue()));
+}
+
+void ThrottlePedal::mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel)
+{
+    const float norm = juce::jlimit (0.0f, 1.0f, param.convertTo0to1 (value) + wheel.deltaY * 0.05f);
+    attachment.setValueAsCompleteGesture (param.convertFrom0to1 (norm));
+}
+
+void ThrottlePedal::paint (juce::Graphics& g)
+{
+    auto b = getLocalBounds().toFloat();
+    const auto text = b.removeFromBottom (14.0f);
+    const auto caption = b.removeFromTop (12.0f);
+    const float press = param.convertTo0to1 (value);   // 0 released, 1 floored
+
+    g.setFont (theme::labelFont (8.5f));
+    g.setColour (theme::engraved);
+    g.drawText ("THROTTLE", caption, juce::Justification::centred, false);
+
+    // The pivot at the bottom, the arm up to the pad.
+    const float w = juce::jmin (b.getWidth() * 0.8f, b.getHeight() * 0.55f);
+    const float cx = b.getCentreX();
+    const float pivotY = b.getBottom() - 4.0f;
+    g.setColour (juce::Colour (0xff3a3c42));
+    g.fillRoundedRectangle (juce::Rectangle<float> (w * 0.7f, 6.0f).withCentre ({ cx, pivotY }), 2.0f);
+
+    // The pad: a trapezoid seen from the driver's seat; pressing it tips its
+    // top away (shorter, narrower at the top) and lowers it.
+    const float top = b.getY() + 4.0f + press * b.getHeight() * 0.22f;
+    const float bottom = pivotY - 8.0f;
+    const float topW = w * (1.0f - 0.25f * press), botW = w * 0.82f;
+    juce::Path pad;
+    pad.startNewSubPath (cx - topW * 0.5f, top);
+    pad.lineTo (cx + topW * 0.5f, top);
+    pad.lineTo (cx + botW * 0.5f, bottom);
+    pad.lineTo (cx - botW * 0.5f, bottom);
+    pad.closeSubPath();
+    const auto rubber = juce::Colour (0xff26272c).interpolatedWith (theme::accent, 0.10f + 0.25f * press);
+    g.setColour (rubber);
+    g.fillPath (pad, juce::AffineTransform());
+    g.setColour (theme::accent.withAlpha (0.35f + 0.5f * press));
+    g.strokePath (pad, juce::PathStrokeType (1.2f, juce::PathStrokeType::curved));
+
+    // Rubber ribs across it.
+    g.setColour (juce::Colours::black.withAlpha (0.55f));
+    constexpr int ribs = 7;
+    for (int i = 1; i <= ribs; ++i)
+    {
+        const float t = (float) i / (float) (ribs + 1);
+        const float y = top + (bottom - top) * t;
+        const float half = 0.5f * (topW + (botW - topW) * t) - 4.0f;
+        g.drawLine (cx - half, y, cx + half, y, 1.6f);
+    }
+
+    g.setFont (theme::gaugeFont (9.0f));
+    g.setColour (value > 0.05f ? theme::redline : theme::text);
+    g.drawText (juce::String (value, 1) + " dB", text, juce::Justification::centred, false);
+}
+
+//==============================================================================
 void HazardButton::paintButton (juce::Graphics& g, bool over, bool down)
 {
     auto b = getLocalBounds().toFloat().reduced (1.0f);
@@ -185,7 +276,8 @@ Dashboard::Dashboard (CamshaftAudioProcessor& p)
       hold ("HOLD", green), sync ("SYNC", green), turbo1 ("T1", theme::auxColour (0)), turbo2 ("T2", theme::auxColour (1)),
       fuel ("FUEL", green, 0.15f, true), temp ("TEMP", blue, 0.75f, false),
       gears (p),
-      limiterSwitch (p.getAPVTS(), ids::limiter, theme::accent)
+      limiterSwitch (p.getAPVTS(), ids::limiter, theme::accent),
+      throttle (p)
 {
     fxme::CircularSpectrum::Colours sc;
     sc.face = theme::plotBack;
@@ -223,7 +315,7 @@ Dashboard::Dashboard (CamshaftAudioProcessor& p)
 
     for (auto* c : std::initializer_list<juce::Component*> { &tach, &spectrum, &scope, &rev, &check, &steal, &midi, &hold,
                                                               &sync, &turbo1, &turbo2, &fuel, &temp, &gears,
-                                                              &limiterSwitch, &hazard })
+                                                              &limiterSwitch, &hazard, &throttle })
         addAndMakeVisible (c);
 
     startTimerHz (30);
@@ -317,7 +409,10 @@ void Dashboard::resized()
     for (auto* l : lights)
         l->setBounds (strip.removeFromLeft (lw).reduced (2, 2));
 
-    // Dials: the spectrum in the middle, larger, as a speedometer.
+    // The pedal on the right, then the dials: the spectrum in the middle,
+    // larger, as a speedometer.
+    throttle.setBounds (area.removeFromRight (juce::jmin (70, area.getWidth() / 8)));
+    area.removeFromRight (6);
     const float h = (float) area.getHeight();
     const float big = juce::jmin (h, (float) area.getWidth() * 0.40f);
     const float small = juce::jmin (big * 0.78f, ((float) area.getWidth() - big) * 0.5f - 6.0f);

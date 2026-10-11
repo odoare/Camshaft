@@ -11,7 +11,8 @@
       scopes    per cam: its rotating profile and its oscilloscope
       strips    per cam: its controls, in the same column as its scope
       bottom    belt & viz (the timing belt beside the dashboard), the
-                modulators, or the matrix (one at a time; belt & viz first)
+                modulators, the matrix, and the effect chains: Turbo 1,
+                Turbo 2, Exhaust (one at a time; belt & viz first)
 
     Each section with a Kick-start (randomize) has its dice in its header.
 
@@ -32,6 +33,7 @@
 #include "MatrixView.h"
 #include "TimingBeltView.h"
 #include "Dashboard.h"
+#include "ChainPane.h"
 #include "Shell/Randomizer.h"
 
 class CamshaftAudioProcessor;
@@ -78,11 +80,13 @@ private:
     std::vector<std::unique_ptr<CamStrip>> strips;
 
     // Bottom band.
-    std::array<juce::TextButton, 3> bottomTabs;
+    static constexpr int numBottomTabs = 6;
+    std::array<juce::TextButton, numBottomTabs> bottomTabs;
     ModulatorPanel modulators;
     MatrixView matrix;
     TimingBeltView belt;
     Dashboard dashboard;
+    std::array<std::unique_ptr<ChainPane>, 3> chainPanes;
     int bottom = 0;
 
     DiceButton camsDice, filtersDice, modsDice;

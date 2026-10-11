@@ -142,6 +142,8 @@ namespace camshaft::tips::bottom
 {
     inline constexpr auto modulators = "The 16 modulators and the MIDI sources.";
     inline constexpr auto matrix     = "Every modulation route.";
+    inline constexpr auto turbo      = "A Turbo: two effects fed by the cams' sends, returned to the mix at its level and pan.";
+    inline constexpr auto exhaust    = "The Exhaust: two effects on the whole mix, then the output and the rev limiter.";
     inline constexpr auto belt       = "The timing belt (cross-modulation between the cams) and the dashboard: output gauges, warning lights, voice mode, panic.";
 }
 
@@ -156,7 +158,6 @@ namespace camshaft::tips::effects
 {
     inline constexpr auto turboSlot   = "A Turbo slot: the effect it holds. Turbos are fed by the cams' sends.";
     inline constexpr auto exhaustSlot = "An Exhaust slot: an effect on the whole mix.";
-    inline constexpr auto show        = "Show this slot's effect.";
     inline constexpr auto returnLevel = "Level of this Turbo in the mix.";
     inline constexpr auto returnPan   = "Pan of this Turbo in the mix.";
     inline constexpr auto dryMute     = "Dry mute: cams sending to this Turbo lose their dry signal (100 % wet).";
@@ -187,6 +188,7 @@ namespace camshaft::tips::dash
     inline constexpr auto gears    = "Voice mode: P poly, M mono (each note restarts the envelopes), L legato (notes played legato only move the pitch).";
     inline constexpr auto limiter  = "Rev limiter on or off (a safety limiter at -0.3 dBFS, always last).";
     inline constexpr auto hazard   = "Hazard: silences every voice at once (panic).";
+    inline constexpr auto throttle = "Throttle: the output level. Drag the pedal down to press it (louder), up to let it off; shift for fine steps, double-click for the default.";
 }
 
 namespace camshaft::tips::global

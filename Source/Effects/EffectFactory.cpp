@@ -2,8 +2,9 @@
   ------------------------------------------------------------------------------
     EffectFactory.cpp
 
-    See EffectFactory.h. The IR-backed effects (Cab, ConvolReverb) defer their
-    IR loading until a slot is set to them, as in MechanOdd.
+    See EffectFactory.h. The Cab defers its IR loading until a slot is set
+    to it, as in MechanOdd. Every effect's component is made in its compact
+    layout (no title, flat knobs, one row), for Camshaft's panes.
 
     Author: Olivier Doaré, github.com/odoare
     Dual-licensed, mirroring the JUCE framework it depends on: under the GNU
@@ -20,35 +21,37 @@
 #include "TubeComponent.h"
 #include "Equalizer.h"
 #include "EqualizerComponent.h"
-#include "Oct.h"
-#include "OctComponent.h"
 #include "Compressor.h"
 #include "CompressorComponent.h"
-#include "Limiter.h"
-#include "LimiterComponent.h"
-#include "Transient.h"
-#include "TransientComponent.h"
 #include "Cab.h"
 #include "CabComponent.h"
-#include "ConvolReverb.h"
-#include "ConvolReverbComponent.h"
 #include "Chorus.h"
 #include "ChorusComponent.h"
 #include "Flanger.h"
 #include "FlangerComponent.h"
 #include "Phaser.h"
 #include "PhaserComponent.h"
-#include "Freeze.h"
-#include "FreezeComponent.h"
+#include "Reverb.h"
+#include "ReverbComponent.h"
 
 namespace camshaft
 {
 
 namespace
 {
+    /** An effect's component in its compact layout (the Tube's constructor
+        has an extra layout flag before it). */
+    template <class FXComponent, class FX>
+    std::unique_ptr<juce::Component> makeCompact (FX& fx, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
+    {
+        if constexpr (std::is_same_v<FXComponent, TubeComponent>)
+            return std::make_unique<FXComponent> (fx, apvts, prefix, false, true, true);
+        else
+            return std::make_unique<FXComponent> (fx, apvts, prefix, false, true);
+    }
+
     template <class FX, class FXComponent, PrepareArgs Args>
-    EffectTypeInfo makeEntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag,
-                              int preferredWidth, int preferredHeight)
+    EffectTypeInfo makeEntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag)
     {
         using Adapter = EffectAdapter<FX, Args>;
         return {
@@ -57,10 +60,8 @@ namespace
             [] (EffectTypeInfo::ParameterList& params, const juce::String& prefix) { FX::addParameters (params, prefix); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
-                auto& impl = static_cast<Adapter&> (e).get();
-                return std::unique_ptr<juce::Component> (new FXComponent (impl, apvts, prefix));
-            },
-            preferredWidth, preferredHeight
+                return makeCompact<FXComponent> (static_cast<Adapter&> (e).get(), apvts, prefix);
+            }
         };
     }
 
@@ -179,46 +180,8 @@ namespace
         }
     };
 
-    class ConvolReverbAdapter : public DeferredIRAdapter<ConvolReverb>
-    {
-    public:
-        // Same order as FxmeFX's own ConvolReverb plugin (the IR parameter is
-        // an index, and the module presets shared with it store it). The
-        // first three hold mid / side and are decoded to left / right.
-        struct IR { const char* name; const char* resource; bool midSide; };
-        static constexpr IR kIRs[] = {
-            { "Council Chamber",         "Council_Chamber_wav",         true  },
-            { "Forest short",            "Forest_short_wav",            true  },
-            { "Forest long",             "Forest_long_wav",             true  },
-            { "Rectangular room small",  "Rectangular_room_small_wav",  false },
-            { "Rectangular room medium", "Rectangular_room_medium_wav", false },
-            { "Rectangular room large",  "Rectangular_room_large_wav",  false },
-        };
-        static constexpr int numIRs = (int) std::size (kIRs);
-
-        static void addParameters (EffectTypeInfo::ParameterList& params, const juce::String& prefix)
-        {
-            ConvolReverb::addParameters (params, prefix, numIRs);
-        }
-
-    protected:
-        void setImpulseList() override
-        {
-            juce::StringArray names, resources, midSide;
-            for (const auto& ir : kIRs)
-            {
-                names.add (ir.name);
-                resources.add (ir.resource);
-                if (ir.midSide)
-                    midSide.add (ir.resource);
-            }
-            impl.setImpulseList (names, resources, midSide);
-        }
-    };
-
     template <class Adapter, class FXComponent>
-    EffectTypeInfo makeIREntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag,
-                                int preferredWidth, int preferredHeight)
+    EffectTypeInfo makeIREntry (const juce::String& name, const juce::String& moduleName, const juce::String& paramTag)
     {
         return {
             name, moduleName, paramTag,
@@ -226,35 +189,26 @@ namespace
             [] (EffectTypeInfo::ParameterList& params, const juce::String& prefix) { Adapter::addParameters (params, prefix); },
             [] (Effect& e, juce::AudioProcessorValueTreeState& apvts, const juce::String& prefix)
             {
-                auto& impl = static_cast<Adapter&> (e).get();
-                return std::unique_ptr<juce::Component> (new FXComponent (impl, apvts, prefix));
-            },
-            preferredWidth, preferredHeight
+                return makeCompact<FXComponent> (static_cast<Adapter&> (e).get(), apvts, prefix);
+            }
         };
     }
 }
 
 const std::vector<EffectTypeInfo>& EffectFactory::types()
 {
-    // The sizes of the FxmeFX plugins' editors (their PluginEditor.h), plus
-    // the effect's own title row (fxmefx::kTopBarHeight).
-    constexpr int titleRow = 44;
     using P = PrepareArgs;
-    // Append only: a slot's type parameter is an index into this list.
+    // A slot's type parameter is an index into this list.
     static const std::vector<EffectTypeInfo> registry = {
-        makeEntry<StereoDelay, StereoDelayComponent, P::rateBlock>         ("Delay",     "StereoDelay", "Del",     600, 340 + titleRow),
-        makeEntry<Tube,        TubeComponent,        P::rate>              ("Tube",      "Tube",        "Tube",    400, 300 + titleRow),
-        makeEntry<Equalizer,   EqualizerComponent,   P::rateChannels>      ("EQ",        "Equalizer",   "EQ",      600, 700 + titleRow),
-        makeEntry<Oct,         OctComponent,         P::rateChannels>      ("Oct",       "Oct",         "Oct",     520, 320 + titleRow),
-        makeEntry<Compressor,  CompressorComponent,  P::rateChannels>      ("Comp",      "Compressor",  "Comp",    600, 300 + titleRow),
-        makeEntry<Limiter,     LimiterComponent,     P::rateChannels>      ("Limit",     "Limiter",     "Lim",     600, 300 + titleRow),
-        makeEntry<Transient,   TransientComponent,   P::rateChannels>      ("Transient", "Transient",   "Trans",   480, 300 + titleRow),
-        makeIREntry<CabAdapter,          CabComponent>                     ("Cab",       "Cab",          "Cab",    600, 400 + titleRow),
-        makeIREntry<ConvolReverbAdapter, ConvolReverbComponent>            ("Reverb",    "ConvolReverb", "Rev",    600, 400 + titleRow),
-        makeEntry<Chorus,      ChorusComponent,      P::rateBlockChannels> ("Chorus",    "Chorus",      "Chorus",  560, 340 + titleRow),
-        makeEntry<Flanger,     FlangerComponent,     P::rateBlockChannels> ("Flanger",   "Flanger",     "Flanger", 560, 340 + titleRow),
-        makeEntry<Phaser,      PhaserComponent,      P::rateBlockChannels> ("Phaser",    "Phaser",      "Phaser",  620, 340 + titleRow),
-        makeEntry<Freeze,      FreezeComponent,      P::rateBlockChannels> ("Freeze",    "Freeze",      "Freeze",  520, 360 + titleRow),
+        makeEntry<StereoDelay, StereoDelayComponent, P::rateBlock>         ("Delay",   "StereoDelay", "Del"),
+        makeEntry<Tube,        TubeComponent,        P::rate>              ("Tube",    "Tube",        "Tube"),
+        makeEntry<Equalizer,   EqualizerComponent,   P::rateChannels>      ("EQ",      "Equalizer",   "EQ"),
+        makeEntry<Compressor,  CompressorComponent,  P::rateChannels>      ("Comp",    "Compressor",  "Comp"),
+        makeIREntry<CabAdapter, CabComponent>                              ("Cab",     "Cab",         "Cab"),
+        makeEntry<Chorus,      ChorusComponent,      P::rateBlockChannels> ("Chorus",  "Chorus",      "Chorus"),
+        makeEntry<Flanger,     FlangerComponent,     P::rateBlockChannels> ("Flanger", "Flanger",     "Flanger"),
+        makeEntry<Phaser,      PhaserComponent,      P::rateBlockChannels> ("Phaser",  "Phaser",      "Phaser"),
+        makeEntry<ReverbEffect, ReverbComponent,     P::rateBlockChannels> ("Reverb",  "Reverb",      "Verb"),
     };
     return registry;
 }

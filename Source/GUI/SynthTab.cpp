@@ -90,9 +90,10 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     }
 
     // ---- Bottom band ----
-    const char* names[] = { "Belt & Viz", "Modulators", "Matrix" };
-    const char* tabTips[] = { tips::bottom::belt, tips::bottom::modulators, tips::bottom::matrix };
-    for (int i = 0; i < 3; ++i)
+    const char* names[] = { "Belt & Viz", "Modulators", "Matrix", "Turbo 1", "Turbo 2", "Exhaust" };
+    const char* tabTips[] = { tips::bottom::belt, tips::bottom::modulators, tips::bottom::matrix,
+                              tips::bottom::turbo, tips::bottom::turbo, tips::bottom::exhaust };
+    for (int i = 0; i < numBottomTabs; ++i)
     {
         auto& t = bottomTabs[(size_t) i];
         t.setButtonText (names[i]);
@@ -108,6 +109,11 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     addChildComponent (matrix);
     addChildComponent (belt);
     addChildComponent (dashboard);
+    for (int c = 0; c < 3; ++c)
+    {
+        chainPanes[(size_t) c] = std::make_unique<ChainPane> (processor, c);
+        addChildComponent (*chainPanes[(size_t) c]);
+    }
     showBottom (0);
 
     camsDice.setTooltip (tips::dice::cams);
@@ -191,7 +197,9 @@ void SynthTab::showBottom (int index)
     dashboard.setVisible (index == 0);
     modulators.setVisible (index == 1);
     matrix.setVisible (index == 2);
-    for (int i = 0; i < 3; ++i)
+    for (int c = 0; c < 3; ++c)
+        chainPanes[(size_t) c]->setVisible (index == 3 + c);
+    for (int i = 0; i < numBottomTabs; ++i)
         bottomTabs[(size_t) i].setToggleState (i == index, juce::dontSendNotification);
     modsDice.setVisible (index == 1);
 }
@@ -250,6 +258,8 @@ void SynthTab::resized()
     area.removeFromTop (4);
     modulators.setBounds (area);
     matrix.setBounds (area);
+    for (auto& pane : chainPanes)
+        pane->setBounds (area);
     auto left = area.removeFromLeft (area.getWidth() / 2);
     belt.setBounds (left.withTrimmedRight (3));
     dashboard.setBounds (area.withTrimmedLeft (3));

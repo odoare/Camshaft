@@ -285,12 +285,14 @@ browser), the gear (settings callout) and help. Then two tabs:
   (pages Cam, Filters, Amp, Mix), bottom band: Belt & Viz first (the timing
   belt on the left half, the dashboard on the right: tachometer, circular
   spectrum, vectorscope, warning lights, fuel and temperature gauges, gear
-  selector, rev limiter switch, hazard button; `Dashboard.h` lists them),
-  Modulators (draggable chips and per-type editors), Matrix. Dice in the
-  section headers.
-- Effects: Turbo 1 and 2 (two slots, return, pan, dry mute), Exhaust (two
-  slots), output and rev limiter, a large master view; the selected effect's
-  own panel with its module preset bar (shared with FxmeFX's plugins).
+  selector, rev limiter switch, hazard button, throttle pedal for the output;
+  `Dashboard.h` lists them), Modulators (draggable chips and per-type
+  editors), Matrix, then the effect chains, one pane each (`ChainPane`): Turbo
+  1 and 2 (return level, pan, dry mute) and the Exhaust (output level, rev
+  limiter), each over its two slots, every slot with its effect selector and
+  module preset bar over the effect's controls in their compact layout.
+  Dice in the section headers. There are no top tabs: the editor is this
+  one page.
 
 Every knob is a `CamKnob`: right-click menu (type a value, MIDI learn, modulate
 from a source, remove modulations, lock from Kick-start, reset), modulation ring

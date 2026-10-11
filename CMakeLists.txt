@@ -54,7 +54,7 @@ file(GLOB_RECURSE CAMSHAFT_SOURCES CONFIGURE_DEPENDS
 target_sources(Camshaft PRIVATE ${CAMSHAFT_SOURCES})
 target_include_directories(Camshaft PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
-# The module, FxmeCore and the WDL convolution engine (Cab, ConvolReverb).
+# The module, FxmeCore and WDL (the Cab's convolution, the Reverb's engine).
 fxmetools_attach(Camshaft)
 
 # ── Reused FxmeFX effects ───────────────────────────────────────────────────
@@ -65,8 +65,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/Common/CommonAssets.cmake)
 target_link_libraries(Camshaft PRIVATE FxmeCommonBinaryData)
 
 set(CAMSHAFT_FXMEFX_EFFECTS
-    StereoDelay Tube Equalizer Oct Compressor Limiter Transient Cab ConvolReverb
-    Chorus Flanger Phaser Freeze)
+    StereoDelay Tube Equalizer Compressor Cab Chorus Flanger Phaser Reverb)
 set(CAMSHAFT_ASSETS "")
 foreach(_fx IN LISTS CAMSHAFT_FXMEFX_EFFECTS ITEMS VuMeter)
     set(_fxdir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/${_fx})
@@ -75,7 +74,7 @@ foreach(_fx IN LISTS CAMSHAFT_FXMEFX_EFFECTS ITEMS VuMeter)
     target_sources(Camshaft PRIVATE ${_fxsrcs})
     target_include_directories(Camshaft PRIVATE ${_fxdir})
 
-    # Images and IR files (Cab uses IR/, ConvolReverb ir/).
+    # Images and IR files (Cab uses IR/).
     file(GLOB _fxassets
         ${_fxdir}/img/*.png ${_fxdir}/img/*.jpg ${_fxdir}/Assets/*.png
         ${_fxdir}/IR/*.wav  ${_fxdir}/ir/*.wav)

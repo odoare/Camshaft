@@ -90,26 +90,4 @@ void Tachometer::paint (juce::Graphics& g)
     g.fillEllipse (light);
 }
 
-//==============================================================================
-MasterView::MasterView (CamshaftAudioProcessor& p)
-    : tach (p), scope (p.getOutputTap(), 1024)
-{
-    fxme::Vectorscope::Colours colours;
-    colours.trace = theme::accent;
-    colours.grid = theme::grid;
-    colours.background = theme::plotBack;
-    scope.setColours (colours);
-    scope.setTooltip (tips::master::scope);
-    addAndMakeVisible (tach);
-    addAndMakeVisible (scope);
-}
-
-void MasterView::resized()
-{
-    auto b = getLocalBounds();
-    const int side = juce::jmin (b.getHeight(), b.getWidth() / 2);
-    scope.setBounds (b.removeFromRight (side));
-    tach.setBounds (b);
-}
-
 } // namespace camshaft

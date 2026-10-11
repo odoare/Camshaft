@@ -2,6 +2,29 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Effects in the bottom band; FxmeReverb; compact effect panels (2026-10-11)
+
+- The Effects tab and the top tabs are gone: Turbo 1, Turbo 2 and the Exhaust
+  are panes of the bottom band, after Belt & Viz, Modulators and Matrix
+  (`ChainPane`). Each shows its return level and pan and the dry mute (a
+  Turbo) or the output level and the rev limiter (the Exhaust), and its two
+  slots side by side, each with its effect selector and preset bar over the
+  effect's controls in their new compact layout.
+- Effects available: Delay, Tube, EQ, Comp, Cab, Chorus, Flanger, Phaser and
+  the new Reverb. Oct, Limiter, Transient, the convolution reverb and Freeze
+  are no longer in Camshaft (no migration: not released; the factory presets
+  will be reworked).
+- FxmeFX: a new plugin, FxmeReverb (`FVRB`), the WDL Freeverb engine through
+  FxmeTools' `fxme::Reverb` with pre-delay, size, damping, width, low and high
+  cut on the wet signal, mix and output, a click-free On switch; standard and
+  compact layouts, three factory presets, Pure Data external, CI and README
+  entries. Its wet level stays within 4 dB of the dry at every size.
+- FxmeFX: every effect Camshaft uses has a compact layout (`compact` after
+  `showTitle`; the Tube after `knobsInSingleRow`): no title, flat knobs, its
+  switches and menus on one line over one row of knobs; the Equalizer shows
+  its response graph beside one band's controls at a time.
+- Dashboard: the output level as a throttle pedal (drag it down to press it).
+
 ## GUI: bars, modulation outlines, tab colours (2026-10-11)
 
 - Horizontal bars (modulator level, filter balance, route depths, Turbo

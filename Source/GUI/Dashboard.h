@@ -24,6 +24,9 @@
       controls      the gear selector (P, M, L: poly, mono, legato), the rev
                     limiter switch, and the hazard button (panic: every voice
                     silenced at once)
+      throttle      the output level as an accelerator pedal: drag it down to
+                    press it (louder), up to let it off; wheel; double-click
+                    for the default
 
     Also here: OutputMeter, the stereo level meter of the top bar.
 
@@ -94,6 +97,26 @@ private:
     int gear = 0;
 };
 
+/** The output level as an accelerator pedal. */
+class ThrottlePedal : public juce::Component,
+                      public juce::SettableTooltipClient
+{
+public:
+    explicit ThrottlePedal (CamshaftAudioProcessor& processor);
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override;
+    void mouseDrag (const juce::MouseEvent&) override;
+    void mouseUp (const juce::MouseEvent&) override;
+    void mouseDoubleClick (const juce::MouseEvent&) override;
+    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
+
+private:
+    juce::RangedAudioParameter& param;
+    juce::ParameterAttachment attachment;
+    float value = 0.0f;           // in dB
+    float dragStartNorm = 0.0f;
+};
+
 /** The hazard button: a red triangle; click to silence every voice. */
 class HazardButton : public juce::Button
 {
@@ -125,6 +148,7 @@ private:
     GearSelector gears;
     fxme::FxmeButton limiterSwitch;
     HazardButton hazard;
+    ThrottlePedal throttle;
 
     std::array<juce::Rectangle<float>, 3> bezels;
     int lastSteals = 0, lastNotes = 0;

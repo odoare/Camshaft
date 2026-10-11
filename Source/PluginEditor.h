@@ -21,7 +21,6 @@
 #include "AppSettings.h"
 #include "Theme.h"
 #include "GUI/SynthTab.h"
-#include "GUI/EffectsTab.h"
 #include "GUI/MasterView.h"
 #include "GUI/Dashboard.h"
 
@@ -39,13 +38,6 @@ private:
     void showGlobalPanel();
     static juce::Image assetImage (const char* resourceName);
 
-    /** Tabs over the shared background. */
-    struct Tabs : public juce::TabbedComponent
-    {
-        Tabs() : juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop) {}
-        void paint (juce::Graphics& g) override { camshaft::theme::paintBackground (g, getLocalBounds().toFloat()); }
-    };
-
     CamshaftAudioProcessor& processor;
     fxme::FxmeLookAndFeel laf;
 
@@ -57,9 +49,7 @@ private:
     fxme::GearButton gearButton;
     fxme::InfoButton infoButton;
 
-    Tabs tabs;
     camshaft::SynthTab synthTab { processor };
-    camshaft::EffectsTab effectsTab { processor };
 
     /** The about screen: 3 s the first time an instance opens its editor,
         and until clicked from the logo or the icon. Last: over everything. */

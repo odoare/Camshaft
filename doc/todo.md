@@ -28,7 +28,8 @@ Numbered for reference; numbers are never reused (finished items move to
    length is not known when the state is read).
 
 7. **Parameter count** (decision, low; question asked 2026-10-10). About 1300 host parameters, most from the
-   six effect slots each holding all 13 FxmeFX effects (MechanOdd's design).
+   six effect slots each holding every effect (MechanOdd's design); nine
+   effects since 2026-10-11 (thirteen before), which already took a share off.
    Fewer effect types per slot, or Turbo slots limited to the time-based effects,
    would halve it. Parameter IDs freeze at the first public build.
 

@@ -44,8 +44,10 @@ namespace
         "warning lights (limiter, DSP load, voice stealing, MIDI, pedal, host "
         "sync, Turbo signal), the free voices and the DSP load, the voice mode "
         "(P M L) and the hazard button (panic).\n\n"
-        "Effects: two Turbo chains fed by the cams' sends, the Exhaust on the "
-        "whole mix, then the output and the rev limiter.\n\n"
+        "Turbo 1, Turbo 2, Exhaust (bottom band): two effect chains fed by the "
+        "cams' sends, returned at their level and pan, and the Exhaust on the "
+        "whole mix, then the output and the rev limiter. Each holds two effects, "
+        "each with its presets (shared with its FxmeFX plugin).\n\n"
         "Garage (presets): the arrows step through them, \"...\" opens the "
         "browser. The dice kick-start (randomize) a section, or everything from "
         "the top bar; locked knobs (right-click) are left alone.\n\n"
@@ -82,12 +84,8 @@ CamshaftAudioProcessorEditor::CamshaftAudioProcessorEditor (CamshaftAudioProcess
     topBar.setRightControls ({ { &headerMeter, 150 }, { &kickStart, 24 }, { &presetBar, 236 },
                                { &gearButton, 24 }, { &infoButton, 22 } });
 
-    // ---- Tabs ----
-    effectsTab.onRandomize = [this] { processor.randomize (RandomSection::effects); };
-    tabs.setTabBarDepth (28);
-    tabs.addTab ("Synth", theme::panel, &synthTab, false);
-    tabs.addTab ("Effects", theme::panel, &effectsTab, false);
-    addAndMakeVisible (tabs);
+    // ---- The synth, its effect chains in its bottom band ----
+    addAndMakeVisible (synthTab);
 
     // ---- Splash, last ----
     splash.setImage (assetImage ("splash_png"));
@@ -132,6 +130,6 @@ void CamshaftAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
     topBar.setBounds (area.removeFromTop (theme::topBarHeight));
-    tabs.setBounds (area);
+    synthTab.setBounds (area);
     splash.setBounds (getLocalBounds());
 }
