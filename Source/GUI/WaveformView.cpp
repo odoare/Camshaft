@@ -373,7 +373,8 @@ void WaveformView::drawWaveform (juce::Graphics& g, juce::Rectangle<float> area)
         const float mid = (float) h * 0.5f, half = (float) h * 0.48f;
         for (size_t ch = 0; ch < view->overview.size(); ++ch)
         {
-            ig.setColour ((ch == 0 ? theme::text : theme::steel).withAlpha (ch == 0 ? 0.55f : 0.35f));
+            // A light grey, the second channel a little softer behind it.
+            ig.setColour (juce::Colour (0xffcfd0d4).withAlpha (ch == 0 ? 0.88f : 0.55f));
             const auto& pyramid = view->overview[ch];
             for (int x = 0; x < w; ++x)
             {
