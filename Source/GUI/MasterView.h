@@ -4,9 +4,10 @@
 
     The master output, as an engine gauge and a scope:
 
-      Tachometer   an arc whose needle follows the output peak (dBFS), a
-                   redline at the rev limiter's ceiling (-0.3 dBFS) and a
-                   warning light while the limiter is cutting in.
+      Tachometer   an arc whose needle follows the output peak (dBFS, its
+                   ticks labelled), a redline at the rev limiter's ceiling
+                   (-0.3 dBFS) and a warning light while the limiter is
+                   cutting in.
       Vectorscope  fxme::Vectorscope on the output tap (Lissajous, mid up).
 
     MasterView puts the two side by side; the header carries a small one,

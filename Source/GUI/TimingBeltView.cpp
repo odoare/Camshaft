@@ -20,6 +20,12 @@
 namespace camshaft
 {
 
+namespace
+{
+    const juce::Colour beltGround { 0xff1c1d21 };
+    const juce::Colour pulleyFace { 0xff2a2c31 };
+}
+
 using namespace cam;
 
 namespace
@@ -68,7 +74,7 @@ void TimingBeltView::timerCallback()
     for (int c = 0; c < numCams; ++c)
         if (display.active[(size_t) c].load())
         {
-            angle[(size_t) c] += dt * 0.6f;
+            angle[(size_t) c] += dt * 0.35f * juce::MathConstants<float>::twoPi;   // as the cam profiles turn
             moving = true;
         }
     if (refusedFrames > 0 && --refusedFrames == 0)
@@ -132,7 +138,7 @@ void TimingBeltView::updateKnobs()
             const bool on = structure.getXmod (s, d) != 0;
             k.setVisible (on);
             if (on)
-                k.setBounds (juce::Rectangle<int> (34, 34).withCentre ((badgeCentre (s, d) + juce::Point<float> (0.0f, 24.0f)).toInt()));
+                k.setBounds (juce::Rectangle<int> (52, 56).withCentre ((badgeCentre (s, d) + juce::Point<float> (0.0f, 38.0f)).toInt()));
         }
 }
 
@@ -144,7 +150,12 @@ void TimingBeltView::resized()
 //==============================================================================
 void TimingBeltView::paint (juce::Graphics& g)
 {
-    theme::paintPanel (g, getLocalBounds().toFloat(), theme::accent);
+    // Dark grey ground, the pulleys a shade lighter.
+    const auto bounds = getLocalBounds().toFloat();
+    g.setColour (beltGround);
+    g.fillRoundedRectangle (bounds, 5.0f);
+    g.setColour (theme::panelLine);
+    g.drawRoundedRectangle (bounds.reduced (0.5f), 5.0f, 1.0f);
     theme::paintEngraved (g, "Timing belt", getLocalBounds().reduced (10, 6), juce::Justification::topLeft);
 
     auto& structure = processor.getStructure();
@@ -214,7 +225,7 @@ void TimingBeltView::paint (juce::Graphics& g)
         const auto colour = theme::camColour (c);
         const bool audible = apvts.getRawParameterValue (ids::cam (c, cfAudible))->load() > 0.5f;
 
-        g.setColour (theme::knobBody);
+        g.setColour (pulleyFace);
         g.fillEllipse (juce::Rectangle<float> (2.0f * r, 2.0f * r).withCentre (centre));
 
         // Teeth around the rim.

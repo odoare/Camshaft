@@ -89,7 +89,9 @@ private:
 
     CamshaftAudioProcessor& processor;
     int slot;
-    juce::Colour colour;
+    juce::Colour colour;                // the controls: the plugin's accent
+    juce::Colour slotColour;            // the modulator's own: its name, its curve
+    inline static const juce::Colour sustainBlue { 0xff40c0ff };
     int shownType = -1;
 
     std::vector<std::unique_ptr<juce::Component>> owned;

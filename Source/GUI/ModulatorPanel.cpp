@@ -53,11 +53,16 @@ void SourceChip::timerCallback()
 
 void SourceChip::paint (juce::Graphics& g)
 {
+    // A slot that is off or modulates nothing is grey; the others wear their
+    // colour (also the ring they draw around the knobs they modulate).
     auto b = getLocalBounds().toFloat().reduced (1.0f);
-    g.setColour (selected ? colour.withAlpha (0.35f) : theme::panelHi);
+    const auto tint = inUse ? colour : theme::dimText.withAlpha (0.6f);
+    g.setColour (selected ? tint.withAlpha (0.35f) : theme::panelHi);
     g.fillRoundedRectangle (b, 3.0f);
-    g.setColour (selected ? colour : theme::panelLine);
+    g.setColour (selected ? tint : (inUse ? tint.withAlpha (0.55f) : theme::panelLine));
     g.drawRoundedRectangle (b, 3.0f, 1.0f);
+    g.setColour (tint);
+    g.fillRoundedRectangle (b.withWidth (3.0f).reduced (0.0f, 2.0f), 1.5f);
 
     // Live output: a bar along the bottom. A bipolar source grows from the
     // centre, -1 at the left edge and +1 at the right; a unipolar one from
@@ -108,7 +113,7 @@ void SourceChip::mouseUp (const juce::MouseEvent&)
 
 //==============================================================================
 ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
-    : processor (p), slot (s), colour (theme::steel)
+    : processor (p), slot (s), colour (theme::accent), slotColour (theme::modColour (s))
 {
     typeBox = &combo (mfType, tips::mods::type);
     level = &knob (mfLevel, tips::mods::level);
@@ -138,9 +143,12 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     durationMode = &combo (mfDurationMode, tips::mods::durationMode);
     dawSync = &toggle (mfDawSync, "Stick to DAW", tips::mods::daw);
 
+    // The curve in its modulator's colour; the sustain controls in the
+    // sustain region's blue.
     fxme::BreakpointCurveEditor::Colours cc;
-    cc.curve = theme::accent;
-    cc.fill = theme::accent.withAlpha (0.15f);
+    cc.curve = slotColour;
+    cc.fill = slotColour.withAlpha (0.15f);
+    cc.sustain = sustainBlue.withAlpha (0.19f);
     cc.background = theme::plotBack;
     curveEditor.setColours (cc);
     curveEditor.setTooltip (tips::mods::curveEditor);
@@ -166,12 +174,12 @@ ModulatorEditor::ModulatorEditor (CamshaftAudioProcessor& p, int s)
     };
     for (auto* t : { &sustainToggle, &releaseToggle })
     {
-        theme::accentToggle (*t, theme::accent);
+        theme::accentToggle (*t, sustainBlue);
         addChildComponent (*t);
         t->onClick = sustainEdited;
     }
     sustainModeBox.addItemList ({ "Hold", "Loop", "Back & forth" }, 1);
-    theme::accentCombo (sustainModeBox, colour);
+    theme::accentCombo (sustainModeBox, sustainBlue);
     sustainModeBox.onChange = sustainEdited;
     addChildComponent (sustainModeBox);
     sustainToggle.setTooltip (tips::mods::sustainRegion);
@@ -315,7 +323,7 @@ void ModulatorEditor::layoutForType()
 void ModulatorEditor::paint (juce::Graphics& g)
 {
     auto header = getLocalBounds().removeFromTop (24);
-    g.setColour (theme::text);
+    g.setColour (slotColour);
     g.setFont (theme::labelFont (13.0f));
     g.drawText (sourceName (processor.getAPVTS(), srcModFirst + slot), header.removeFromLeft (80), juce::Justification::centredLeft);
 
@@ -389,7 +397,7 @@ ModulatorPanel::ModulatorPanel (CamshaftAudioProcessor& p) : processor (p)
 {
     for (int m = 0; m < numModulators; ++m)
     {
-        auto chip = std::make_unique<SourceChip> (processor, srcModFirst + m, theme::steel);
+        auto chip = std::make_unique<SourceChip> (processor, srcModFirst + m, theme::modColour (m));
         chip->onClick = [this, m] { select (m); };
         addAndMakeVisible (*chip);
         slotChips.push_back (std::move (chip));
@@ -437,19 +445,20 @@ void ModulatorPanel::resized()
 {
     auto area = getLocalBounds().reduced (6);
 
-    // Slot chips: 4 x 4; fixed sources: 4 per row under them.
+    // Slot chips: 4 x 4; fixed sources: 4 per row under them; all the rows
+    // share the column's height.
     auto left = area.removeFromLeft (juce::jmin (330, area.getWidth() / 3));
-    const int chipH = 22, cols = 4;
+    constexpr int cols = 4, gap = 8;
+    const int fixedRows = ((int) fixedChips.size() + cols - 1) / cols;
+    const int chipH = juce::jmax (18, (left.getHeight() - gap) / (4 + fixedRows));
+    const int cw = left.getWidth() / cols;
     auto grid = left.removeFromTop (chipH * 4);
-    const int cw = grid.getWidth() / cols;
     for (int m = 0; m < (int) slotChips.size(); ++m)
         slotChips[(size_t) m]->setBounds (grid.getX() + (m % cols) * cw, grid.getY() + (m / cols) * chipH, cw, chipH);
 
-    left.removeFromTop (8);
-    const int rows = ((int) fixedChips.size() + cols - 1) / cols;
-    const int fh = juce::jmin (20, left.getHeight() / juce::jmax (1, rows));
+    left.removeFromTop (gap);
     for (int i = 0; i < (int) fixedChips.size(); ++i)
-        fixedChips[(size_t) i]->setBounds (left.getX() + (i % cols) * cw, left.getY() + (i / cols) * fh, cw, fh);
+        fixedChips[(size_t) i]->setBounds (left.getX() + (i % cols) * cw, left.getY() + (i / cols) * chipH, cw, chipH);
 
     area.removeFromLeft (10);
     if (editor != nullptr)

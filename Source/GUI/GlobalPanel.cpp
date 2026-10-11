@@ -50,6 +50,7 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
       glideSync (p.getAPVTS(), ids::glideSync, "Sync", theme::accent)
 {
     laf.setAccentColour (theme::accent);
+    laf.setKnobStyle (fxme::FxmeLookAndFeel::KnobStyle::flat);
     setLookAndFeel (&laf);
 
     voices.setTooltip (tips::global::voices);

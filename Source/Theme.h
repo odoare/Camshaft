@@ -36,6 +36,7 @@ namespace camshaft::theme
     inline const juce::Colour engraved   { 0xff6e6c66 };
     inline const juce::Colour topBarBg   { 0xff0f1013 };
     inline const juce::Colour knobBody   { 0xff2b2b2e };
+    inline const juce::Colour knobCentre { 0xff0c0c0e };   // the knobs' disc: almost black
 
     /** The warning orange: the top bar hairline, the presets, the redline. */
     inline const juce::Colour accent     { 0xffff7a1a };
@@ -51,17 +52,30 @@ namespace camshaft::theme
         return colours[(size_t) juce::jlimit (0, 3, c)];
     }
 
+    /** Modulator slot m's colour: its chip, and the ring it draws around the
+        knobs it modulates. Hues spread by the golden ratio, so neighbouring
+        slots never look alike. */
+    inline juce::Colour modColour (int m) noexcept
+    {
+        const float hue = std::fmod (0.03f + 0.6180339887f * (float) m, 1.0f);
+        return juce::Colour::fromHSV (hue, 0.58f, 0.95f, 1.0f);
+    }
+
     inline juce::Colour auxColour (int a) noexcept { return a == 0 ? juce::Colour (0xff7cc46e) : juce::Colour (0xff5aa0e0); }
     inline const juce::Colour exhaustColour { 0xffd0613f };
 
     // ---- Fonts ---------------------------------------------------------------
-    inline juce::Font labelFont (float h = 12.0f)  { return juce::Font (juce::FontOptions (h, juce::Font::bold)); }
-    inline juce::Font gaugeFont (float h = 11.0f)  { return juce::Font (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), h, juce::Font::plain)); }
+    /** Every label and read-out is drawn this much larger than its nominal
+        size (the layouts keep their sizes). */
+    inline constexpr float fontScale = 1.12f;
+
+    inline juce::Font labelFont (float h = 12.0f)  { return juce::Font (juce::FontOptions (h * fontScale, juce::Font::bold)); }
+    inline juce::Font gaugeFont (float h = 11.0f)  { return juce::Font (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(), h * fontScale, juce::Font::plain)); }
 
     // ---- Control styling -----------------------------------------------------
     inline void accentSlider (juce::Slider& s, juce::Colour a)
     {
-        s.setColour (juce::Slider::rotarySliderFillColourId,    knobBody);
+        s.setColour (juce::Slider::rotarySliderFillColourId,    knobCentre);
         s.setColour (juce::Slider::rotarySliderOutlineColourId, a.darker (1.6f));
         s.setColour (juce::Slider::trackColourId,               a);
         s.setColour (juce::Slider::thumbColourId,               a.brighter (0.4f));

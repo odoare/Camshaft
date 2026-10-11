@@ -2,6 +2,38 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## GUI: larger cam knobs, curve colours, darker belt (2026-10-11)
+
+- The Cam, Amp and Mix pages' knob rows grow into the strip's spare height
+  (`ControlPage::addRow` takes a maximum), so their knobs are larger while the
+  strips and the labels keep their sizes; the Filters page is unchanged. Its
+  knobs lose the "F1" / "F2" prefix (the host names keep it). Toggles in a
+  page keep a button's size (Rnd phase now looks like Audible).
+- The modulator chips share the whole height of their column.
+- Curve editor: the curve in its modulator's colour, the sustain and release
+  switches and the loop mode in the sustain region's blue. The editor's other
+  controls are back to the plugin's orange (the slot's colour stays on its
+  name and its curve).
+- The timing belt is darker, its pulleys too, and they turn at the cam
+  profiles' speed.
+- The knobs' discs are almost black (theme `knobCentre`).
+
+## GUI: modulator colours, flat knobs, larger text (2026-10-11)
+
+- Each modulator slot has its own colour (theme `modColour`, hues spread by
+  the golden ratio): its chip wears it (a stripe, the outline), grey when the
+  slot is off or modulates nothing, and every knob it modulates shows the
+  modulation as an outline in that colour, one per route (amp envelopes in
+  their cam's colour, MIDI and voice sources in steel). The slot's editor
+  uses it as its accent.
+- Knobs use a new flat style (FxmeTools `FxmeLookAndFeel::KnobStyle::flat`):
+  no light rim, thicker arcs, a bold pointer mark, a larger bold label.
+- Labels and read-outs are 12 % larger (theme `fontScale`), the layouts
+  unchanged.
+- The timing belt sits on dark grey with lighter grey pulleys; its lift knobs
+  are larger.
+- The dashboard's tachometer has its ticks labelled in dB.
+
 ## Belt & Viz and the dashboard; a level meter in the top bar (2026-10-10)
 
 - The bottom band opens on "Belt & Viz" (first tab): the timing belt on the

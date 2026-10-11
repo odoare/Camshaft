@@ -34,13 +34,16 @@ class CamshaftAudioProcessor;
 namespace camshaft
 {
 
-/** A knob page laid out as rows; controls are owned by the page. */
+/** A knob page laid out as rows; controls are owned by the page. A row
+    may grow (up to a height) into the page's spare room, so its knobs get
+    larger without the page changing size; toggle buttons keep a button's
+    height whatever their row's. */
 class ControlPage : public juce::Component
 {
 public:
     using Row = std::vector<juce::Component*>;
 
-    void addRow (Row row, int height) { rows.push_back ({ std::move (row), height }); }
+    void addRow (Row row, int height, int maxHeight = 0) { rows.push_back ({ std::move (row), height, juce::jmax (height, maxHeight) }); }
     void resized() override;
 
     template <typename T, typename... Args>
@@ -57,7 +60,7 @@ public:
                            const char* tooltip);
 
 private:
-    struct RowInfo { Row items; int height; };
+    struct RowInfo { Row items; int height, maxHeight; };
     std::vector<RowInfo> rows;
     std::vector<std::unique_ptr<juce::Component>> owned;
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>> attachments;

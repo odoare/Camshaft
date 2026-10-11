@@ -26,25 +26,59 @@ using namespace cam;
 void ControlPage::resized()
 {
     auto area = getLocalBounds();
-    int fixed = 0;
+
+    // The spare room goes first to the rows that may grow (shared out, each
+    // up to its maximum), the rest into equal gaps.
+    std::vector<int> heights;
+    int total = 0;
     for (const auto& r : rows)
-        fixed += r.height;
-    const int spare = juce::jmax (0, area.getHeight() - fixed);
+    {
+        heights.push_back (r.height);
+        total += r.height;
+    }
+    const int minGaps = 4 * (int) (rows.size() + 1);
+    for (int pass = 0; pass < 4; ++pass)
+    {
+        const int room = area.getHeight() - total - minGaps;
+        int open = 0;
+        for (size_t i = 0; i < rows.size(); ++i)
+            open += heights[i] < rows[i].maxHeight ? 1 : 0;
+        if (room <= 0 || open == 0)
+            break;
+        const int share = juce::jmax (1, room / open);
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            const int add = juce::jmin (share, rows[i].maxHeight - heights[i]);
+            if (add > 0)
+            {
+                heights[i] += add;
+                total += add;
+            }
+        }
+    }
+
+    const int spare = juce::jmax (0, area.getHeight() - total);
     const int gap = rows.empty() ? 0 : spare / (int) (rows.size() + 1);
 
     area.removeFromTop (gap);
-    for (const auto& r : rows)
+    for (size_t ri = 0; ri < rows.size(); ++ri)
     {
-        auto line = area.removeFromTop (r.height);
+        const auto& r = rows[ri];
+        auto line = area.removeFromTop (heights[ri]);
         area.removeFromTop (gap);
         if (r.items.empty())
             continue;
         const int w = line.getWidth() / (int) r.items.size();
         for (auto* item : r.items)
-            if (item != nullptr)
-                item->setBounds (line.removeFromLeft (w).reduced (2, 1));
-            else
-                line.removeFromLeft (w);
+        {
+            auto cell = line.removeFromLeft (w);
+            if (item == nullptr)
+                continue;
+            // A toggle keeps a button's size, whatever its row's height.
+            if (dynamic_cast<fxme::FxmeButton*> (item) != nullptr)
+                cell = cell.withSizeKeepingCentre (juce::jmin (cell.getWidth(), 86), juce::jmin (cell.getHeight(), 22));
+            item->setBounds (cell.reduced (2, 1));
+        }
     }
 }
 
@@ -94,7 +128,14 @@ CamStrip::CamStrip (CamshaftAudioProcessor& p, int c)
 
 CamKnob& CamStrip::knob (ControlPage& page, int field, const char* tooltip, bool bipolar)
 {
-    auto& k = page.make<CamKnob> (processor, ids::cam (cam, field), camSpecs[field].name, colour, bipolar);
+    // The filters' knobs sit in their filter's rows: "Cutoff", not "F1 cutoff".
+    juce::String label (camSpecs[field].name);
+    if (label.startsWith ("F1 ") || label.startsWith ("F2 "))
+    {
+        label = label.substring (3);
+        label = label.substring (0, 1).toUpperCase() + label.substring (1);
+    }
+    auto& k = page.make<CamKnob> (processor, ids::cam (cam, field), label, colour, bipolar);
     k.setTooltip (tooltip);
     return k;
 }
@@ -109,7 +150,7 @@ void CamStrip::buildCamPage()
     auto& overlap = knob (page, cfOverlap, tips::cam::overlap);
     auto& coarse  = knob (page, cfCoarse, tips::cam::coarse, true);
     auto& fine    = knob (page, cfFine, tips::cam::fine, true);
-    page.addRow ({ &start, &length, &overlap, &coarse, &fine }, 64);
+    page.addRow ({ &start, &length, &overlap, &coarse, &fine }, 64, 84);
 
     auto& shape = page.combo (apvts, ids::cam (cam, cfOverlapShape), colour, tips::cam::overlapShape);
     auto& snap  = page.combo (apvts, ids::cam (cam, cfSnap), colour, tips::cam::snap);
@@ -120,7 +161,7 @@ void CamStrip::buildCamPage()
     spreadKnob = &knob (page, cfSpread, tips::cam::spread);
     auto& randomPhase = page.make<fxme::FxmeButton> (apvts, ids::cam (cam, cfRandomPhase), "Rnd phase", colour);
     randomPhase.button.setTooltip (tips::cam::randomPhase);
-    page.addRow ({ &cylinders, detuneKnob, spreadKnob, &randomPhase }, 64);
+    page.addRow ({ &cylinders, detuneKnob, spreadKnob, &randomPhase }, 64, 84);
 }
 
 void CamStrip::buildFilterPage()
@@ -161,13 +202,13 @@ void CamStrip::buildAmpPage()
     auto& d = knob (page, cfDecay, tips::cam::decay);
     auto& s = knob (page, cfSustain, tips::cam::sustain);
     auto& r = knob (page, cfRelease, tips::cam::release);
-    page.addRow ({ &a, &d, &s, &r }, 70);
+    page.addRow ({ &a, &d, &s, &r }, 70, 96);
 
     auto& ac = knob (page, cfAttackCurve, tips::cam::attackCurve, true);
     auto& dc = knob (page, cfDecayCurve, tips::cam::decayCurve, true);
     auto& rc = knob (page, cfReleaseCurve, tips::cam::releaseCurve, true);
     auto& v  = knob (page, cfVelocity, tips::cam::velocity);
-    page.addRow ({ &ac, &dc, &rc, &v }, 64);
+    page.addRow ({ &ac, &dc, &rc, &v }, 64, 90);
 }
 
 void CamStrip::buildMixPage()
@@ -179,7 +220,7 @@ void CamStrip::buildMixPage()
     auto& pan    = knob (page, cfPan, tips::cam::pan, true);
     auto& send1  = knob (page, cfSend1, tips::cam::send1);
     auto& send2  = knob (page, cfSend2, tips::cam::send2);
-    page.addRow ({ &volume, &pan, &send1, &send2 }, 72);
+    page.addRow ({ &volume, &pan, &send1, &send2 }, 72, 96);
 
     auto& tap1 = page.combo (apvts, ids::cam (cam, cfTap1), theme::auxColour (0), tips::cam::tap1);
     auto& tap2 = page.combo (apvts, ids::cam (cam, cfTap2), theme::auxColour (1), tips::cam::tap2);
@@ -193,7 +234,7 @@ void CamStrip::buildMixPage()
         k.setTooltip (tips::cam::lift);
         lifts.push_back (&k);
     }
-    page.addRow (lifts, 56);
+    page.addRow (lifts, 56, 80);
 }
 
 //==============================================================================

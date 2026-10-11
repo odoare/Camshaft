@@ -61,6 +61,19 @@ juce::PopupMenu sourcesMenu (juce::AudioProcessorValueTreeState& apvts, int tick
     return menu;
 }
 
+juce::Colour sourceColour (juce::AudioProcessorValueTreeState& apvts, int s)
+{
+    if (s >= srcModFirst && s < srcModFirst + numModulators)
+    {
+        const int m = s - srcModFirst;
+        const int type = (int) apvts.getRawParameterValue (ids::mod (m, mfType))->load();
+        return type == mtOff ? theme::dimText : theme::modColour (m);
+    }
+    if (s >= srcAmpEnvFirst && s < srcAmpEnvFirst + numCams)
+        return theme::camColour (s - srcAmpEnvFirst);
+    return theme::steel;
+}
+
 bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int s)
 {
         if (s >= srcModFirst && s < srcModFirst + numModulators)
@@ -175,6 +188,7 @@ void CamKnob::timerCallback()
 
     float lo = 0.0f, hi = 0.0f;
     bool ring = false;
+    std::vector<Ring> newRings;
     for (int i : routesIn)
     {
         const auto r = structure.getRoute (i);
@@ -185,6 +199,15 @@ void CamKnob::timerCallback()
         const float smin = sourceIsBipolar (apvts, r.source) ? -1.0f : 0.0f;
         lo += juce::jmin (d * smin, d);
         hi += juce::jmax (d * smin, d);
+        newRings.push_back ({ juce::jmin (d * smin, d), juce::jmax (d * smin, d), sourceColour (apvts, r.source) });
+    }
+    bool ringsChanged = newRings.size() != rings.size();
+    for (size_t i = 0; ! ringsChanged && i < rings.size(); ++i)
+        ringsChanged = newRings[i] != rings[i];
+    if (ringsChanged)
+    {
+        rings = std::move (newRings);
+        repaint();
     }
 
     const float newLive = liveValue();
@@ -221,13 +244,14 @@ void CamKnob::paint (juce::Graphics& g)
         return;
     }
 
-    // The same geometry as FxmeLookAndFeel::drawRotarySlider.
+    // The knob as the look-and-feel draws it.
     const auto b = getLocalBounds().toFloat();
-    const float diameter = 0.7f * juce::jmin (b.getWidth(), b.getHeight());
-    const float labelHeight = juce::jmin (diameter * 0.32f, b.getHeight() - diameter);
-    const float radius = diameter * 0.5f;
-    const float cx = b.getCentreX();
-    const float cy = b.getY() + (b.getHeight() - (diameter + labelHeight)) * 0.5f + radius;
+    auto style = fxme::FxmeLookAndFeel::KnobStyle::classic;
+    if (auto* fl = dynamic_cast<fxme::FxmeLookAndFeel*> (&getLookAndFeel()))
+        style = fl->styleFor (*this);
+    const auto geo = fxme::FxmeLookAndFeel::rotaryGeometry (b, true, style);
+    const float radius = geo.radius;
+    const float cx = geo.centre.x, cy = geo.centre.y;
     const auto rp = getRotaryParameters();
     auto angleAt = [&] (float norm)
     {
@@ -235,15 +259,26 @@ void CamKnob::paint (juce::Graphics& g)
     };
 
     const float base = param != nullptr ? param->getValue() : 0.0f;
-    const float ringR = radius + diameter / 12.0f * 1.3f;
+    const float ringR = radius + 2.5f;
 
+    // The modulations, an outline per route in its source's colour, the
+    // first one closest to the knob.
     if (hasRing)
     {
-        juce::Path arc;
-        const float a0 = angleAt (base + ringLo), a1 = angleAt (base + ringHi);
-        arc.addCentredArc (cx, cy, ringR, ringR, 0.0f, juce::jmin (a0, a1), juce::jmax (a0, a1), true);
-        g.setColour (theme::steel.withAlpha (isEnabled() ? 0.85f : 0.3f));
-        g.strokePath (arc, juce::PathStrokeType (2.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        const float alpha = isEnabled() ? 0.95f : 0.3f;
+        for (size_t i = 0; i < rings.size() && i < 4; ++i)
+        {
+            const auto& ring = rings[i];
+            const float rr = ringR + 3.0f * (float) i;
+            juce::Path faint, arc;
+            faint.addCentredArc (cx, cy, rr, rr, 0.0f, rp.startAngleRadians, rp.endAngleRadians, true);
+            g.setColour (ring.colour.withAlpha (0.18f * alpha));
+            g.strokePath (faint, juce::PathStrokeType (2.0f));
+            const float a0 = angleAt (base + ring.lo), a1 = angleAt (base + ring.hi);
+            arc.addCentredArc (cx, cy, rr, rr, 0.0f, juce::jmin (a0, a1), juce::jmax (a0, a1), true);
+            g.setColour (ring.colour.withAlpha (alpha));
+            g.strokePath (arc, juce::PathStrokeType (2.2f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
     }
 
     if (live >= 0.0f)

@@ -56,6 +56,7 @@ CamshaftAudioProcessorEditor::CamshaftAudioProcessorEditor (CamshaftAudioProcess
     : AudioProcessorEditor (&p), processor (p)
 {
     laf.setAccentColour (theme::accent);
+    laf.setKnobStyle (fxme::FxmeLookAndFeel::KnobStyle::flat);
     setLookAndFeel (&laf);
 
     // ---- Top bar ----

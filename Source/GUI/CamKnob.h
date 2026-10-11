@@ -42,6 +42,10 @@ juce::String sourceName (juce::AudioProcessorValueTreeState& apvts, int source);
     from the centre. */
 bool sourceIsBipolar (juce::AudioProcessorValueTreeState& apvts, int source);
 
+/** A source's colour: a modulator slot's own (grey when off), a cam's for
+    its amp envelope, steel for the MIDI and voice sources. */
+juce::Colour sourceColour (juce::AudioProcessorValueTreeState& apvts, int source);
+
 /** Drag description of a modulation source chip: "modsrc:<index>". */
 juce::String sourceDragDescription (int source);
 int sourceFromDragDescription (const juce::var& description);
@@ -82,6 +86,17 @@ private:
 
     // What is drawn, refreshed by the timer.
     float ringLo = 0.0f, ringHi = 0.0f;
+    /** One ring per route into the knob, in its source's colour. */
+    struct Ring
+    {
+        float lo = 0.0f, hi = 0.0f;
+        juce::Colour colour;
+        bool operator!= (const Ring& o) const noexcept
+        {
+            return std::abs (lo - o.lo) > 1.0e-6f || std::abs (hi - o.hi) > 1.0e-6f || colour != o.colour;
+        }
+    };
+    std::vector<Ring> rings;
     juce::Array<int> routesIn;     // the routes into this knob, kept until the routes change
     int routesSeen = -1;
     bool hasRing = false;

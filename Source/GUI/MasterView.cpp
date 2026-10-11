@@ -59,12 +59,24 @@ void Tachometer::paint (juce::Graphics& g)
     g.setColour (theme::redline);
     g.strokePath (red, juce::PathStrokeType (3.0f));
 
-    for (float db : { -48.0f, -36.0f, -24.0f, -12.0f, -6.0f, 0.0f })
+    // Ticks with their dB values, and the unit.
+    const float labelSize = juce::jlimit (7.5f, 12.0f, r * 0.17f);
+    g.setFont (theme::labelFont (labelSize / theme::fontScale));
+    for (int db : { -48, -36, -24, -12, -6, 0 })
     {
-        const float a = angleFor (db);
-        g.setColour (db >= -0.3f ? theme::redline : theme::dimText);
+        const float a = angleFor ((float) db);
+        const auto colour = db >= 0 ? theme::redline : theme::dimText;
+        g.setColour (colour);
         g.drawLine ({ c.getPointOnCircumference (r * 0.74f, a), c.getPointOnCircumference (r * 0.86f, a) }, 1.2f);
+        if (db == -36 && r < 60.0f)
+            continue;   // too crowded on a small dial
+        const auto at = c.getPointOnCircumference (r * 0.58f, a);
+        g.drawText (juce::String (db), juce::Rectangle<float> (labelSize * 2.6f, labelSize * 1.2f).withCentre (at),
+                    juce::Justification::centred, false);
     }
+    g.setColour (theme::engraved);
+    g.drawText ("dB", juce::Rectangle<float> (labelSize * 3.0f, labelSize * 1.2f).withCentre ({ c.x, c.y - r * 0.32f }),
+                juce::Justification::centred, false);
 
     // Needle.
     const float a = angleFor (needleDb);
