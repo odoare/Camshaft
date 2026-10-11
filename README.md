@@ -35,8 +35,11 @@ See [doc/architecture.md](doc/architecture.md) for how it works.
   an LFO); a slot that modulates nothing is dimmed and not computed. While you
   hold a point of a curve, the waveform marks where it puts the ranges it
   modulates.
-- **Timing belt.** Drag from one cam's pulley to another to make the first
-  modulate the second; click a belt's badge to switch FM, ring, AM or off.
+- **Belt & Viz.** The timing belt: drag from one cam's pulley to another to
+  make the first modulate the second; click a belt's badge to switch FM,
+  ring, AM or off. Beside it, the dashboard: output level, spectrum and
+  stereo image, warning lights, free voices and DSP load, the voice mode (P
+  M L) and a hazard button that silences every voice.
 - **Effects.** Turbo 1 and 2 are fed by the cams' sends, the Exhaust takes the
   whole mix, the rev limiter (a safety limiter at -0.3 dBFS) is always last.
 - **Presets** (the "Garage", top bar): the arrows step through them, "..."

@@ -459,6 +459,26 @@ int main()
                "a cam whose envelope ended stops while the voice plays on");
     }
 
+    {
+        // The dashboard's sources: notes and steals counted, the pedal shown,
+        // and the hazard button silencing everything at once.
+        Rig rig;
+        rig.settings.polyphony = 2;
+        bool finite = true;
+        rig.run (finite);
+        rig.engine.noteOn (60, 0.8f);
+        rig.engine.noteOn (64, 0.8f);
+        rig.engine.noteOn (67, 0.8f);                  // steals one
+        rig.engine.controller (64, 1.0f);              // sustain pedal down
+        rig.run (finite);
+        const auto& d = rig.engine.getDisplay();
+        check (d.noteOns.load() == 3 && d.steals.load() == 1 && d.sustainDown.load() && d.polyphony.load() == 2,
+               "dashboard counters: notes, steals, pedal, polyphony");
+        rig.engine.panic();
+        const float peak = rig.run (finite);
+        check (d.voicesActive.load() == 0 && peak < 1.0e-6f && ! d.sustainDown.load(), "panic silences every voice at once");
+    }
+
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);
     return failures == 0 ? 0 : 1;
 }

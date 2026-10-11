@@ -113,6 +113,10 @@ public:
     void controller (int cc, float value01);
     void allNotesOff();
 
+    /** Silences every voice at once (no release) and forgets the held
+        notes and the pedal: the dashboard's hazard button. */
+    void panic();
+
     struct Buses
     {
         float* dry[2];
@@ -158,6 +162,10 @@ public:
         std::array<std::array<std::atomic<float>, maxVoices>, numModulators> curvePos {};
         std::array<fxme::StereoTap, numCams> scopes;
         std::atomic<int> voicesActive { 0 };
+        std::atomic<int> polyphony { 8 };
+        std::atomic<int> steals { 0 };          // counts up at each stolen voice
+        std::atomic<int> noteOns { 0 };         // counts up at each note received
+        std::atomic<bool> sustainDown { false };
     };
 
     Display& getDisplay() noexcept { return display; }

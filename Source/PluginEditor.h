@@ -23,6 +23,7 @@
 #include "GUI/SynthTab.h"
 #include "GUI/EffectsTab.h"
 #include "GUI/MasterView.h"
+#include "GUI/Dashboard.h"
 
 class CamshaftAudioProcessorEditor : public juce::AudioProcessorEditor,
                                      public juce::DragAndDropContainer
@@ -50,7 +51,7 @@ private:
 
     fxme::TopBar topBar { camshaft::theme::displayName, camshaft::theme::tagline,
                           JucePlugin_VersionString, assetImage ("logo686_png") };
-    camshaft::MasterView headerMaster { processor };
+    camshaft::OutputMeter headerMeter { processor };
     camshaft::DiceButton kickStart;
     fxme::PresetBarComponent presetBar { processor.getPresetManager() };
     fxme::GearButton gearButton;

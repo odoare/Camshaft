@@ -93,6 +93,19 @@ public:
     float getOutputPeakDb() const noexcept               { return outputPeakDb.load (std::memory_order_relaxed); }
     float getLimiterReductionDb() const noexcept         { return limiter.getGainReductionDb(); }
 
+    // Dashboard and top bar data (any thread).
+    /** Output channel `ch` (0, 1): RMS and peak of the last block, dBFS. */
+    float getOutputRmsDb (int ch) const noexcept         { return outputMeters[(size_t) (ch & 1)].getRMS(); }
+    float getOutputBlockPeakDb (int ch) const noexcept   { return outputMeters[(size_t) (ch & 1)].getPeak(); }
+    fxme::SpectrumTap& getSpectrumTap() noexcept         { return spectrumTap; }
+    /** Time spent in processBlock over the time available, 0 to 1 (and over). */
+    double getDspLoad() const noexcept                   { return loadMeasurer.getLoadAsProportion(); }
+    bool isHostPlaying() const noexcept                  { return hostPlaying.load (std::memory_order_relaxed); }
+    /** Peak of Turbo `a`'s output (after its chain), last block, linear. */
+    float getAuxPeak (int a) const noexcept              { return auxPeak[(size_t) (a & 1)].load (std::memory_order_relaxed); }
+    /** Silences every voice at the next audio block (the hazard button). */
+    void requestPanic() noexcept                         { panicRequested.store (true); }
+
     bool takeFirstSplash() noexcept { return ! std::exchange (splashShown, true); }
 
 private:
@@ -167,6 +180,12 @@ private:
     fxme::LookaheadLimiter limiter;
     fxme::StereoTap outputTap;
     std::atomic<float> outputPeakDb { -100.0f };
+    std::array<fxme::VuMeter, 2> outputMeters;
+    fxme::SpectrumTap spectrumTap;
+    std::vector<float> monoScratch;
+    juce::AudioProcessLoadMeasurer loadMeasurer;
+    std::atomic<bool> hostPlaying { false }, panicRequested { false };
+    std::array<std::atomic<float>, cam::numAux> auxPeak {};
     float peakEnvelope = 0.0f;
 
     bool keepAudioOnPresetLoad = false;

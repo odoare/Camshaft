@@ -141,7 +141,7 @@ namespace camshaft::tips::bottom
 {
     inline constexpr auto modulators = "The 16 modulators and the MIDI sources.";
     inline constexpr auto matrix     = "Every modulation route.";
-    inline constexpr auto belt       = "The timing belt: cross-modulation between the cams.";
+    inline constexpr auto belt       = "The timing belt (cross-modulation between the cams) and the dashboard: output gauges, warning lights, voice mode, panic.";
 }
 
 namespace camshaft::tips::dice
@@ -168,6 +168,24 @@ namespace camshaft::tips::master
 {
     inline constexpr auto tach  = "Output peak level. The red arc is the rev limiter's ceiling; the light shows it cutting in.";
     inline constexpr auto scope = "Vectorscope of the output: vertical is mono, wide is stereo, horizontal leans out of phase.";
+    inline constexpr auto meter = "Output level, left and right (RMS bars, peaks held a moment; red above 0 dBFS).";
+}
+
+namespace camshaft::tips::dash
+{
+    inline constexpr auto spectrum = "Spectrum of the output, 20 Hz at the lower left to 20 kHz at the lower right (tilted 3 dB per octave so music reads level).";
+    inline constexpr auto rev      = "REV: the rev limiter is reducing the level.";
+    inline constexpr auto check    = "CHECK: the audio processing is near or over its time budget (DSP load above 90 %). Fewer voices, cams or cylinders will help.";
+    inline constexpr auto steal    = "STEAL: a voice was stolen for a new note; the polyphony is used up.";
+    inline constexpr auto midi     = "MIDI: notes are coming in.";
+    inline constexpr auto hold     = "HOLD: the sustain pedal is down.";
+    inline constexpr auto sync     = "SYNC: the host is playing; synced LFOs and curves follow its position.";
+    inline constexpr auto turbo    = "Turbo chain carrying signal.";
+    inline constexpr auto fuel     = "FUEL: the voices still free.";
+    inline constexpr auto temp     = "TEMP: the DSP load (time spent processing over the time available).";
+    inline constexpr auto gears    = "Voice mode: P poly, M mono (each note restarts the envelopes), L legato (notes played legato only move the pitch).";
+    inline constexpr auto limiter  = "Rev limiter on or off (a safety limiter at -0.3 dBFS, always last).";
+    inline constexpr auto hazard   = "Hazard: silences every voice at once (panic).";
 }
 
 namespace camshaft::tips::global

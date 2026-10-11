@@ -38,7 +38,7 @@ void DiceButton::paintButton (juce::Graphics& g, bool over, bool down)
 
 //==============================================================================
 SynthTab::SynthTab (CamshaftAudioProcessor& p)
-    : processor (p), waveform (p), modulators (p), matrix (p), belt (p)
+    : processor (p), waveform (p), modulators (p), matrix (p), belt (p), dashboard (p)
 {
     // ---- File band ----
     importButton.setTooltip (tips::file::import);
@@ -90,8 +90,8 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     }
 
     // ---- Bottom band ----
-    const char* names[] = { "Modulators", "Matrix", "Timing belt" };
-    const char* tabTips[] = { tips::bottom::modulators, tips::bottom::matrix, tips::bottom::belt };
+    const char* names[] = { "Belt & Viz", "Modulators", "Matrix" };
+    const char* tabTips[] = { tips::bottom::belt, tips::bottom::modulators, tips::bottom::matrix };
     for (int i = 0; i < 3; ++i)
     {
         auto& t = bottomTabs[(size_t) i];
@@ -107,6 +107,7 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     addChildComponent (modulators);
     addChildComponent (matrix);
     addChildComponent (belt);
+    addChildComponent (dashboard);
     showBottom (0);
 
     camsDice.setTooltip (tips::dice::cams);
@@ -186,12 +187,13 @@ void SynthTab::exportDialog()
 void SynthTab::showBottom (int index)
 {
     bottom = index;
-    modulators.setVisible (index == 0);
-    matrix.setVisible (index == 1);
-    belt.setVisible (index == 2);
+    belt.setVisible (index == 0);
+    dashboard.setVisible (index == 0);
+    modulators.setVisible (index == 1);
+    matrix.setVisible (index == 2);
     for (int i = 0; i < 3; ++i)
         bottomTabs[(size_t) i].setToggleState (i == index, juce::dontSendNotification);
-    modsDice.setVisible (index == 0);
+    modsDice.setVisible (index == 1);
 }
 
 //==============================================================================
@@ -248,7 +250,9 @@ void SynthTab::resized()
     area.removeFromTop (4);
     modulators.setBounds (area);
     matrix.setBounds (area);
-    belt.setBounds (area);
+    auto left = area.removeFromLeft (area.getWidth() / 2);
+    belt.setBounds (left.withTrimmedRight (3));
+    dashboard.setBounds (area.withTrimmedLeft (3));
 }
 
 } // namespace camshaft

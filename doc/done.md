@@ -2,6 +2,27 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## Belt & Viz and the dashboard; a level meter in the top bar (2026-10-10)
+
+- The bottom band opens on "Belt & Viz" (first tab): the timing belt on the
+  left half, a dashboard on the right, laid out like a car's instrument
+  cluster: the tachometer, the spectrum in the middle where the speedometer
+  sits (new FxmeTools component `CircularSpectrum`), the vectorscope; warning
+  lights REV (limiter), CHECK (DSP load above 90 %), STEAL (a voice stolen),
+  MIDI, HOLD (sustain pedal), SYNC (host playing), T1 and T2 (Turbo signal);
+  FUEL (free voices) and TEMP (DSP load) gauges; the voice mode as a P / M / L
+  gear selector, the rev limiter switch, and a hazard button (panic: every
+  voice silenced at once, from the audio thread at its next block).
+- The top bar shows the output as a horizontal stereo meter (RMS bars, held
+  peaks; FxmeTools `StereoLevelMeter` gained a horizontal layout) instead of
+  the small tachometer and vectorscope. The Effects tab keeps its large
+  master view.
+- The processor measures its DSP load (JUCE's load measurer), meters both
+  output channels, feeds the spectrum with the mid signal while it is shown,
+  and publishes the Turbo outputs' peaks; the engine counts notes and steals
+  and shows the pedal. Checked in the engine test (counters, panic); the
+  dashboard itself has not been seen yet.
+
 ## Range parameter IDs follow their names (2026-10-10)
 
 `r<n>_start` and `r<n>_length` became `r<n>_opening` and `r<n>_duration`, so

@@ -234,6 +234,11 @@ void CamshaftAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
         auxGainR[(size_t) a].reset (sampleRate, 0.02);
     }
     peakEnvelope = 0.0f;
+
+    for (auto& m : outputMeters)
+        m.prepare (sampleRate);
+    monoScratch.assign ((size_t) preparedBlock, 0.0f);
+    loadMeasurer.reset (sampleRate, preparedBlock);
 }
 
 void CamshaftAudioProcessor::releaseResources() {}
@@ -324,6 +329,7 @@ void CamshaftAudioProcessor::applyGlobalModulation()
 void CamshaftAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+    juce::AudioProcessLoadMeasurer::ScopedTimer loadTimer (loadMeasurer, buffer.getNumSamples());
 
     const int total = buffer.getNumSamples();
     if (preparedBlock <= 0)
@@ -340,6 +346,9 @@ void CamshaftAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 void CamshaftAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, int start, int n)
 {
     readParameters();
+    hostPlaying.store (settings.playing, std::memory_order_relaxed);
+    if (panicRequested.exchange (false))
+        engine.panic();
     engine.beginBlock (settings);
 
     dryBuffer.clear (0, n);
@@ -380,6 +389,7 @@ void CamshaftAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, juc
         juce::AudioBuffer<float> aux (auxBuffers[(size_t) a].getArrayOfWritePointers(), 2, n);
         auxChains[(size_t) a].checkParameters();
         auxChains[(size_t) a].process (aux);
+        auxPeak[(size_t) a].store (juce::jmax (aux.getMagnitude (0, 0, n), aux.getMagnitude (1, 0, n)), std::memory_order_relaxed);
 
         const float gain = juce::Decibels::decibelsToGain (pAuxReturn[a]->load(), -60.0f);
         const float pan = juce::jlimit (-1.0f, 1.0f, pAuxPan[a]->load());
@@ -425,8 +435,18 @@ void CamshaftAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, juc
         buffer.addFrom (0, start, mix.getReadPointer (1), n, 0.5f);
     }
 
-    // Master view.
+    // Master view, meters, spectrum.
     outputTap.push (mix.getReadPointer (0), mix.getReadPointer (1), n);
+    outputMeters[0].process (mix.getReadPointer (0), n);
+    outputMeters[1].process (mix.getReadPointer (1), n);
+    if (spectrumTap.isEnabled() && n <= (int) monoScratch.size())
+    {
+        const float* l = mix.getReadPointer (0);
+        const float* r = mix.getReadPointer (1);
+        for (int i = 0; i < n; ++i)
+            monoScratch[(size_t) i] = 0.5f * (l[i] + r[i]);
+        spectrumTap.push (monoScratch.data(), n);
+    }
     const float peak = juce::jmax (mix.getMagnitude (0, 0, n), mix.getMagnitude (1, 0, n));
     const float fall = std::exp (-(float) n / (0.25f * (float) getSampleRate()));
     peakEnvelope = juce::jmax (peak, peakEnvelope * fall);

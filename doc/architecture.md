@@ -265,12 +265,18 @@ Header (`fxme::TopBar`): name, icon (clickable: about box), a small master view
 (tachometer and vectorscope), the global Kick-start, the Garage (preset bar and
 browser), the gear (settings callout) and help. Then two tabs:
 
+- Top bar: the output level as a horizontal stereo meter (`OutputMeter`,
+  fxme::StereoLevelMeter).
 - Synth: file band (import / export / built-in, channels, normalise, waveform
   view with the four ranges, every voice's live range and read position, the
   curve probe, zoom, drag and drop), scope rows (cam
   profile turning in polar form with a follower, oscilloscope), cam strips
-  (pages Cam, Filters, Amp, Mix), bottom band (Modulators with draggable chips
-  and per-type editors, Matrix, Timing belt). Dice in the section headers.
+  (pages Cam, Filters, Amp, Mix), bottom band: Belt & Viz first (the timing
+  belt on the left half, the dashboard on the right: tachometer, circular
+  spectrum, vectorscope, warning lights, fuel and temperature gauges, gear
+  selector, rev limiter switch, hazard button; `Dashboard.h` lists them),
+  Modulators (draggable chips and per-type editors), Matrix. Dice in the
+  section headers.
 - Effects: Turbo 1 and 2 (two slots, return, pan, dry mute), Exhaust (two
   slots), output and rev limiter, a large master view; the selected effect's
   own panel with its module preset bar (shared with FxmeFX's plugins).

@@ -10,7 +10,8 @@
                 with the cams' ranges
       scopes    per cam: its rotating profile and its oscilloscope
       strips    per cam: its controls, in the same column as its scope
-      bottom    modulators, matrix, or timing belt (one at a time)
+      bottom    belt & viz (the timing belt beside the dashboard), the
+                modulators, or the matrix (one at a time; belt & viz first)
 
     Each section with a Kick-start (randomize) has its dice in its header.
 
@@ -30,6 +31,7 @@
 #include "ModulatorPanel.h"
 #include "MatrixView.h"
 #include "TimingBeltView.h"
+#include "Dashboard.h"
 #include "Shell/Randomizer.h"
 
 class CamshaftAudioProcessor;
@@ -80,6 +82,7 @@ private:
     ModulatorPanel modulators;
     MatrixView matrix;
     TimingBeltView belt;
+    Dashboard dashboard;
     int bottom = 0;
 
     DiceButton camsDice, filtersDice, modsDice;

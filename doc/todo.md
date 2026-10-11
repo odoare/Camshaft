@@ -78,7 +78,8 @@ Numbered for reference; numbers are never reused (finished items move to
     (zero crossings, detected periods) when zoomed in; only the overlap zone is
     drawn.
 
-16. **Dyno curve** (low, later: the visualisations will be reworked together). The plan's visual design puts a smoothed spectrum behind
+16. **Dyno curve** (low, later: the visualisations will be reworked together;
+    the dashboard's circular spectrum may take its place). The plan's visual design puts a smoothed spectrum behind
     the tachometer.
 
 ## Content

@@ -329,7 +329,8 @@ void CamEngine::applyAction (const fxme::VoiceAllocator::Action& a)
     switch (a.type)
     {
         case T::start:     v.start (a.note, a.velocity, glideFrom); lastNote = a.note; break;
-        case T::steal:     v.steal (a.note, a.velocity, glideFrom); lastNote = a.note; break;
+        case T::steal:     v.steal (a.note, a.velocity, glideFrom); lastNote = a.note;
+                           display.steals.fetch_add (1, std::memory_order_relaxed); break;
         case T::retrigger: v.retrigger (a.note, a.velocity, glideAllowed); lastNote = a.note; break;
         case T::glide:     v.moveTo (a.note); lastNote = a.note; break;
         case T::release:   v.release (a.velocity); break;
@@ -343,6 +344,7 @@ void CamEngine::noteOn (int note, float velocity)
         noteOff (note, 0.0f);
         return;
     }
+    display.noteOns.fetch_add (1, std::memory_order_relaxed);
     fxme::VoiceAllocator::Action actions[fxme::VoiceAllocator::maxActions];
     const int n = allocator.noteOn (note, velocity, actions);
     for (int i = 0; i < n; ++i)
@@ -383,6 +385,14 @@ void CamEngine::controller (int cc, float value01)
     for (int i = 0; i < numCcSources; ++i)
         if (ccNumbers[(size_t) i].load (std::memory_order_relaxed) == cc)
             ccValues[(size_t) i] = value01;
+}
+
+void CamEngine::panic()
+{
+    for (auto& v : voices)
+        v.stop();
+    allocator.reset();
+    lastNote = -1;
 }
 
 void CamEngine::allNotesOff()
@@ -600,6 +610,8 @@ void CamEngine::publishDisplay (int newest)
     for (const auto& v : voices)
         count += v.isActive() ? 1 : 0;
     display.voicesActive.store (count, std::memory_order_relaxed);
+    display.polyphony.store (allocator.getPolyphony(), std::memory_order_relaxed);
+    display.sustainDown.store (allocator.isSustainDown(), std::memory_order_relaxed);
 
     display.newestVoice.store (newest, std::memory_order_relaxed);
     for (int m = 0; m < numModulators; ++m)
