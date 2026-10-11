@@ -13,6 +13,8 @@ Newest first. Items that came from `todo.md` keep their number.
   knob's bounds when the knob fills its height.
 - The curve editor's controls are in the slot's colour like the LFO's and the
   ADSR's (its sustain controls stay blue).
+- The Matrix's depth bars take their source's colour (the modulator's own,
+  following it when the source changes).
 - The selected bottom tab (Belt & Viz, Modulators, Matrix) is lit in a light
   orange, the cam pages' tabs in a lighter shade of their cam's colour.
 

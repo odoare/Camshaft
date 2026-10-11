@@ -131,6 +131,9 @@ void MatrixRow::refresh()
             dest = e->group + ": " + e->name;
     destButton.setButtonText (dest);
 
+    // The depth bar in its source's colour (a modulator's own, a cam's for
+    // its envelope, steel for the MIDI sources).
+    depth.setAccent (shownSource > 0 ? sourceColour (apvts, shownSource) : theme::steel);
     depth.setEnabled (used);
     viaButton.setEnabled (used);
     clearButton.setEnabled (used || pendingSource > 0);

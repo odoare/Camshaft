@@ -154,6 +154,17 @@ void CamKnob::setBarStyle()
     setColour (juce::Slider::textBoxOutlineColourId, accent.darker (1.2f));
 }
 
+void CamKnob::setAccent (juce::Colour newAccent)
+{
+    if (newAccent == accent)
+        return;
+    accent = newAccent;
+    theme::accentSlider (*this, accent);
+    setColour (juce::Slider::textBoxTextColourId, theme::text);
+    if (getSliderStyle() == juce::Slider::LinearHorizontal)
+        setBarStyle();
+}
+
 CamKnob::~CamKnob()
 {
     stopTimer();

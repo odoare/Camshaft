@@ -63,6 +63,9 @@ public:
         line at the value's end (as FxmeFX's bars). */
     void setBarStyle();
 
+    /** Changes the accent (arc, pointer, bar fill), keeping the style. */
+    void setAccent (juce::Colour newAccent);
+
     CamKnob (CamshaftAudioProcessor& processor, const juce::String& paramID,
              const juce::String& label, juce::Colour accent, bool bipolar = false);
     ~CamKnob() override;
