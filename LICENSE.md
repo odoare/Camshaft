@@ -1,6 +1,6 @@
 # Licensing
 
-Camshaft follows FxmeTools' terms (see `lib/FxmeFX/lib/FxmeTools/LICENSE.md`
+Camshaft follows FxmeTools' terms (see FxmeTools' `LICENSE.md`
 for the reasoning): two halves under two licences, stated in each file's header
 as an SPDX identifier.
 
@@ -18,7 +18,7 @@ licence is independent of the framework's.
 
     SPDX-License-Identifier: LGPL-3.0-or-later
 
-Full text: `lib/FxmeFX/lib/FxmeTools/core/LICENSE` (with the GPLv3 text it
+Full text: FxmeTools' `core/LICENSE` (with the GPLv3 text it
 builds on, `core/LICENSE.GPL`).
 
 ## The plugin: AGPL-3.0-or-later, or commercial
@@ -29,14 +29,14 @@ dual-licensed:
 
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
 
-- Under the AGPLv3 (full text: `lib/FxmeFX/lib/FxmeTools/FxmeTools/LICENSE`):
+- Under the AGPLv3 (full text: FxmeTools' `FxmeTools/LICENSE`):
   distribute freely with the complete source, under the same licence.
 - Under commercial terms from the author, for those holding a commercial JUCE
   licence. Contact via [github.com/odoare](https://github.com/odoare) or
   www.fx-mechanics.com. A commercial grant covers this code only, not JUCE.
 
 The FxmeFX effects compiled into the plugin carry their own terms (see
-`lib/FxmeFX/LICENSE.md`); WDL is under the zlib licence (Cockos).
+FxmeFX's `LICENSE.md`); WDL is under the zlib licence (Cockos).
 
 ---
 

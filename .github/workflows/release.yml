@@ -10,8 +10,8 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
-env:
-  JUCE_VERSION: 8.0.12
+# JUCE, FxmeTools and FxmeFX are fetched by CMake at the commits pinned in
+# cmake/Dependencies.cmake; -DFXME_USE_SIBLINGS=OFF makes sure of it.
 
 jobs:
   # ── Linux x86_64 ──────────────────────────────────────────────────────────
@@ -29,18 +29,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: Camshaft
-          submodules: recursive     # FxmeFX, FxmeTools inside it, WDL inside that
-                                    # (the convolution engine, the real FFT)
-
-      - uses: actions/checkout@v4
-        with:
-          repository: juce-framework/JUCE
-          ref: ${{ env.JUCE_VERSION }}
-          path: JUCE                 # CMake expects JUCE as a sibling of Camshaft
 
       - name: Configure & Build
         run: |
-          cmake -B Camshaft/build -S Camshaft -DCMAKE_BUILD_TYPE=Release
+          cmake -B Camshaft/build -S Camshaft -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF
           # The embedded IRs and presets compile as one large blob: build that
           # target alone first to keep peak RAM down, then the rest.
           cmake --build Camshaft/build --config Release --target CamshaftBinaryData --parallel 1
@@ -66,13 +58,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: Camshaft
-          submodules: recursive
-
-      - uses: actions/checkout@v4
-        with:
-          repository: juce-framework/JUCE
-          ref: ${{ env.JUCE_VERSION }}
-          path: JUCE
 
       - name: Set up MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
@@ -81,7 +66,7 @@ jobs:
 
       - name: Configure & Build
         run: |
-          cmake -B Camshaft/build -S Camshaft -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake -B Camshaft/build -S Camshaft -G Ninja -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF
           cmake --build Camshaft/build --target CamshaftBinaryData --parallel 1
           cmake --build Camshaft/build --parallel
 
@@ -106,13 +91,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: Camshaft
-          submodules: recursive
-
-      - uses: actions/checkout@v4
-        with:
-          repository: juce-framework/JUCE
-          ref: ${{ env.JUCE_VERSION }}
-          path: JUCE
 
       - name: Configure & Build
         run: |
@@ -121,6 +99,7 @@ jobs:
           # be missed the way an in-file set() after project() can.
           cmake -B Camshaft/build -S Camshaft \
             -DCMAKE_BUILD_TYPE=Release \
+            -DFXME_USE_SIBLINGS=OFF \
             -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
           cmake --build Camshaft/build --config Release --target CamshaftBinaryData --parallel 1

@@ -20,13 +20,10 @@ project(Camshaft VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# JUCE is a sibling of this repository: ../JUCE
-add_subdirectory(../JUCE JUCE)
-
-# FxmeTools (the module and its JUCE-free core) ships inside the FxmeFX
-# submodule, as in MechanOdd. The helper registers the module, builds FxmeCore
-# and provides fxmetools_attach().
-include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/lib/FxmeTools/cmake/FxmeTools.cmake)
+# JUCE, FxmeTools and FxmeFX: sibling clones (../JUCE, ...) or the pinned
+# commits; sets JUCE_DIR, FXMETOOLS_DIR and FXMEFX_DIR, adds JUCE and
+# includes FxmeTools.cmake (the module, FxmeCore, fxmetools_attach()).
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
 
 juce_add_plugin(Camshaft
     COMPANY_NAME                "FX-Mechanics"
@@ -61,14 +58,14 @@ fxmetools_attach(Camshaft)
 # Each effect's DSP class and component, not its plugin wrapper. The
 # components include Common/TopBar.h, which needs the FxmeCommonBinaryData
 # target (the FX-Mechanics logo) on the include path.
-include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/Common/CommonAssets.cmake)
+include(${FXMEFX_DIR}/Source/Common/CommonAssets.cmake)
 target_link_libraries(Camshaft PRIVATE FxmeCommonBinaryData)
 
 set(CAMSHAFT_FXMEFX_EFFECTS
     StereoDelay Tube Equalizer Compressor Cab Chorus Flanger Phaser Reverb)
 set(CAMSHAFT_ASSETS "")
 foreach(_fx IN LISTS CAMSHAFT_FXMEFX_EFFECTS ITEMS VuMeter)
-    set(_fxdir ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/Source/${_fx})
+    set(_fxdir ${FXMEFX_DIR}/Source/${_fx})
     file(GLOB _fxsrcs ${_fxdir}/*.cpp)
     list(FILTER _fxsrcs EXCLUDE REGEX "(PluginProcessor|PluginEditor|PdMain)\\.cpp$")
     target_sources(Camshaft PRIVATE ${_fxsrcs})
@@ -85,7 +82,7 @@ endforeach()
 # their own binary-data namespace; defines FXMEFX_HAS_MODULE_PRESETS. Their
 # user presets live in FX-Mechanics/Modules/<Effect>/Presets, shared with
 # FxmeFX's own plugins and with MechanOdd.
-include(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeFX/cmake/FxmeModulePresets.cmake)
+include(${FXMEFX_DIR}/cmake/FxmeModulePresets.cmake)
 fxmefx_add_module_presets(Camshaft ${CAMSHAFT_FXMEFX_EFFECTS})
 
 # Camshaft's own images and factory presets.

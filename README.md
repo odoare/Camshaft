@@ -90,17 +90,22 @@ universal (Apple Silicon and Intel) and support macOS 10.13 and later.
 
 ## Building
 
-JUCE is expected as a sibling directory of this repository (`../JUCE`).
-FxmeTools comes inside the FxmeFX submodule and carries WDL as its own nested
-submodule, so clone recursively:
+Camshaft depends on JUCE, [FxmeTools](https://github.com/odoare/FxmeTools)
+(with WDL inside it) and [FxmeFX](https://github.com/odoare/FxmeFX), pinned
+in `cmake/Dependencies.cmake`. There are no submodules: CMake uses a sibling
+clone (`../JUCE`, `../FxmeTools`, `../FxmeFX`) when there is one, and
+otherwise downloads the pinned commit. The configure step prints which one it
+took for each.
 
 ```sh
-git clone --recurse-submodules <this repository>
-# or, in an existing clone:
-git submodule update --init --recursive
-
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target Camshaft_VST3 -j2
+```
+
+For a release, ignore the sibling clones and build from the pins only:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF
 ```
 
 Builds do not install: copy `build/Camshaft_artefacts/Release/VST3/Camshaft.vst3`

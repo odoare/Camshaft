@@ -18,9 +18,11 @@ chain reuse FxmeFX's effects, and a look-ahead rev limiter ends the chain.
 ## Layout and what lives where
 
 ```
-lib/FxmeFX/                        submodule; FxmeTools is nested in it
-  lib/FxmeTools/core/FxmeTools/    JUCE-free: synth/ (new) and dsp/ additions
-  lib/FxmeTools/FxmeTools/         JUCE module: components/ additions
+cmake/Dependencies.cmake   pins JUCE, FxmeTools and FxmeFX (sibling clones or
+                           FetchContent, see FxmeDeps.cmake); no submodules
+../FxmeFX/                 effect sources, CommonAssets.cmake, FxmeModulePresets.cmake
+../FxmeTools/core/FxmeTools/   JUCE-free: synth/ (new) and dsp/ additions
+../FxmeTools/FxmeTools/        JUCE module: components/ additions
 Source/
   Engine/        JUCE-free engine, built against FxmeCore only (LGPL)
   Shell/         plugin-side state: parameters, structure, audio, MIDI learn, randomize
@@ -37,7 +39,7 @@ JUCE-free, as planned, but stay in `Source/Engine`: the Camshaft voice (four
 cams, its routing, its parameter set) is not reusable by another plugin, while
 every generic piece it is built from went into FxmeTools.
 
-### Added to FxmeTools (shared, see `lib/FxmeFX/lib/FxmeTools/doc/api-changes.md`)
+### Added to FxmeTools (shared, see FxmeTools `doc/api-changes.md`)
 
 | Header | Half | Role in Camshaft |
 |---|---|---|
@@ -318,11 +320,10 @@ FxmeFX and MechanOdd. Recommendations followed (merged into the plan): see its
 ## Building
 
 ```sh
-git submodule update --init --recursive      # FxmeFX, FxmeTools inside it, WDL inside that
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release   # add -DFXME_USE_SIBLINGS=OFF for a release
 cmake --build build --target Camshaft_VST3 -j2
 ```
 
 The JUCE-free engine test: `cmake --build build --target CamshaftEngineTest -j2`
 then `./build/CamshaftEngineTest`. The FxmeTools core tests:
-`cmake -S lib/FxmeFX/lib/FxmeTools/core -B build-core && cmake --build build-core -j2 && ctest --test-dir build-core`.
+`cmake -S ../FxmeTools/core -B build-core && cmake --build build-core -j2 && ctest --test-dir build-core`.

@@ -2,7 +2,7 @@
 
 Numbered for reference; numbers are never reused (finished items move to
 `done.md` with their number). Priority: high / medium / low. "FxmeTools" or
-"FxmeFX" means the item touches the shared submodules.
+"FxmeFX" means the item touches the shared repos.
 
 ## Build and verification
 
