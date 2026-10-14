@@ -383,6 +383,20 @@ void CamshaftAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, juc
 
     applyGlobalModulation();
 
+    // A NaN or infinity from the engine (an extreme patch can make one) would
+    // stay in every effect with memory (a reverb tail, a delay's feedback, a
+    // detector) as loud noise: it never gets past here.
+    auto sanitise = [n] (juce::AudioBuffer<float>& b)
+    {
+        for (int ch = 0; ch < 2; ++ch)
+            for (auto* x = b.getWritePointer (ch), * end = x + n; x != end; ++x)
+                if (! std::isfinite (*x))
+                    *x = 0.0f;
+    };
+    sanitise (dryBuffer);
+    for (auto& b : auxBuffers)
+        sanitise (b);
+
     // Turbo 1 and 2: their chains, then back into the mix.
     for (int a = 0; a < numAux; ++a)
     {
