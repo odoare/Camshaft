@@ -64,11 +64,11 @@ arriving.
 Download the archive for your system from the releases page and copy the
 plugin to your plugin folder:
 
-| System | VST3 | AU |
-|---|---|---|
-| Linux | `~/.vst3/` | |
-| Windows | `C:\Program Files\Common Files\VST3\` | |
-| macOS | `/Library/Audio/Plug-Ins/VST3/` | `/Library/Audio/Plug-Ins/Components/` |
+| System | VST3 | CLAP | AU |
+|---|---|---|---|
+| Linux | `~/.vst3/` | `~/.clap/` | |
+| Windows | `C:\Program Files\Common Files\VST3\` | `C:\Program Files\Common Files\CLAP\` | |
+| macOS | `/Library/Audio/Plug-Ins/VST3/` | `/Library/Audio/Plug-Ins/CLAP/` | `/Library/Audio/Plug-Ins/Components/` |
 
 Then rescan the plugins in your host (most hosts cache the plugins they have
 seen).
@@ -82,6 +82,7 @@ what you installed, in Terminal:
 
 ```sh
 xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/VST3/Camshaft.vst3
+xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/CLAP/Camshaft.clap
 xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/Components/Camshaft.component
 ```
 
@@ -90,9 +91,11 @@ universal (Apple Silicon and Intel) and support macOS 10.13 and later.
 
 ## Building
 
-Camshaft depends on JUCE, [FxmeTools](https://github.com/odoare/FxmeTools)
-(with WDL inside it) and [FxmeFX](https://github.com/odoare/FxmeFX), pinned
-in `cmake/Dependencies.cmake`. There are no submodules: CMake uses a sibling
+Camshaft depends on JUCE 9, [FxmeTools](https://github.com/odoare/FxmeTools)
+(with WDL inside it), [FxmeFX](https://github.com/odoare/FxmeFX) and, for
+the CLAP format,
+[clap-juce-extensions](https://github.com/free-audio/clap-juce-extensions),
+pinned in `cmake/Dependencies.cmake`. There are no submodules: CMake uses a sibling
 clone (`../JUCE`, `../FxmeTools`, `../FxmeFX`) when there is one, and
 otherwise downloads the pinned commit. The configure step prints which one it
 took for each.
@@ -109,7 +112,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFXME_USE_SIBLINGS=OFF
 ```
 
 Builds do not install: copy `build/Camshaft_artefacts/Release/VST3/Camshaft.vst3`
-to your VST3 folder and rescan.
+(or `CLAP/Camshaft.clap`, target `Camshaft_CLAP`) to your plugin folder and
+rescan.
 
 The sound engine builds and tests without JUCE:
 

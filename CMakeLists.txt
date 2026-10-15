@@ -44,6 +44,12 @@ juce_add_plugin(Camshaft
     BUNDLE_ID                   "com.fx-mechanics.Camshaft"
 )
 
+# CLAP, beside AU/VST3/Standalone (clap-juce-extensions; see
+# fxmetools_add_clap in FxmeTools.cmake). The ID is permanent once released.
+fxmetools_add_clap(Camshaft
+    ID       "com.fx-mechanics.Camshaft"
+    FEATURES instrument synthesizer stereo)
+
 # Sources are globbed recursively; re-run the configure step after adding one.
 file(GLOB_RECURSE CAMSHAFT_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp

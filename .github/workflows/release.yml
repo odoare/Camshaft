@@ -24,7 +24,8 @@ jobs:
           sudo apt install -y \
             libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
             libxcursor-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev \
-            libcurl4-openssl-dev libwebkit2gtk-4.1-dev
+            libcurl4-openssl-dev libwebkit2gtk-4.1-dev \
+            libxi-dev libegl-dev    # JUCE 9: XInput2 (multi-touch), EGL (OpenGL)
 
       - uses: actions/checkout@v4
         with:
@@ -43,6 +44,7 @@ jobs:
           ART=Camshaft/build/Camshaft_artefacts/Release
           mkdir -p staging
           cp -r "$ART/VST3/Camshaft.vst3" staging/
+          cp "$ART/CLAP/Camshaft.clap" staging/
           cp -r "$ART/Standalone/Camshaft" staging/
           zip -r ${{ github.workspace }}/Camshaft-Linux-x86_64.zip staging/
 
@@ -76,6 +78,7 @@ jobs:
           ART=Camshaft/build/Camshaft_artefacts/Release
           mkdir -p staging
           cp -r "$ART/VST3/Camshaft.vst3" staging/
+          cp "$ART/CLAP/Camshaft.clap" staging/
           cp -r "$ART/Standalone/Camshaft.exe" staging/
           7z a Camshaft-Windows-x86_64.zip ./staging/*
 
@@ -118,6 +121,7 @@ jobs:
           for bundle in \
             "$ART/VST3/Camshaft.vst3/Contents/MacOS/Camshaft" \
             "$ART/AU/Camshaft.component/Contents/MacOS/Camshaft" \
+            "$ART/CLAP/Camshaft.clap/Contents/MacOS/Camshaft" \
             "$ART/Standalone/Camshaft.app/Contents/MacOS/Camshaft"
           do
             if [[ ! -f "$bundle" ]]; then
@@ -144,7 +148,7 @@ jobs:
         run: |
           set -euo pipefail
           ART=Camshaft/build/Camshaft_artefacts/Release
-          for bundle in "$ART/VST3/Camshaft.vst3" "$ART/AU/Camshaft.component" "$ART/Standalone/Camshaft.app"; do
+          for bundle in "$ART/VST3/Camshaft.vst3" "$ART/AU/Camshaft.component" "$ART/CLAP/Camshaft.clap" "$ART/Standalone/Camshaft.app"; do
             codesign --force --deep --sign - --timestamp=none "$bundle"
             codesign --verify --verbose "$bundle"
           done
@@ -156,8 +160,10 @@ jobs:
           ART=Camshaft/build/Camshaft_artefacts/Release
           mkdir -p pkg_root/Library/Audio/Plug-Ins/VST3
           mkdir -p pkg_root/Library/Audio/Plug-Ins/Components
+          mkdir -p pkg_root/Library/Audio/Plug-Ins/CLAP
           cp -r "$ART/VST3/Camshaft.vst3" pkg_root/Library/Audio/Plug-Ins/VST3/
           cp -r "$ART/AU/Camshaft.component" pkg_root/Library/Audio/Plug-Ins/Components/
+          cp -r "$ART/CLAP/Camshaft.clap" pkg_root/Library/Audio/Plug-Ins/CLAP/
           pkgbuild \
             --root pkg_root \
             --identifier com.fx-mechanics.Camshaft \
@@ -170,12 +176,13 @@ jobs:
           name: macos-pkg
           path: Camshaft-macOS.pkg
 
-      - name: Package VST3, AU and Standalone zips
+      - name: Package VST3, AU, CLAP and Standalone zips
         run: |
           ART=Camshaft/build/Camshaft_artefacts/Release
           mkdir -p staging
           cp -r "$ART/VST3/Camshaft.vst3" staging/
           cp -r "$ART/AU/Camshaft.component" staging/
+          cp -r "$ART/CLAP/Camshaft.clap" staging/
           cp -r "$ART/Standalone/Camshaft.app" staging/
           zip -r ${{ github.workspace }}/Camshaft-macOS-universal.zip staging/
 

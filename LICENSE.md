@@ -24,7 +24,7 @@ builds on, `core/LICENSE.GPL`).
 ## The plugin: AGPL-3.0-or-later, or commercial
 
 The plugin shell, its editor and the effect hosting compile against JUCE and
-are bound by its terms. Like JUCE 8 and FxmeTools' JUCE module, they are
+are bound by its terms. Like JUCE and FxmeTools' JUCE module, they are
 dual-licensed:
 
     SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
@@ -36,7 +36,9 @@ dual-licensed:
   www.fx-mechanics.com. A commercial grant covers this code only, not JUCE.
 
 The FxmeFX effects compiled into the plugin carry their own terms (see
-FxmeFX's `LICENSE.md`); WDL is under the zlib licence (Cockos).
+FxmeFX's `LICENSE.md`); WDL is under the zlib licence (Cockos). The CLAP
+build links clap-juce-extensions, clap and clap-helpers, all under the MIT
+licence.
 
 ---
 
