@@ -110,6 +110,7 @@ SynthTab::SynthTab (CamshaftAudioProcessor& p)
     addChildComponent (matrix);
     addChildComponent (belt);
     addChildComponent (dashboard);
+    dashboard.onToggleFullView = [this] { setDashboardFull (! dashboardFull); };
     for (int c = 0; c < 3; ++c)
     {
         chainPanes[(size_t) c] = std::make_unique<ChainPane> (processor, c);
@@ -221,22 +222,40 @@ void SynthTab::exportDialog()
 void SynthTab::showBottom (int index)
 {
     bottom = index;
-    belt.setVisible (index == 0);
-    dashboard.setVisible (index == 0);
-    modulators.setVisible (index == 1);
-    matrix.setVisible (index == 2);
+    const bool lower = ! dashboardFull;      // the strips and the bottom band
+    belt.setVisible (lower && index == 0);
+    dashboard.setVisible (dashboardFull || index == 0);
+    modulators.setVisible (lower && index == 1);
+    matrix.setVisible (lower && index == 2);
     for (int c = 0; c < 3; ++c)
-        chainPanes[(size_t) c]->setVisible (index == 3 + c);
+        chainPanes[(size_t) c]->setVisible (lower && index == 3 + c);
     for (int i = 0; i < numBottomTabs; ++i)
+    {
+        bottomTabs[(size_t) i].setVisible (lower);
         bottomTabs[(size_t) i].setToggleState (i == index, juce::dontSendNotification);
-    modsDice.setVisible (index == 1);
+    }
+    modsDice.setVisible (lower && index == 1);
+    for (auto& s : strips)
+        s->setVisible (lower);
+    camsDice.setVisible (lower);
+    filtersDice.setVisible (lower);
+}
+
+void SynthTab::setDashboardFull (bool full)
+{
+    dashboardFull = full;
+    dashboard.setFullView (full);
+    showBottom (bottom);
+    resized();
+    repaint();
 }
 
 //==============================================================================
 void SynthTab::paint (juce::Graphics& g)
 {
     theme::paintEngraved (g, "Audio", fileHeader);
-    theme::paintEngraved (g, "Cams", stripsHeader);
+    if (! dashboardFull)
+        theme::paintEngraved (g, "Cams", stripsHeader);
 }
 
 void SynthTab::resized()
@@ -267,6 +286,8 @@ void SynthTab::resized()
     stripsHeader = area.removeFromTop (20);
     camsDice.setBounds (stripsHeader.getX() + 48, stripsHeader.getY(), 20, 20);
     filtersDice.setBounds (stripsHeader.getX() + 72, stripsHeader.getY(), 20, 20);
+    // In full view the dashboard takes everything from here down.
+    const auto fullView = stripsHeader.getUnion (area);
     auto stripsArea = area.removeFromTop (juce::jmax (210, h * 28 / 100));
     area.removeFromTop (6);
 
@@ -290,7 +311,7 @@ void SynthTab::resized()
         pane->setBounds (area);
     auto left = area.removeFromLeft (area.getWidth() / 2);
     belt.setBounds (left.withTrimmedRight (3));
-    dashboard.setBounds (area.withTrimmedLeft (3));
+    dashboard.setBounds (dashboardFull ? fullView.reduced (3, 0) : area.withTrimmedLeft (3));
 }
 
 } // namespace camshaft

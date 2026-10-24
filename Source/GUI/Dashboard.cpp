@@ -267,6 +267,36 @@ void HazardButton::paintButton (juce::Graphics& g, bool over, bool down)
 }
 
 //==============================================================================
+void ExpandButton::paintButton (juce::Graphics& g, bool over, bool down)
+{
+    auto b = getLocalBounds().toFloat().reduced (2.0f);
+    const float d = juce::jmin (b.getWidth(), b.getHeight());
+    b = b.withSizeKeepingCentre (d, d);
+
+    g.setColour (down ? theme::accent : (over ? theme::text : theme::dimText));
+    const float arm = d * 0.38f;
+    juce::Path p;
+    // One bracket per corner; its tip at the corner (expand) or towards the
+    // centre (back).
+    for (int cx = 0; cx < 2; ++cx)
+        for (int cy = 0; cy < 2; ++cy)
+        {
+            const float sx = cx == 0 ? 1.0f : -1.0f, sy = cy == 0 ? 1.0f : -1.0f;
+            juce::Point<float> tip (cx == 0 ? b.getX() : b.getRight(), cy == 0 ? b.getY() : b.getBottom());
+            float dir = 1.0f;
+            if (expanded)
+            {
+                tip += { sx * arm, sy * arm };
+                dir = -1.0f;
+            }
+            p.startNewSubPath (tip.x + dir * sx * arm, tip.y);
+            p.lineTo (tip);
+            p.lineTo (tip.x, tip.y + dir * sy * arm);
+        }
+    g.strokePath (p, juce::PathStrokeType (1.6f, juce::PathStrokeType::mitered, juce::PathStrokeType::square));
+}
+
+//==============================================================================
 Dashboard::Dashboard (CamshaftAudioProcessor& p)
     : processor (p),
       tach (p),
@@ -312,10 +342,12 @@ Dashboard::Dashboard (CamshaftAudioProcessor& p)
     limiterSwitch.button.setTooltip (tips::dash::limiter);
     hazard.setTooltip (tips::dash::hazard);
     hazard.onClick = [this] { processor.requestPanic(); };
+    expand.setTooltip (tips::dash::expand);
+    expand.onClick = [this] { if (onToggleFullView) onToggleFullView(); };
 
     for (auto* c : std::initializer_list<juce::Component*> { &tach, &spectrum, &scope, &rev, &check, &steal, &midi, &hold,
                                                               &sync, &turbo1, &turbo2, &fuel, &temp, &gears,
-                                                              &limiterSwitch, &hazard, &throttle })
+                                                              &limiterSwitch, &hazard, &throttle, &expand })
         addAndMakeVisible (c);
 
     startTimerHz (30);
@@ -411,6 +443,9 @@ void Dashboard::resized()
 
     // The pedal on the right, then the dials: the spectrum in the middle,
     // larger, as a speedometer.
+    // The full-view button sits in the top-left corner (clear of the round
+    // bezels, which leave it the corner).
+    expand.setBounds (area.getX(), area.getY(), 20, 20);
     throttle.setBounds (area.removeFromRight (juce::jmin (70, area.getWidth() / 8)));
     area.removeFromRight (6);
     const float h = (float) area.getHeight();

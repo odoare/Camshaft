@@ -188,6 +188,7 @@ namespace camshaft::tips::dash
     inline constexpr auto gears    = "Voice mode: P poly, M mono (each note restarts the envelopes), L legato (notes played legato only move the pitch).";
     inline constexpr auto limiter  = "Rev limiter on or off (a safety limiter at -0.3 dBFS, always last).";
     inline constexpr auto hazard   = "Hazard: silences every voice at once (panic).";
+    inline constexpr auto expand   = "Full view: the dashboard over the whole lower half (the cam controls and the bottom tabs hidden). Click again to go back.";
     inline constexpr auto throttle = "Throttle: the output level. Drag the pedal down to press it (louder), up to let it off; shift for fine steps, double-click for the default.";
 }
 

@@ -27,6 +27,9 @@
       throttle      the output level as an accelerator pedal: drag it down to
                     press it (louder), up to let it off; wheel; double-click
                     for the default
+      full view     the small button in the top-left corner: the owner
+                    (SynthTab) gives the dashboard the whole lower half, or
+                    takes it back
 
     Also here: OutputMeter, the stereo level meter of the top bar.
 
@@ -117,6 +120,19 @@ private:
     float dragStartNorm = 0.0f;
 };
 
+/** Full view on or off: four corner brackets, pointing out (expand) or in
+    (back). */
+class ExpandButton : public juce::Button
+{
+public:
+    ExpandButton() : juce::Button ("full view") { setMouseClickGrabsKeyboardFocus (false); }
+    void setExpanded (bool e) { expanded = e; repaint(); }
+    void paintButton (juce::Graphics&, bool over, bool down) override;
+
+private:
+    bool expanded = false;
+};
+
 /** The hazard button: a red triangle; click to silence every voice. */
 class HazardButton : public juce::Button
 {
@@ -134,6 +150,11 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    /** Called by the full-view button; the owner resizes the dashboard and
+        calls setFullView(). */
+    std::function<void()> onToggleFullView;
+    void setFullView (bool on) { expand.setExpanded (on); }
+
 private:
     void timerCallback() override;
 
@@ -149,6 +170,7 @@ private:
     fxme::FxmeButton limiterSwitch;
     HazardButton hazard;
     ThrottlePedal throttle;
+    ExpandButton expand;
 
     std::array<juce::Rectangle<float>, 3> bezels;
     int lastSteals = 0, lastNotes = 0;

@@ -14,6 +14,9 @@
                 modulators, the matrix, and the effect chains: Turbo 1,
                 Turbo 2, Exhaust (one at a time; belt & viz first)
 
+    The dashboard's full-view button gives it everything below the scopes
+    (the strips and the bottom band hidden) until it is clicked again.
+
     Each section with a Kick-start (randomize) has its dice in its header.
 
     Author: Olivier Doaré, github.com/odoare
@@ -62,6 +65,7 @@ public:
 private:
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void showBottom (int index);
+    void setDashboardFull (bool full);
     void importDialog();
     void exportDialog();
     void builtInMenu();
@@ -89,6 +93,7 @@ private:
     Dashboard dashboard;
     std::array<std::unique_ptr<ChainPane>, 3> chainPanes;
     int bottom = 0;
+    bool dashboardFull = false;      // the dashboard over the strips and the bottom band
 
     DiceButton camsDice, filtersDice, modsDice;
 
