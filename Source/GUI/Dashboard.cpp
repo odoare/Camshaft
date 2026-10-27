@@ -446,7 +446,10 @@ void Dashboard::resized()
     // The full-view button sits in the top-left corner (clear of the round
     // bezels, which leave it the corner).
     expand.setBounds (area.getX(), area.getY(), 20, 20);
-    throttle.setBounds (area.removeFromRight (juce::jmin (70, area.getWidth() / 8)));
+    // The pedal keeps its proportions as the dashboard grows: its width
+    // follows its height (70 px wide at the usual height).
+    throttle.setBounds (area.removeFromRight (juce::jmin (area.getWidth() / 5,
+                                                          juce::jmax (70, juce::roundToInt ((float) area.getHeight() * 0.4f)))));
     area.removeFromRight (6);
     const float h = (float) area.getHeight();
     const float big = juce::jmin (h, (float) area.getWidth() * 0.40f);

@@ -34,6 +34,7 @@ namespace camshaft::theme
     inline const juce::Colour text       { 0xffe6e4de };
     inline const juce::Colour dimText    { 0xff9a978f };
     inline const juce::Colour engraved   { 0xff6e6c66 };
+    inline const juce::Colour waveform   { 0xfff6f2f3 };   // the wavetable plot: almost white
     inline const juce::Colour topBarBg   { 0xff0f1013 };
     inline const juce::Colour knobBody   { 0xff2b2b2e };
     inline const juce::Colour knobCentre { 0xff0c0c0e };   // the knobs' disc: almost black
