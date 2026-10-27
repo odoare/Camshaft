@@ -50,13 +50,13 @@
   <PARAM id="aux1_fx0_Delay_Del_CrossFdbk" />
   <PARAM id="aux1_fx0_Delay_Del_DelayL" />
   <PARAM id="aux1_fx0_Delay_Del_DelayR" />
-  <PARAM id="aux1_fx0_Delay_Del_DryGain" />
+  <PARAM id="aux1_fx0_Delay_Del_DryGain" value="0.0" />
   <PARAM id="aux1_fx0_Delay_Del_FdbkL" />
   <PARAM id="aux1_fx0_Delay_Del_FdbkR" />
   <PARAM id="aux1_fx0_Delay_Del_FilterCutoff" />
   <PARAM id="aux1_fx0_Delay_Del_FilterQ" />
-  <PARAM id="aux1_fx0_Delay_Del_ModeL" />
-  <PARAM id="aux1_fx0_Delay_Del_ModeR" />
+  <PARAM id="aux1_fx0_Delay_Del_ModeL" value="0.0" />
+  <PARAM id="aux1_fx0_Delay_Del_ModeR" value="0.0" />
   <PARAM id="aux1_fx0_Delay_Del_On" />
   <PARAM id="aux1_fx0_Delay_Del_WetGain" />
   <PARAM id="aux1_fx0_EQ_EQ_B1_Freq" />
@@ -549,18 +549,18 @@
   <PARAM id="master_fx0_Reverb_Verb_Size" />
   <PARAM id="master_fx0_Reverb_Verb_Width" />
   <PARAM id="master_fx0_Tube_Tube_Bias" />
-  <PARAM id="master_fx0_Tube_Tube_Drive" />
-  <PARAM id="master_fx0_Tube_Tube_Model" />
-  <PARAM id="master_fx0_Tube_Tube_On" />
+  <PARAM id="master_fx0_Tube_Tube_Drive" value="4.480000019073486" />
+  <PARAM id="master_fx0_Tube_Tube_Model" value="2.0" />
+  <PARAM id="master_fx0_Tube_Tube_On" value="1.0" />
   <PARAM id="master_fx0_Tube_Tube_Out" />
   <PARAM id="master_fx0_Tube_Tube_Sag" />
   <PARAM id="master_fx0_Tube_Tube_Tone" />
-  <PARAM id="master_fx0_type" value="0.0" />
+  <PARAM id="master_fx0_type" value="2.0" />
   <PARAM id="master_fx1_Cab_Cab_GainL" />
   <PARAM id="master_fx1_Cab_Cab_GainR" />
-  <PARAM id="master_fx1_Cab_Cab_IRL" />
-  <PARAM id="master_fx1_Cab_Cab_IRR" />
-  <PARAM id="master_fx1_Cab_Cab_On" />
+  <PARAM id="master_fx1_Cab_Cab_IRL" value="15.0" />
+  <PARAM id="master_fx1_Cab_Cab_IRR" value="18.0" />
+  <PARAM id="master_fx1_Cab_Cab_On" value="1.0" />
   <PARAM id="master_fx1_Chorus_Chorus_Delay" />
   <PARAM id="master_fx1_Chorus_Chorus_Depth" />
   <PARAM id="master_fx1_Chorus_Chorus_Div" />
@@ -660,7 +660,7 @@
   <PARAM id="master_fx1_Tube_Tube_Out" />
   <PARAM id="master_fx1_Tube_Tube_Sag" />
   <PARAM id="master_fx1_Tube_Tube_Tone" />
-  <PARAM id="master_fx1_type" value="0.0" />
+  <PARAM id="master_fx1_type" value="5.0" />
   <PARAM id="master_limiter" />
   <PARAM id="master_out" />
   <PARAM id="mod10_acurve" />
@@ -833,15 +833,15 @@
   <PARAM id="mod16_velamt" />
   <PARAM id="mod1_acurve" value="0.01199996471405029" />
   <PARAM id="mod1_att" value="5371.21875" />
-  <PARAM id="mod1_beats" />
+  <PARAM id="mod1_beats" value="3.999999761581421" />
   <PARAM id="mod1_bipolar" />
-  <PARAM id="mod1_daw" />
+  <PARAM id="mod1_daw" value="0.0" />
   <PARAM id="mod1_dcurve" />
   <PARAM id="mod1_dec" />
   <PARAM id="mod1_delay" />
   <PARAM id="mod1_div" />
-  <PARAM id="mod1_dur" />
-  <PARAM id="mod1_durmode" />
+  <PARAM id="mod1_dur" value="1.999999761581421" />
+  <PARAM id="mod1_durmode" value="0.0" />
   <PARAM id="mod1_fade" />
   <PARAM id="mod1_level" />
   <PARAM id="mod1_mode" />
@@ -867,17 +867,17 @@
   <PARAM id="mod2_dur" />
   <PARAM id="mod2_durmode" />
   <PARAM id="mod2_fade" />
-  <PARAM id="mod2_level" />
-  <PARAM id="mod2_mode" />
+  <PARAM id="mod2_level" value="1.0" />
+  <PARAM id="mod2_mode" value="0.0" />
   <PARAM id="mod2_phase" />
-  <PARAM id="mod2_rate" />
+  <PARAM id="mod2_rate" value="2.0" />
   <PARAM id="mod2_rcurve" />
   <PARAM id="mod2_rel" />
   <PARAM id="mod2_shape" />
   <PARAM id="mod2_speed" />
   <PARAM id="mod2_sus" />
   <PARAM id="mod2_sync" />
-  <PARAM id="mod2_type" />
+  <PARAM id="mod2_type" value="3.0" />
   <PARAM id="mod2_velamt" />
   <PARAM id="mod3_acurve" />
   <PARAM id="mod3_att" />
@@ -1147,14 +1147,14 @@
   <PARAM id="r2_spread" />
   <PARAM id="r2_sus" value="0.800000011920929" />
   <PARAM id="r2_velamt" />
-  <PARAM id="r2_volume" />
+  <PARAM id="r2_volume" value="-6.0" />
   <PARAM id="r2_xfshape" />
   <PARAM id="r2_xm1_lift" />
   <PARAM id="r2_xm2_lift" />
   <PARAM id="r2_xm3_lift" value="0.0" />
   <PARAM id="r2_xm4_lift" />
   <PARAM id="r3_acurve" />
-  <PARAM id="r3_att" value="0.06665919721126556" />
+  <PARAM id="r3_att" value="0.06665916740894318" />
   <PARAM id="r3_audible" value="0.0" />
   <PARAM id="r3_coarse" value="16.0" />
   <PARAM id="r3_cyl" />

@@ -7,7 +7,7 @@
   <PARAM id="r1_dec" value="250.0" />
   <PARAM id="r1_sus" value="0.0" />
   <PARAM id="r1_rel" value="200.0" />
-  <PARAM id="r1_volume" value="-7.0" />
+  <PARAM id="r1_volume" value="0.0" />
   <PARAM id="r1_f1_on" value="1.0" />
   <PARAM id="r1_f1_type" value="4.0" />
   <PARAM id="r1_f1_cutoff" value="2200.0" />
@@ -538,7 +538,7 @@
   <PARAM id="master_fx0_Flanger_Flanger_Feedback" />
   <PARAM id="master_fx0_Flanger_Flanger_Mix" />
   <PARAM id="master_fx0_Flanger_Flanger_On" />
-  <PARAM id="master_fx0_Flanger_Flanger_Out" />
+  <PARAM id="master_fx0_Flanger_Flanger_Out" value="5.200000762939453" />
   <PARAM id="master_fx0_Flanger_Flanger_Rate" />
   <PARAM id="master_fx0_Flanger_Flanger_Shape" />
   <PARAM id="master_fx0_Flanger_Flanger_Sync" />
@@ -676,7 +676,7 @@
   <PARAM id="master_fx1_Tube_Tube_Sag" />
   <PARAM id="master_fx1_Tube_Tube_Tone" />
   <PARAM id="master_limiter" />
-  <PARAM id="master_out" />
+  <PARAM id="master_out" value="0.0" />
   <PARAM id="mod10_acurve" />
   <PARAM id="mod10_att" />
   <PARAM id="mod10_beats" />
@@ -1102,7 +1102,7 @@
   <PARAM id="r1_xm3_lift" />
   <PARAM id="r1_xm4_lift" />
   <PARAM id="r2_acurve" />
-  <PARAM id="r2_att" value="0.05380099266767502" />
+  <PARAM id="r2_att" value="0.05380096659064293" />
   <PARAM id="r2_audible" value="1.0" />
   <PARAM id="r2_coarse" value="0.0" />
   <PARAM id="r2_cyl" />
@@ -1147,7 +1147,7 @@
   <PARAM id="r2_spread" />
   <PARAM id="r2_sus" value="0.0" />
   <PARAM id="r2_velamt" />
-  <PARAM id="r2_volume" value="-6.0" />
+  <PARAM id="r2_volume" value="0.0" />
   <PARAM id="r2_xfshape" />
   <PARAM id="r2_xm1_lift" />
   <PARAM id="r2_xm2_lift" />

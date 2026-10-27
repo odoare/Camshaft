@@ -1,0 +1,1325 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Parameters presetName="Torque - Oil Leak" schemaVersion="3">
+  <Structure>
+    <Routes>
+      <Route i="0" src="velocity" dst="r1_f1_cutoff" via="none" />
+    </Routes>
+    <Belt>
+      <Link src="1" dst="0" type="FM" />
+    </Belt>
+    <Curves />
+    <CcSources />
+    <MidiLearn />
+    <Locks />
+    <Settings />
+    <Cams>
+      <Cam index="0" mode="wavetable" attack="0" loopStart="0" loopEnd="0" release="0" rootKey="60" />
+      <Cam index="1" mode="wavetable" attack="0" loopStart="0" loopEnd="0" release="0" rootKey="60" />
+      <Cam index="2" mode="wavetable" attack="0" loopStart="0" loopEnd="0" release="0" rootKey="60" />
+      <Cam index="3" mode="wavetable" attack="0" loopStart="0" loopEnd="0" release="0" rootKey="60" />
+    </Cams>
+  </Structure>
+  <PARAM id="aux1_drymute" />
+  <PARAM id="aux1_fx0_Cab_Cab_GainL" />
+  <PARAM id="aux1_fx0_Cab_Cab_GainR" />
+  <PARAM id="aux1_fx0_Cab_Cab_IRL" />
+  <PARAM id="aux1_fx0_Cab_Cab_IRR" />
+  <PARAM id="aux1_fx0_Cab_Cab_On" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Delay" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Depth" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Div" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Mix" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_On" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Out" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Rate" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Shape" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Sync" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Voices" />
+  <PARAM id="aux1_fx0_Chorus_Chorus_Width" />
+  <PARAM id="aux1_fx0_Comp_Comp_Attack" />
+  <PARAM id="aux1_fx0_Comp_Comp_Gain" />
+  <PARAM id="aux1_fx0_Comp_Comp_Knee" />
+  <PARAM id="aux1_fx0_Comp_Comp_On" />
+  <PARAM id="aux1_fx0_Comp_Comp_PeakRms" />
+  <PARAM id="aux1_fx0_Comp_Comp_PreGain" />
+  <PARAM id="aux1_fx0_Comp_Comp_Ratio" />
+  <PARAM id="aux1_fx0_Comp_Comp_RelMode" />
+  <PARAM id="aux1_fx0_Comp_Comp_Release" />
+  <PARAM id="aux1_fx0_Comp_Comp_Thresh" />
+  <PARAM id="aux1_fx0_Delay_Del_CrossFdbk" />
+  <PARAM id="aux1_fx0_Delay_Del_DelayL" />
+  <PARAM id="aux1_fx0_Delay_Del_DelayR" />
+  <PARAM id="aux1_fx0_Delay_Del_DryGain" value="0.0" />
+  <PARAM id="aux1_fx0_Delay_Del_FdbkL" value="-6.0" />
+  <PARAM id="aux1_fx0_Delay_Del_FdbkR" value="-6.0" />
+  <PARAM id="aux1_fx0_Delay_Del_FilterCutoff" />
+  <PARAM id="aux1_fx0_Delay_Del_FilterQ" />
+  <PARAM id="aux1_fx0_Delay_Del_ModeL" value="0.0" />
+  <PARAM id="aux1_fx0_Delay_Del_ModeR" value="0.0" />
+  <PARAM id="aux1_fx0_Delay_Del_On" />
+  <PARAM id="aux1_fx0_Delay_Del_WetGain" />
+  <PARAM id="aux1_fx0_EQ_EQ_B1_Freq" />
+  <PARAM id="aux1_fx0_EQ_EQ_B1_Gain" />
+  <PARAM id="aux1_fx0_EQ_EQ_B1_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_B1_Q" />
+  <PARAM id="aux1_fx0_EQ_EQ_B1_Type" />
+  <PARAM id="aux1_fx0_EQ_EQ_B2_Freq" />
+  <PARAM id="aux1_fx0_EQ_EQ_B2_Gain" />
+  <PARAM id="aux1_fx0_EQ_EQ_B2_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_B2_Q" />
+  <PARAM id="aux1_fx0_EQ_EQ_B2_Type" />
+  <PARAM id="aux1_fx0_EQ_EQ_B3_Freq" />
+  <PARAM id="aux1_fx0_EQ_EQ_B3_Gain" />
+  <PARAM id="aux1_fx0_EQ_EQ_B3_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_B3_Q" />
+  <PARAM id="aux1_fx0_EQ_EQ_B3_Type" />
+  <PARAM id="aux1_fx0_EQ_EQ_HS_Freq" />
+  <PARAM id="aux1_fx0_EQ_EQ_HS_Gain" />
+  <PARAM id="aux1_fx0_EQ_EQ_HS_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_HS_Q" />
+  <PARAM id="aux1_fx0_EQ_EQ_HS_Type" />
+  <PARAM id="aux1_fx0_EQ_EQ_LS_Freq" />
+  <PARAM id="aux1_fx0_EQ_EQ_LS_Gain" />
+  <PARAM id="aux1_fx0_EQ_EQ_LS_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_LS_Q" />
+  <PARAM id="aux1_fx0_EQ_EQ_LS_Type" />
+  <PARAM id="aux1_fx0_EQ_EQ_On" />
+  <PARAM id="aux1_fx0_EQ_EQ_PostGain" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Delay" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Depth" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Div" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Feedback" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Mix" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_On" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Out" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Rate" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Shape" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Sync" />
+  <PARAM id="aux1_fx0_Flanger_Flanger_Width" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Depth" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Div" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Feedback" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Freq" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Mix" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_On" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Out" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Rate" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Shape" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Stages" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Sync" />
+  <PARAM id="aux1_fx0_Phaser_Phaser_Width" />
+  <PARAM id="aux1_fx0_Reverb_Verb_Damp" value="50.0" />
+  <PARAM id="aux1_fx0_Reverb_Verb_HighCut" />
+  <PARAM id="aux1_fx0_Reverb_Verb_LowCut" />
+  <PARAM id="aux1_fx0_Reverb_Verb_Mix" value="25.0" />
+  <PARAM id="aux1_fx0_Reverb_Verb_On" />
+  <PARAM id="aux1_fx0_Reverb_Verb_Out" />
+  <PARAM id="aux1_fx0_Reverb_Verb_PreDelay" />
+  <PARAM id="aux1_fx0_Reverb_Verb_Size" value="60.0" />
+  <PARAM id="aux1_fx0_Reverb_Verb_Width" />
+  <PARAM id="aux1_fx0_Tube_Tube_Bias" />
+  <PARAM id="aux1_fx0_Tube_Tube_Drive" />
+  <PARAM id="aux1_fx0_Tube_Tube_Model" />
+  <PARAM id="aux1_fx0_Tube_Tube_On" />
+  <PARAM id="aux1_fx0_Tube_Tube_Out" />
+  <PARAM id="aux1_fx0_Tube_Tube_Sag" />
+  <PARAM id="aux1_fx0_Tube_Tube_Tone" />
+  <PARAM id="aux1_fx0_type" value="0.0" />
+  <PARAM id="aux1_fx1_Cab_Cab_GainL" />
+  <PARAM id="aux1_fx1_Cab_Cab_GainR" />
+  <PARAM id="aux1_fx1_Cab_Cab_IRL" />
+  <PARAM id="aux1_fx1_Cab_Cab_IRR" />
+  <PARAM id="aux1_fx1_Cab_Cab_On" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Delay" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Depth" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Div" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Mix" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_On" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Out" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Rate" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Shape" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Sync" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Voices" />
+  <PARAM id="aux1_fx1_Chorus_Chorus_Width" />
+  <PARAM id="aux1_fx1_Comp_Comp_Attack" />
+  <PARAM id="aux1_fx1_Comp_Comp_Gain" />
+  <PARAM id="aux1_fx1_Comp_Comp_Knee" />
+  <PARAM id="aux1_fx1_Comp_Comp_On" />
+  <PARAM id="aux1_fx1_Comp_Comp_PeakRms" />
+  <PARAM id="aux1_fx1_Comp_Comp_PreGain" />
+  <PARAM id="aux1_fx1_Comp_Comp_Ratio" />
+  <PARAM id="aux1_fx1_Comp_Comp_RelMode" />
+  <PARAM id="aux1_fx1_Comp_Comp_Release" />
+  <PARAM id="aux1_fx1_Comp_Comp_Thresh" />
+  <PARAM id="aux1_fx1_Delay_Del_CrossFdbk" />
+  <PARAM id="aux1_fx1_Delay_Del_DelayL" />
+  <PARAM id="aux1_fx1_Delay_Del_DelayR" />
+  <PARAM id="aux1_fx1_Delay_Del_DryGain" />
+  <PARAM id="aux1_fx1_Delay_Del_FdbkL" />
+  <PARAM id="aux1_fx1_Delay_Del_FdbkR" />
+  <PARAM id="aux1_fx1_Delay_Del_FilterCutoff" />
+  <PARAM id="aux1_fx1_Delay_Del_FilterQ" />
+  <PARAM id="aux1_fx1_Delay_Del_ModeL" />
+  <PARAM id="aux1_fx1_Delay_Del_ModeR" />
+  <PARAM id="aux1_fx1_Delay_Del_On" />
+  <PARAM id="aux1_fx1_Delay_Del_WetGain" />
+  <PARAM id="aux1_fx1_EQ_EQ_B1_Freq" />
+  <PARAM id="aux1_fx1_EQ_EQ_B1_Gain" />
+  <PARAM id="aux1_fx1_EQ_EQ_B1_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_B1_Q" />
+  <PARAM id="aux1_fx1_EQ_EQ_B1_Type" />
+  <PARAM id="aux1_fx1_EQ_EQ_B2_Freq" />
+  <PARAM id="aux1_fx1_EQ_EQ_B2_Gain" />
+  <PARAM id="aux1_fx1_EQ_EQ_B2_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_B2_Q" />
+  <PARAM id="aux1_fx1_EQ_EQ_B2_Type" />
+  <PARAM id="aux1_fx1_EQ_EQ_B3_Freq" />
+  <PARAM id="aux1_fx1_EQ_EQ_B3_Gain" />
+  <PARAM id="aux1_fx1_EQ_EQ_B3_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_B3_Q" />
+  <PARAM id="aux1_fx1_EQ_EQ_B3_Type" />
+  <PARAM id="aux1_fx1_EQ_EQ_HS_Freq" />
+  <PARAM id="aux1_fx1_EQ_EQ_HS_Gain" />
+  <PARAM id="aux1_fx1_EQ_EQ_HS_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_HS_Q" />
+  <PARAM id="aux1_fx1_EQ_EQ_HS_Type" />
+  <PARAM id="aux1_fx1_EQ_EQ_LS_Freq" />
+  <PARAM id="aux1_fx1_EQ_EQ_LS_Gain" />
+  <PARAM id="aux1_fx1_EQ_EQ_LS_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_LS_Q" />
+  <PARAM id="aux1_fx1_EQ_EQ_LS_Type" />
+  <PARAM id="aux1_fx1_EQ_EQ_On" />
+  <PARAM id="aux1_fx1_EQ_EQ_PostGain" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Delay" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Depth" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Div" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Feedback" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Mix" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_On" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Out" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Rate" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Shape" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Sync" />
+  <PARAM id="aux1_fx1_Flanger_Flanger_Width" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Depth" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Div" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Feedback" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Freq" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Mix" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_On" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Out" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Rate" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Shape" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Stages" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Sync" />
+  <PARAM id="aux1_fx1_Phaser_Phaser_Width" />
+  <PARAM id="aux1_fx1_Reverb_Verb_Damp" />
+  <PARAM id="aux1_fx1_Reverb_Verb_HighCut" />
+  <PARAM id="aux1_fx1_Reverb_Verb_LowCut" />
+  <PARAM id="aux1_fx1_Reverb_Verb_Mix" />
+  <PARAM id="aux1_fx1_Reverb_Verb_On" />
+  <PARAM id="aux1_fx1_Reverb_Verb_Out" />
+  <PARAM id="aux1_fx1_Reverb_Verb_PreDelay" />
+  <PARAM id="aux1_fx1_Reverb_Verb_Size" />
+  <PARAM id="aux1_fx1_Reverb_Verb_Width" />
+  <PARAM id="aux1_fx1_Tube_Tube_Bias" />
+  <PARAM id="aux1_fx1_Tube_Tube_Drive" />
+  <PARAM id="aux1_fx1_Tube_Tube_Model" />
+  <PARAM id="aux1_fx1_Tube_Tube_On" />
+  <PARAM id="aux1_fx1_Tube_Tube_Out" />
+  <PARAM id="aux1_fx1_Tube_Tube_Sag" />
+  <PARAM id="aux1_fx1_Tube_Tube_Tone" />
+  <PARAM id="aux1_fx1_type" />
+  <PARAM id="aux1_pan" />
+  <PARAM id="aux1_return" value="-3.700000762939453" />
+  <PARAM id="aux2_drymute" />
+  <PARAM id="aux2_fx0_Cab_Cab_GainL" />
+  <PARAM id="aux2_fx0_Cab_Cab_GainR" />
+  <PARAM id="aux2_fx0_Cab_Cab_IRL" />
+  <PARAM id="aux2_fx0_Cab_Cab_IRR" />
+  <PARAM id="aux2_fx0_Cab_Cab_On" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Delay" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Depth" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Div" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Mix" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_On" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Out" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Rate" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Shape" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Sync" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Voices" />
+  <PARAM id="aux2_fx0_Chorus_Chorus_Width" />
+  <PARAM id="aux2_fx0_Comp_Comp_Attack" />
+  <PARAM id="aux2_fx0_Comp_Comp_Gain" />
+  <PARAM id="aux2_fx0_Comp_Comp_Knee" />
+  <PARAM id="aux2_fx0_Comp_Comp_On" />
+  <PARAM id="aux2_fx0_Comp_Comp_PeakRms" />
+  <PARAM id="aux2_fx0_Comp_Comp_PreGain" />
+  <PARAM id="aux2_fx0_Comp_Comp_Ratio" />
+  <PARAM id="aux2_fx0_Comp_Comp_RelMode" />
+  <PARAM id="aux2_fx0_Comp_Comp_Release" />
+  <PARAM id="aux2_fx0_Comp_Comp_Thresh" />
+  <PARAM id="aux2_fx0_Delay_Del_CrossFdbk" />
+  <PARAM id="aux2_fx0_Delay_Del_DelayL" value="0.5" />
+  <PARAM id="aux2_fx0_Delay_Del_DelayR" value="0.75" />
+  <PARAM id="aux2_fx0_Delay_Del_DryGain" value="0.0" />
+  <PARAM id="aux2_fx0_Delay_Del_FdbkL" value="-6.0" />
+  <PARAM id="aux2_fx0_Delay_Del_FdbkR" value="-6.0" />
+  <PARAM id="aux2_fx0_Delay_Del_FilterCutoff" />
+  <PARAM id="aux2_fx0_Delay_Del_FilterQ" />
+  <PARAM id="aux2_fx0_Delay_Del_ModeL" value="0.0" />
+  <PARAM id="aux2_fx0_Delay_Del_ModeR" value="0.0" />
+  <PARAM id="aux2_fx0_Delay_Del_On" />
+  <PARAM id="aux2_fx0_Delay_Del_WetGain" value="-6.0" />
+  <PARAM id="aux2_fx0_EQ_EQ_B1_Freq" />
+  <PARAM id="aux2_fx0_EQ_EQ_B1_Gain" />
+  <PARAM id="aux2_fx0_EQ_EQ_B1_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_B1_Q" />
+  <PARAM id="aux2_fx0_EQ_EQ_B1_Type" />
+  <PARAM id="aux2_fx0_EQ_EQ_B2_Freq" />
+  <PARAM id="aux2_fx0_EQ_EQ_B2_Gain" />
+  <PARAM id="aux2_fx0_EQ_EQ_B2_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_B2_Q" />
+  <PARAM id="aux2_fx0_EQ_EQ_B2_Type" />
+  <PARAM id="aux2_fx0_EQ_EQ_B3_Freq" />
+  <PARAM id="aux2_fx0_EQ_EQ_B3_Gain" />
+  <PARAM id="aux2_fx0_EQ_EQ_B3_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_B3_Q" />
+  <PARAM id="aux2_fx0_EQ_EQ_B3_Type" />
+  <PARAM id="aux2_fx0_EQ_EQ_HS_Freq" />
+  <PARAM id="aux2_fx0_EQ_EQ_HS_Gain" />
+  <PARAM id="aux2_fx0_EQ_EQ_HS_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_HS_Q" />
+  <PARAM id="aux2_fx0_EQ_EQ_HS_Type" />
+  <PARAM id="aux2_fx0_EQ_EQ_LS_Freq" />
+  <PARAM id="aux2_fx0_EQ_EQ_LS_Gain" />
+  <PARAM id="aux2_fx0_EQ_EQ_LS_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_LS_Q" />
+  <PARAM id="aux2_fx0_EQ_EQ_LS_Type" />
+  <PARAM id="aux2_fx0_EQ_EQ_On" />
+  <PARAM id="aux2_fx0_EQ_EQ_PostGain" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Delay" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Depth" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Div" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Feedback" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Mix" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_On" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Out" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Rate" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Shape" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Sync" />
+  <PARAM id="aux2_fx0_Flanger_Flanger_Width" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Depth" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Div" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Feedback" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Freq" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Mix" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_On" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Out" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Rate" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Shape" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Stages" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Sync" />
+  <PARAM id="aux2_fx0_Phaser_Phaser_Width" />
+  <PARAM id="aux2_fx0_Reverb_Verb_Damp" />
+  <PARAM id="aux2_fx0_Reverb_Verb_HighCut" />
+  <PARAM id="aux2_fx0_Reverb_Verb_LowCut" />
+  <PARAM id="aux2_fx0_Reverb_Verb_Mix" />
+  <PARAM id="aux2_fx0_Reverb_Verb_On" />
+  <PARAM id="aux2_fx0_Reverb_Verb_Out" />
+  <PARAM id="aux2_fx0_Reverb_Verb_PreDelay" />
+  <PARAM id="aux2_fx0_Reverb_Verb_Size" />
+  <PARAM id="aux2_fx0_Reverb_Verb_Width" />
+  <PARAM id="aux2_fx0_Tube_Tube_Bias" />
+  <PARAM id="aux2_fx0_Tube_Tube_Drive" />
+  <PARAM id="aux2_fx0_Tube_Tube_Model" />
+  <PARAM id="aux2_fx0_Tube_Tube_On" />
+  <PARAM id="aux2_fx0_Tube_Tube_Out" />
+  <PARAM id="aux2_fx0_Tube_Tube_Sag" />
+  <PARAM id="aux2_fx0_Tube_Tube_Tone" />
+  <PARAM id="aux2_fx0_type" value="0.0" />
+  <PARAM id="aux2_fx1_Cab_Cab_GainL" />
+  <PARAM id="aux2_fx1_Cab_Cab_GainR" />
+  <PARAM id="aux2_fx1_Cab_Cab_IRL" />
+  <PARAM id="aux2_fx1_Cab_Cab_IRR" />
+  <PARAM id="aux2_fx1_Cab_Cab_On" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Delay" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Depth" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Div" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Mix" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_On" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Out" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Rate" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Shape" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Sync" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Voices" />
+  <PARAM id="aux2_fx1_Chorus_Chorus_Width" />
+  <PARAM id="aux2_fx1_Comp_Comp_Attack" />
+  <PARAM id="aux2_fx1_Comp_Comp_Gain" />
+  <PARAM id="aux2_fx1_Comp_Comp_Knee" />
+  <PARAM id="aux2_fx1_Comp_Comp_On" />
+  <PARAM id="aux2_fx1_Comp_Comp_PeakRms" />
+  <PARAM id="aux2_fx1_Comp_Comp_PreGain" />
+  <PARAM id="aux2_fx1_Comp_Comp_Ratio" />
+  <PARAM id="aux2_fx1_Comp_Comp_RelMode" />
+  <PARAM id="aux2_fx1_Comp_Comp_Release" />
+  <PARAM id="aux2_fx1_Comp_Comp_Thresh" />
+  <PARAM id="aux2_fx1_Delay_Del_CrossFdbk" />
+  <PARAM id="aux2_fx1_Delay_Del_DelayL" />
+  <PARAM id="aux2_fx1_Delay_Del_DelayR" />
+  <PARAM id="aux2_fx1_Delay_Del_DryGain" />
+  <PARAM id="aux2_fx1_Delay_Del_FdbkL" />
+  <PARAM id="aux2_fx1_Delay_Del_FdbkR" />
+  <PARAM id="aux2_fx1_Delay_Del_FilterCutoff" />
+  <PARAM id="aux2_fx1_Delay_Del_FilterQ" />
+  <PARAM id="aux2_fx1_Delay_Del_ModeL" />
+  <PARAM id="aux2_fx1_Delay_Del_ModeR" />
+  <PARAM id="aux2_fx1_Delay_Del_On" />
+  <PARAM id="aux2_fx1_Delay_Del_WetGain" />
+  <PARAM id="aux2_fx1_EQ_EQ_B1_Freq" />
+  <PARAM id="aux2_fx1_EQ_EQ_B1_Gain" />
+  <PARAM id="aux2_fx1_EQ_EQ_B1_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_B1_Q" />
+  <PARAM id="aux2_fx1_EQ_EQ_B1_Type" />
+  <PARAM id="aux2_fx1_EQ_EQ_B2_Freq" />
+  <PARAM id="aux2_fx1_EQ_EQ_B2_Gain" />
+  <PARAM id="aux2_fx1_EQ_EQ_B2_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_B2_Q" />
+  <PARAM id="aux2_fx1_EQ_EQ_B2_Type" />
+  <PARAM id="aux2_fx1_EQ_EQ_B3_Freq" />
+  <PARAM id="aux2_fx1_EQ_EQ_B3_Gain" />
+  <PARAM id="aux2_fx1_EQ_EQ_B3_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_B3_Q" />
+  <PARAM id="aux2_fx1_EQ_EQ_B3_Type" />
+  <PARAM id="aux2_fx1_EQ_EQ_HS_Freq" />
+  <PARAM id="aux2_fx1_EQ_EQ_HS_Gain" />
+  <PARAM id="aux2_fx1_EQ_EQ_HS_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_HS_Q" />
+  <PARAM id="aux2_fx1_EQ_EQ_HS_Type" />
+  <PARAM id="aux2_fx1_EQ_EQ_LS_Freq" />
+  <PARAM id="aux2_fx1_EQ_EQ_LS_Gain" />
+  <PARAM id="aux2_fx1_EQ_EQ_LS_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_LS_Q" />
+  <PARAM id="aux2_fx1_EQ_EQ_LS_Type" />
+  <PARAM id="aux2_fx1_EQ_EQ_On" />
+  <PARAM id="aux2_fx1_EQ_EQ_PostGain" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Delay" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Depth" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Div" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Feedback" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Mix" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_On" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Out" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Rate" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Shape" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Sync" />
+  <PARAM id="aux2_fx1_Flanger_Flanger_Width" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Depth" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Div" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Feedback" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Freq" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Mix" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_On" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Out" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Rate" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Shape" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Stages" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Sync" />
+  <PARAM id="aux2_fx1_Phaser_Phaser_Width" />
+  <PARAM id="aux2_fx1_Reverb_Verb_Damp" />
+  <PARAM id="aux2_fx1_Reverb_Verb_HighCut" />
+  <PARAM id="aux2_fx1_Reverb_Verb_LowCut" />
+  <PARAM id="aux2_fx1_Reverb_Verb_Mix" />
+  <PARAM id="aux2_fx1_Reverb_Verb_On" />
+  <PARAM id="aux2_fx1_Reverb_Verb_Out" />
+  <PARAM id="aux2_fx1_Reverb_Verb_PreDelay" />
+  <PARAM id="aux2_fx1_Reverb_Verb_Size" />
+  <PARAM id="aux2_fx1_Reverb_Verb_Width" />
+  <PARAM id="aux2_fx1_Tube_Tube_Bias" />
+  <PARAM id="aux2_fx1_Tube_Tube_Drive" />
+  <PARAM id="aux2_fx1_Tube_Tube_Model" />
+  <PARAM id="aux2_fx1_Tube_Tube_On" />
+  <PARAM id="aux2_fx1_Tube_Tube_Out" />
+  <PARAM id="aux2_fx1_Tube_Tube_Sag" />
+  <PARAM id="aux2_fx1_Tube_Tube_Tone" />
+  <PARAM id="aux2_fx1_type" />
+  <PARAM id="aux2_pan" />
+  <PARAM id="aux2_return" value="-7.599998474121094" />
+  <PARAM id="glide_div" />
+  <PARAM id="glide_mode" />
+  <PARAM id="glide_sync" />
+  <PARAM id="glide_time" />
+  <PARAM id="interp" />
+  <PARAM id="master_fx0_Cab_Cab_GainL" />
+  <PARAM id="master_fx0_Cab_Cab_GainR" />
+  <PARAM id="master_fx0_Cab_Cab_IRL" />
+  <PARAM id="master_fx0_Cab_Cab_IRR" />
+  <PARAM id="master_fx0_Cab_Cab_On" />
+  <PARAM id="master_fx0_Chorus_Chorus_Delay" />
+  <PARAM id="master_fx0_Chorus_Chorus_Depth" />
+  <PARAM id="master_fx0_Chorus_Chorus_Div" />
+  <PARAM id="master_fx0_Chorus_Chorus_Mix" />
+  <PARAM id="master_fx0_Chorus_Chorus_On" />
+  <PARAM id="master_fx0_Chorus_Chorus_Out" />
+  <PARAM id="master_fx0_Chorus_Chorus_Rate" />
+  <PARAM id="master_fx0_Chorus_Chorus_Shape" />
+  <PARAM id="master_fx0_Chorus_Chorus_Sync" />
+  <PARAM id="master_fx0_Chorus_Chorus_Voices" />
+  <PARAM id="master_fx0_Chorus_Chorus_Width" />
+  <PARAM id="master_fx0_Comp_Comp_Attack" />
+  <PARAM id="master_fx0_Comp_Comp_Gain" />
+  <PARAM id="master_fx0_Comp_Comp_Knee" />
+  <PARAM id="master_fx0_Comp_Comp_On" />
+  <PARAM id="master_fx0_Comp_Comp_PeakRms" />
+  <PARAM id="master_fx0_Comp_Comp_PreGain" />
+  <PARAM id="master_fx0_Comp_Comp_Ratio" />
+  <PARAM id="master_fx0_Comp_Comp_RelMode" />
+  <PARAM id="master_fx0_Comp_Comp_Release" />
+  <PARAM id="master_fx0_Comp_Comp_Thresh" />
+  <PARAM id="master_fx0_Delay_Del_CrossFdbk" />
+  <PARAM id="master_fx0_Delay_Del_DelayL" />
+  <PARAM id="master_fx0_Delay_Del_DelayR" />
+  <PARAM id="master_fx0_Delay_Del_DryGain" />
+  <PARAM id="master_fx0_Delay_Del_FdbkL" />
+  <PARAM id="master_fx0_Delay_Del_FdbkR" />
+  <PARAM id="master_fx0_Delay_Del_FilterCutoff" />
+  <PARAM id="master_fx0_Delay_Del_FilterQ" />
+  <PARAM id="master_fx0_Delay_Del_ModeL" />
+  <PARAM id="master_fx0_Delay_Del_ModeR" />
+  <PARAM id="master_fx0_Delay_Del_On" />
+  <PARAM id="master_fx0_Delay_Del_WetGain" />
+  <PARAM id="master_fx0_EQ_EQ_B1_Freq" />
+  <PARAM id="master_fx0_EQ_EQ_B1_Gain" />
+  <PARAM id="master_fx0_EQ_EQ_B1_On" />
+  <PARAM id="master_fx0_EQ_EQ_B1_Q" />
+  <PARAM id="master_fx0_EQ_EQ_B1_Type" />
+  <PARAM id="master_fx0_EQ_EQ_B2_Freq" />
+  <PARAM id="master_fx0_EQ_EQ_B2_Gain" />
+  <PARAM id="master_fx0_EQ_EQ_B2_On" />
+  <PARAM id="master_fx0_EQ_EQ_B2_Q" />
+  <PARAM id="master_fx0_EQ_EQ_B2_Type" />
+  <PARAM id="master_fx0_EQ_EQ_B3_Freq" />
+  <PARAM id="master_fx0_EQ_EQ_B3_Gain" />
+  <PARAM id="master_fx0_EQ_EQ_B3_On" />
+  <PARAM id="master_fx0_EQ_EQ_B3_Q" />
+  <PARAM id="master_fx0_EQ_EQ_B3_Type" />
+  <PARAM id="master_fx0_EQ_EQ_HS_Freq" value="5000.0" />
+  <PARAM id="master_fx0_EQ_EQ_HS_Gain" value="0.0" />
+  <PARAM id="master_fx0_EQ_EQ_HS_On" />
+  <PARAM id="master_fx0_EQ_EQ_HS_Q" />
+  <PARAM id="master_fx0_EQ_EQ_HS_Type" />
+  <PARAM id="master_fx0_EQ_EQ_LS_Freq" />
+  <PARAM id="master_fx0_EQ_EQ_LS_Gain" />
+  <PARAM id="master_fx0_EQ_EQ_LS_On" />
+  <PARAM id="master_fx0_EQ_EQ_LS_Q" />
+  <PARAM id="master_fx0_EQ_EQ_LS_Type" />
+  <PARAM id="master_fx0_EQ_EQ_On" value="0.0" />
+  <PARAM id="master_fx0_EQ_EQ_PostGain" />
+  <PARAM id="master_fx0_Flanger_Flanger_Delay" />
+  <PARAM id="master_fx0_Flanger_Flanger_Depth" />
+  <PARAM id="master_fx0_Flanger_Flanger_Div" />
+  <PARAM id="master_fx0_Flanger_Flanger_Feedback" />
+  <PARAM id="master_fx0_Flanger_Flanger_Mix" />
+  <PARAM id="master_fx0_Flanger_Flanger_On" />
+  <PARAM id="master_fx0_Flanger_Flanger_Out" />
+  <PARAM id="master_fx0_Flanger_Flanger_Rate" />
+  <PARAM id="master_fx0_Flanger_Flanger_Shape" />
+  <PARAM id="master_fx0_Flanger_Flanger_Sync" />
+  <PARAM id="master_fx0_Flanger_Flanger_Width" />
+  <PARAM id="master_fx0_Phaser_Phaser_Depth" />
+  <PARAM id="master_fx0_Phaser_Phaser_Div" />
+  <PARAM id="master_fx0_Phaser_Phaser_Feedback" />
+  <PARAM id="master_fx0_Phaser_Phaser_Freq" />
+  <PARAM id="master_fx0_Phaser_Phaser_Mix" />
+  <PARAM id="master_fx0_Phaser_Phaser_On" />
+  <PARAM id="master_fx0_Phaser_Phaser_Out" />
+  <PARAM id="master_fx0_Phaser_Phaser_Rate" />
+  <PARAM id="master_fx0_Phaser_Phaser_Shape" />
+  <PARAM id="master_fx0_Phaser_Phaser_Stages" />
+  <PARAM id="master_fx0_Phaser_Phaser_Sync" />
+  <PARAM id="master_fx0_Phaser_Phaser_Width" />
+  <PARAM id="master_fx0_Reverb_Verb_Damp" />
+  <PARAM id="master_fx0_Reverb_Verb_HighCut" />
+  <PARAM id="master_fx0_Reverb_Verb_LowCut" />
+  <PARAM id="master_fx0_Reverb_Verb_Mix" />
+  <PARAM id="master_fx0_Reverb_Verb_On" />
+  <PARAM id="master_fx0_Reverb_Verb_Out" />
+  <PARAM id="master_fx0_Reverb_Verb_PreDelay" />
+  <PARAM id="master_fx0_Reverb_Verb_Size" />
+  <PARAM id="master_fx0_Reverb_Verb_Width" />
+  <PARAM id="master_fx0_Tube_Tube_Bias" />
+  <PARAM id="master_fx0_Tube_Tube_Drive" />
+  <PARAM id="master_fx0_Tube_Tube_Model" />
+  <PARAM id="master_fx0_Tube_Tube_On" />
+  <PARAM id="master_fx0_Tube_Tube_Out" />
+  <PARAM id="master_fx0_Tube_Tube_Sag" />
+  <PARAM id="master_fx0_Tube_Tube_Tone" />
+  <PARAM id="master_fx0_type" value="0.0" />
+  <PARAM id="master_fx1_Cab_Cab_GainL" />
+  <PARAM id="master_fx1_Cab_Cab_GainR" />
+  <PARAM id="master_fx1_Cab_Cab_IRL" value="1.0" />
+  <PARAM id="master_fx1_Cab_Cab_IRR" value="2.0" />
+  <PARAM id="master_fx1_Cab_Cab_On" />
+  <PARAM id="master_fx1_Chorus_Chorus_Delay" />
+  <PARAM id="master_fx1_Chorus_Chorus_Depth" />
+  <PARAM id="master_fx1_Chorus_Chorus_Div" />
+  <PARAM id="master_fx1_Chorus_Chorus_Mix" />
+  <PARAM id="master_fx1_Chorus_Chorus_On" />
+  <PARAM id="master_fx1_Chorus_Chorus_Out" />
+  <PARAM id="master_fx1_Chorus_Chorus_Rate" />
+  <PARAM id="master_fx1_Chorus_Chorus_Shape" />
+  <PARAM id="master_fx1_Chorus_Chorus_Sync" />
+  <PARAM id="master_fx1_Chorus_Chorus_Voices" />
+  <PARAM id="master_fx1_Chorus_Chorus_Width" />
+  <PARAM id="master_fx1_Comp_Comp_Attack" />
+  <PARAM id="master_fx1_Comp_Comp_Gain" />
+  <PARAM id="master_fx1_Comp_Comp_Knee" />
+  <PARAM id="master_fx1_Comp_Comp_On" />
+  <PARAM id="master_fx1_Comp_Comp_PeakRms" />
+  <PARAM id="master_fx1_Comp_Comp_PreGain" />
+  <PARAM id="master_fx1_Comp_Comp_Ratio" />
+  <PARAM id="master_fx1_Comp_Comp_RelMode" />
+  <PARAM id="master_fx1_Comp_Comp_Release" />
+  <PARAM id="master_fx1_Comp_Comp_Thresh" />
+  <PARAM id="master_fx1_Delay_Del_CrossFdbk" />
+  <PARAM id="master_fx1_Delay_Del_DelayL" />
+  <PARAM id="master_fx1_Delay_Del_DelayR" />
+  <PARAM id="master_fx1_Delay_Del_DryGain" />
+  <PARAM id="master_fx1_Delay_Del_FdbkL" />
+  <PARAM id="master_fx1_Delay_Del_FdbkR" />
+  <PARAM id="master_fx1_Delay_Del_FilterCutoff" />
+  <PARAM id="master_fx1_Delay_Del_FilterQ" />
+  <PARAM id="master_fx1_Delay_Del_ModeL" />
+  <PARAM id="master_fx1_Delay_Del_ModeR" />
+  <PARAM id="master_fx1_Delay_Del_On" />
+  <PARAM id="master_fx1_Delay_Del_WetGain" />
+  <PARAM id="master_fx1_EQ_EQ_B1_Freq" />
+  <PARAM id="master_fx1_EQ_EQ_B1_Gain" />
+  <PARAM id="master_fx1_EQ_EQ_B1_On" />
+  <PARAM id="master_fx1_EQ_EQ_B1_Q" />
+  <PARAM id="master_fx1_EQ_EQ_B1_Type" />
+  <PARAM id="master_fx1_EQ_EQ_B2_Freq" />
+  <PARAM id="master_fx1_EQ_EQ_B2_Gain" />
+  <PARAM id="master_fx1_EQ_EQ_B2_On" />
+  <PARAM id="master_fx1_EQ_EQ_B2_Q" />
+  <PARAM id="master_fx1_EQ_EQ_B2_Type" />
+  <PARAM id="master_fx1_EQ_EQ_B3_Freq" />
+  <PARAM id="master_fx1_EQ_EQ_B3_Gain" />
+  <PARAM id="master_fx1_EQ_EQ_B3_On" />
+  <PARAM id="master_fx1_EQ_EQ_B3_Q" />
+  <PARAM id="master_fx1_EQ_EQ_B3_Type" />
+  <PARAM id="master_fx1_EQ_EQ_HS_Freq" />
+  <PARAM id="master_fx1_EQ_EQ_HS_Gain" />
+  <PARAM id="master_fx1_EQ_EQ_HS_On" />
+  <PARAM id="master_fx1_EQ_EQ_HS_Q" />
+  <PARAM id="master_fx1_EQ_EQ_HS_Type" />
+  <PARAM id="master_fx1_EQ_EQ_LS_Freq" />
+  <PARAM id="master_fx1_EQ_EQ_LS_Gain" />
+  <PARAM id="master_fx1_EQ_EQ_LS_On" />
+  <PARAM id="master_fx1_EQ_EQ_LS_Q" />
+  <PARAM id="master_fx1_EQ_EQ_LS_Type" />
+  <PARAM id="master_fx1_EQ_EQ_On" />
+  <PARAM id="master_fx1_EQ_EQ_PostGain" />
+  <PARAM id="master_fx1_Flanger_Flanger_Delay" />
+  <PARAM id="master_fx1_Flanger_Flanger_Depth" />
+  <PARAM id="master_fx1_Flanger_Flanger_Div" />
+  <PARAM id="master_fx1_Flanger_Flanger_Feedback" />
+  <PARAM id="master_fx1_Flanger_Flanger_Mix" />
+  <PARAM id="master_fx1_Flanger_Flanger_On" />
+  <PARAM id="master_fx1_Flanger_Flanger_Out" />
+  <PARAM id="master_fx1_Flanger_Flanger_Rate" />
+  <PARAM id="master_fx1_Flanger_Flanger_Shape" />
+  <PARAM id="master_fx1_Flanger_Flanger_Sync" />
+  <PARAM id="master_fx1_Flanger_Flanger_Width" />
+  <PARAM id="master_fx1_Phaser_Phaser_Depth" />
+  <PARAM id="master_fx1_Phaser_Phaser_Div" />
+  <PARAM id="master_fx1_Phaser_Phaser_Feedback" />
+  <PARAM id="master_fx1_Phaser_Phaser_Freq" />
+  <PARAM id="master_fx1_Phaser_Phaser_Mix" />
+  <PARAM id="master_fx1_Phaser_Phaser_On" />
+  <PARAM id="master_fx1_Phaser_Phaser_Out" />
+  <PARAM id="master_fx1_Phaser_Phaser_Rate" />
+  <PARAM id="master_fx1_Phaser_Phaser_Shape" />
+  <PARAM id="master_fx1_Phaser_Phaser_Stages" />
+  <PARAM id="master_fx1_Phaser_Phaser_Sync" />
+  <PARAM id="master_fx1_Phaser_Phaser_Width" />
+  <PARAM id="master_fx1_Reverb_Verb_Damp" />
+  <PARAM id="master_fx1_Reverb_Verb_HighCut" />
+  <PARAM id="master_fx1_Reverb_Verb_LowCut" />
+  <PARAM id="master_fx1_Reverb_Verb_Mix" />
+  <PARAM id="master_fx1_Reverb_Verb_On" />
+  <PARAM id="master_fx1_Reverb_Verb_Out" />
+  <PARAM id="master_fx1_Reverb_Verb_PreDelay" />
+  <PARAM id="master_fx1_Reverb_Verb_Size" />
+  <PARAM id="master_fx1_Reverb_Verb_Width" />
+  <PARAM id="master_fx1_Tube_Tube_Bias" />
+  <PARAM id="master_fx1_Tube_Tube_Drive" />
+  <PARAM id="master_fx1_Tube_Tube_Model" />
+  <PARAM id="master_fx1_Tube_Tube_On" />
+  <PARAM id="master_fx1_Tube_Tube_Out" />
+  <PARAM id="master_fx1_Tube_Tube_Sag" />
+  <PARAM id="master_fx1_Tube_Tube_Tone" />
+  <PARAM id="master_fx1_type" value="0.0" />
+  <PARAM id="master_limiter" />
+  <PARAM id="master_out" value="-6.0" />
+  <PARAM id="mod10_acurve" value="0.3304269313812256" />
+  <PARAM id="mod10_att" value="252.1406707763672" />
+  <PARAM id="mod10_beats" value="8.833552360534668" />
+  <PARAM id="mod10_bipolar" value="0.0" />
+  <PARAM id="mod10_daw" />
+  <PARAM id="mod10_dcurve" value="-0.3877230882644653" />
+  <PARAM id="mod10_dec" value="166.5286560058594" />
+  <PARAM id="mod10_delay" value="132.2167816162109" />
+  <PARAM id="mod10_div" value="5.0" />
+  <PARAM id="mod10_dur" value="1.358194231987" />
+  <PARAM id="mod10_durmode" value="0.0" />
+  <PARAM id="mod10_fade" value="424.4074096679688" />
+  <PARAM id="mod10_level" value="0.7521940469741821" />
+  <PARAM id="mod10_mode" value="1.0" />
+  <PARAM id="mod10_phase" value="0.6036108732223511" />
+  <PARAM id="mod10_rate" value="0.1661728769540787" />
+  <PARAM id="mod10_rcurve" value="0.467538595199585" />
+  <PARAM id="mod10_rel" value="303.134765625" />
+  <PARAM id="mod10_shape" value="2.0" />
+  <PARAM id="mod10_speed" value="1.12005078792572" />
+  <PARAM id="mod10_sus" value="0.6480413675308228" />
+  <PARAM id="mod10_sync" />
+  <PARAM id="mod10_type" />
+  <PARAM id="mod10_velamt" value="0.5111510157585144" />
+  <PARAM id="mod11_acurve" value="0.2595686912536621" />
+  <PARAM id="mod11_att" value="0.06392071396112442" />
+  <PARAM id="mod11_beats" value="7.981709480285645" />
+  <PARAM id="mod11_bipolar" />
+  <PARAM id="mod11_daw" value="1.0" />
+  <PARAM id="mod11_dcurve" value="0.01753664016723633" />
+  <PARAM id="mod11_dec" value="434.1838073730469" />
+  <PARAM id="mod11_delay" value="338.5721740722656" />
+  <PARAM id="mod11_div" value="8.0" />
+  <PARAM id="mod11_dur" value="4.163643360137939" />
+  <PARAM id="mod11_durmode" />
+  <PARAM id="mod11_fade" value="37.30185699462891" />
+  <PARAM id="mod11_level" value="0.7621698379516602" />
+  <PARAM id="mod11_mode" value="0.0" />
+  <PARAM id="mod11_phase" value="0.8672798275947571" />
+  <PARAM id="mod11_rate" value="0.1069926545023918" />
+  <PARAM id="mod11_rcurve" value="0.1015317440032959" />
+  <PARAM id="mod11_rel" value="196.6706237792969" />
+  <PARAM id="mod11_shape" value="2.0" />
+  <PARAM id="mod11_speed" value="1.348450064659119" />
+  <PARAM id="mod11_sus" value="0.8040151596069336" />
+  <PARAM id="mod11_sync" />
+  <PARAM id="mod11_type" />
+  <PARAM id="mod11_velamt" value="0.7692976593971252" />
+  <PARAM id="mod12_acurve" value="-0.2886375188827515" />
+  <PARAM id="mod12_att" value="255.4255981445312" />
+  <PARAM id="mod12_beats" value="7.972004890441895" />
+  <PARAM id="mod12_bipolar" value="0.0" />
+  <PARAM id="mod12_daw" />
+  <PARAM id="mod12_dcurve" value="0.4512844085693359" />
+  <PARAM id="mod12_dec" value="702.4191284179688" />
+  <PARAM id="mod12_delay" value="123.0261459350586" />
+  <PARAM id="mod12_div" value="14.0" />
+  <PARAM id="mod12_dur" value="7.933895587921143" />
+  <PARAM id="mod12_durmode" />
+  <PARAM id="mod12_fade" value="315.3718872070312" />
+  <PARAM id="mod12_level" value="0.6658883094787598" />
+  <PARAM id="mod12_mode" />
+  <PARAM id="mod12_phase" value="0.1400281488895416" />
+  <PARAM id="mod12_rate" value="1.393852472305298" />
+  <PARAM id="mod12_rcurve" value="-0.3928900361061096" />
+  <PARAM id="mod12_rel" value="1607.388427734375" />
+  <PARAM id="mod12_shape" value="4.0" />
+  <PARAM id="mod12_speed" value="0.6036680340766907" />
+  <PARAM id="mod12_sus" value="0.2607114017009735" />
+  <PARAM id="mod12_sync" value="0.0" />
+  <PARAM id="mod12_type" />
+  <PARAM id="mod12_velamt" value="0.1259635388851166" />
+  <PARAM id="mod13_acurve" value="-0.7786757349967957" />
+  <PARAM id="mod13_att" value="401.1503601074219" />
+  <PARAM id="mod13_beats" value="5.637660503387451" />
+  <PARAM id="mod13_bipolar" value="1.0" />
+  <PARAM id="mod13_daw" />
+  <PARAM id="mod13_dcurve" value="-0.7892512083053589" />
+  <PARAM id="mod13_dec" value="620.179443359375" />
+  <PARAM id="mod13_delay" value="46.35068893432617" />
+  <PARAM id="mod13_div" value="16.0" />
+  <PARAM id="mod13_dur" value="1.828243136405945" />
+  <PARAM id="mod13_durmode" />
+  <PARAM id="mod13_fade" value="671.3445434570312" />
+  <PARAM id="mod13_level" value="0.688021719455719" />
+  <PARAM id="mod13_mode" value="1.0" />
+  <PARAM id="mod13_phase" value="0.8099344372749329" />
+  <PARAM id="mod13_rate" value="5.07168436050415" />
+  <PARAM id="mod13_rcurve" value="0.214705228805542" />
+  <PARAM id="mod13_rel" value="1975.476684570312" />
+  <PARAM id="mod13_shape" value="0.0" />
+  <PARAM id="mod13_speed" value="1.424881935119629" />
+  <PARAM id="mod13_sus" value="0.396472692489624" />
+  <PARAM id="mod13_sync" />
+  <PARAM id="mod13_type" />
+  <PARAM id="mod13_velamt" value="0.863238513469696" />
+  <PARAM id="mod14_acurve" value="0.4300277233123779" />
+  <PARAM id="mod14_att" value="0.0001295070833293721" />
+  <PARAM id="mod14_beats" value="13.21384811401367" />
+  <PARAM id="mod14_bipolar" />
+  <PARAM id="mod14_daw" />
+  <PARAM id="mod14_dcurve" value="0.39164137840271" />
+  <PARAM id="mod14_dec" value="1612.781860351562" />
+  <PARAM id="mod14_delay" value="116.9647827148438" />
+  <PARAM id="mod14_div" value="11.0" />
+  <PARAM id="mod14_dur" value="1.09214198589325" />
+  <PARAM id="mod14_durmode" />
+  <PARAM id="mod14_fade" value="766.37109375" />
+  <PARAM id="mod14_level" value="0.7015161514282227" />
+  <PARAM id="mod14_mode" />
+  <PARAM id="mod14_phase" value="0.3219352066516876" />
+  <PARAM id="mod14_rate" value="0.08363614976406097" />
+  <PARAM id="mod14_rcurve" value="-0.2535767555236816" />
+  <PARAM id="mod14_rel" value="623.3169555664062" />
+  <PARAM id="mod14_shape" value="6.0" />
+  <PARAM id="mod14_speed" value="0.5453940033912659" />
+  <PARAM id="mod14_sus" value="0.280130922794342" />
+  <PARAM id="mod14_sync" />
+  <PARAM id="mod14_type" />
+  <PARAM id="mod14_velamt" value="0.1827103197574615" />
+  <PARAM id="mod15_acurve" value="-0.3351448774337769" />
+  <PARAM id="mod15_att" value="4.167699813842773" />
+  <PARAM id="mod15_beats" value="14.77047157287598" />
+  <PARAM id="mod15_bipolar" value="1.0" />
+  <PARAM id="mod15_daw" />
+  <PARAM id="mod15_dcurve" value="-0.7475594282150269" />
+  <PARAM id="mod15_dec" value="1290.019287109375" />
+  <PARAM id="mod15_delay" value="259.6019897460938" />
+  <PARAM id="mod15_div" value="6.0" />
+  <PARAM id="mod15_dur" value="4.786509990692139" />
+  <PARAM id="mod15_durmode" value="0.0" />
+  <PARAM id="mod15_fade" value="57.96360778808594" />
+  <PARAM id="mod15_level" value="0.8883525133132935" />
+  <PARAM id="mod15_mode" value="1.0" />
+  <PARAM id="mod15_phase" value="0.5464330315589905" />
+  <PARAM id="mod15_rate" value="0.08932451158761978" />
+  <PARAM id="mod15_rcurve" value="0.01881992816925049" />
+  <PARAM id="mod15_rel" value="909.3361206054688" />
+  <PARAM id="mod15_shape" value="6.0" />
+  <PARAM id="mod15_speed" value="1.345454573631287" />
+  <PARAM id="mod15_sus" value="0.04106074199080467" />
+  <PARAM id="mod15_sync" value="1.0" />
+  <PARAM id="mod15_type" />
+  <PARAM id="mod15_velamt" value="0.9179604649543762" />
+  <PARAM id="mod16_acurve" value="-0.5754874348640442" />
+  <PARAM id="mod16_att" value="90.52231597900391" />
+  <PARAM id="mod16_beats" value="7.348572731018066" />
+  <PARAM id="mod16_bipolar" />
+  <PARAM id="mod16_daw" />
+  <PARAM id="mod16_dcurve" value="-0.3762317895889282" />
+  <PARAM id="mod16_dec" value="1977.817260742188" />
+  <PARAM id="mod16_delay" value="6.513245582580566" />
+  <PARAM id="mod16_div" value="10.0" />
+  <PARAM id="mod16_dur" value="3.086584568023682" />
+  <PARAM id="mod16_durmode" value="0.0" />
+  <PARAM id="mod16_fade" value="314.7848815917969" />
+  <PARAM id="mod16_level" value="0.899792492389679" />
+  <PARAM id="mod16_mode" />
+  <PARAM id="mod16_phase" value="0.5357624888420105" />
+  <PARAM id="mod16_rate" value="1.657517671585083" />
+  <PARAM id="mod16_rcurve" value="0.06690514087677002" />
+  <PARAM id="mod16_rel" value="174.4125823974609" />
+  <PARAM id="mod16_shape" value="1.0" />
+  <PARAM id="mod16_speed" value="1.415544033050537" />
+  <PARAM id="mod16_sus" value="0.1013100147247314" />
+  <PARAM id="mod16_sync" value="1.0" />
+  <PARAM id="mod16_type" />
+  <PARAM id="mod16_velamt" value="0.04039217531681061" />
+  <PARAM id="mod1_acurve" value="-0.2977362871170044" />
+  <PARAM id="mod1_att" value="4.865426063537598" />
+  <PARAM id="mod1_beats" value="10.84238338470459" />
+  <PARAM id="mod1_bipolar" value="0.0" />
+  <PARAM id="mod1_daw" />
+  <PARAM id="mod1_dcurve" value="-0.7639181613922119" />
+  <PARAM id="mod1_dec" value="1494.2373046875" />
+  <PARAM id="mod1_delay" value="98.55830383300781" />
+  <PARAM id="mod1_div" value="0.0" />
+  <PARAM id="mod1_dur" value="2.833532333374023" />
+  <PARAM id="mod1_durmode" />
+  <PARAM id="mod1_fade" value="395.469970703125" />
+  <PARAM id="mod1_level" value="0.5373244881629944" />
+  <PARAM id="mod1_mode" value="0.0" />
+  <PARAM id="mod1_phase" value="0.03607772290706635" />
+  <PARAM id="mod1_rate" value="0.4036830067634583" />
+  <PARAM id="mod1_rcurve" value="0.1851563453674316" />
+  <PARAM id="mod1_rel" value="2767.38671875" />
+  <PARAM id="mod1_shape" value="6.0" />
+  <PARAM id="mod1_speed" value="0.5825463533401489" />
+  <PARAM id="mod1_sus" value="0.9523277878761292" />
+  <PARAM id="mod1_sync" value="1.0" />
+  <PARAM id="mod1_type" value="3.0" />
+  <PARAM id="mod1_velamt" value="0.2467656135559082" />
+  <PARAM id="mod2_acurve" value="-0.1120997071266174" />
+  <PARAM id="mod2_att" value="88.26647186279297" />
+  <PARAM id="mod2_beats" value="9.917405128479004" />
+  <PARAM id="mod2_bipolar" value="1.0" />
+  <PARAM id="mod2_daw" />
+  <PARAM id="mod2_dcurve" value="0.4434549808502197" />
+  <PARAM id="mod2_dec" value="935.3831176757812" />
+  <PARAM id="mod2_delay" value="4.294332981109619" />
+  <PARAM id="mod2_div" value="7.0" />
+  <PARAM id="mod2_dur" value="6.649474143981934" />
+  <PARAM id="mod2_durmode" value="1.0" />
+  <PARAM id="mod2_fade" value="258.6662902832031" />
+  <PARAM id="mod2_level" value="0.6384867429733276" />
+  <PARAM id="mod2_mode" value="1.0" />
+  <PARAM id="mod2_phase" value="0.1387610137462616" />
+  <PARAM id="mod2_rate" value="0.9931600689888" />
+  <PARAM id="mod2_rcurve" value="-0.396065354347229" />
+  <PARAM id="mod2_rel" value="1595.166748046875" />
+  <PARAM id="mod2_shape" value="1.0" />
+  <PARAM id="mod2_speed" value="0.6087356209754944" />
+  <PARAM id="mod2_sus" value="0.8810493946075439" />
+  <PARAM id="mod2_sync" value="0.0" />
+  <PARAM id="mod2_type" value="3.0" />
+  <PARAM id="mod2_velamt" value="0.6841199398040771" />
+  <PARAM id="mod3_acurve" value="-0.07244986295700073" />
+  <PARAM id="mod3_att" value="129.2417297363281" />
+  <PARAM id="mod3_beats" value="9.783273696899414" />
+  <PARAM id="mod3_bipolar" value="1.0" />
+  <PARAM id="mod3_daw" value="0.0" />
+  <PARAM id="mod3_dcurve" value="-0.3645853996276855" />
+  <PARAM id="mod3_dec" value="691.6097412109375" />
+  <PARAM id="mod3_delay" value="55.94281005859375" />
+  <PARAM id="mod3_div" value="2.0" />
+  <PARAM id="mod3_dur" value="7.922713279724121" />
+  <PARAM id="mod3_durmode" value="1.0" />
+  <PARAM id="mod3_fade" value="148.1306457519531" />
+  <PARAM id="mod3_level" value="0.9038179516792297" />
+  <PARAM id="mod3_mode" value="1.0" />
+  <PARAM id="mod3_phase" value="0.5100505948066711" />
+  <PARAM id="mod3_rate" value="0.5249226093292236" />
+  <PARAM id="mod3_rcurve" value="-0.511652946472168" />
+  <PARAM id="mod3_rel" value="66.92884063720703" />
+  <PARAM id="mod3_shape" value="2.0" />
+  <PARAM id="mod3_speed" value="1.508577466011047" />
+  <PARAM id="mod3_sus" value="0.4648232758045197" />
+  <PARAM id="mod3_sync" />
+  <PARAM id="mod3_type" value="3.0" />
+  <PARAM id="mod3_velamt" value="0.8799377083778381" />
+  <PARAM id="mod4_acurve" value="-0.6064033508300781" />
+  <PARAM id="mod4_att" value="79.23849487304688" />
+  <PARAM id="mod4_beats" value="5.238529205322266" />
+  <PARAM id="mod4_bipolar" value="0.0" />
+  <PARAM id="mod4_daw" value="0.0" />
+  <PARAM id="mod4_dcurve" value="0.2510011196136475" />
+  <PARAM id="mod4_dec" value="156.2366027832031" />
+  <PARAM id="mod4_delay" value="193.0339202880859" />
+  <PARAM id="mod4_div" value="15.0" />
+  <PARAM id="mod4_dur" value="1.084676623344421" />
+  <PARAM id="mod4_durmode" value="0.0" />
+  <PARAM id="mod4_fade" value="394.5856018066406" />
+  <PARAM id="mod4_level" value="0.8625952005386353" />
+  <PARAM id="mod4_mode" />
+  <PARAM id="mod4_phase" value="0.479305624961853" />
+  <PARAM id="mod4_rate" value="0.06407255679368973" />
+  <PARAM id="mod4_rcurve" value="0.01104986667633057" />
+  <PARAM id="mod4_rel" value="1631.06982421875" />
+  <PARAM id="mod4_shape" value="3.0" />
+  <PARAM id="mod4_speed" value="0.7551225423812866" />
+  <PARAM id="mod4_sus" value="0.9848938584327698" />
+  <PARAM id="mod4_sync" value="0.0" />
+  <PARAM id="mod4_type" value="3.0" />
+  <PARAM id="mod4_velamt" value="0.9532105922698975" />
+  <PARAM id="mod5_acurve" value="0.4567556381225586" />
+  <PARAM id="mod5_att" value="106.4159851074219" />
+  <PARAM id="mod5_beats" value="1.401684999465942" />
+  <PARAM id="mod5_bipolar" />
+  <PARAM id="mod5_daw" />
+  <PARAM id="mod5_dcurve" value="0.2333354949951172" />
+  <PARAM id="mod5_dec" value="421.655517578125" />
+  <PARAM id="mod5_delay" value="2.412570238113403" />
+  <PARAM id="mod5_div" value="14.0" />
+  <PARAM id="mod5_dur" value="0.9976106882095337" />
+  <PARAM id="mod5_durmode" value="1.0" />
+  <PARAM id="mod5_fade" value="746.0896606445312" />
+  <PARAM id="mod5_level" value="0.8940194845199585" />
+  <PARAM id="mod5_mode" value="1.0" />
+  <PARAM id="mod5_phase" value="0.4216605126857758" />
+  <PARAM id="mod5_rate" value="0.9785889387130737" />
+  <PARAM id="mod5_rcurve" value="0.4495599269866943" />
+  <PARAM id="mod5_rel" value="185.3815765380859" />
+  <PARAM id="mod5_shape" value="4.0" />
+  <PARAM id="mod5_speed" value="1.183197259902954" />
+  <PARAM id="mod5_sus" value="0.1841613054275513" />
+  <PARAM id="mod5_sync" />
+  <PARAM id="mod5_type" value="3.0" />
+  <PARAM id="mod5_velamt" value="0.1752825677394867" />
+  <PARAM id="mod6_acurve" value="-0.07472825050354004" />
+  <PARAM id="mod6_att" value="156.8269348144531" />
+  <PARAM id="mod6_beats" value="2.36735200881958" />
+  <PARAM id="mod6_bipolar" value="1.0" />
+  <PARAM id="mod6_daw" />
+  <PARAM id="mod6_dcurve" value="0.2202961444854736" />
+  <PARAM id="mod6_dec" value="81.58185577392578" />
+  <PARAM id="mod6_delay" value="494.0357360839844" />
+  <PARAM id="mod6_div" value="1.0" />
+  <PARAM id="mod6_dur" value="1.857810497283936" />
+  <PARAM id="mod6_durmode" value="0.0" />
+  <PARAM id="mod6_fade" value="314.0271911621094" />
+  <PARAM id="mod6_level" value="0.9171112775802612" />
+  <PARAM id="mod6_mode" />
+  <PARAM id="mod6_phase" value="0.8873386979103088" />
+  <PARAM id="mod6_rate" value="7.40949010848999" />
+  <PARAM id="mod6_rcurve" value="-0.4896599054336548" />
+  <PARAM id="mod6_rel" value="191.9681091308594" />
+  <PARAM id="mod6_shape" value="0.0" />
+  <PARAM id="mod6_speed" value="0.5120289921760559" />
+  <PARAM id="mod6_sus" value="0.8030354976654053" />
+  <PARAM id="mod6_sync" value="0.0" />
+  <PARAM id="mod6_type" />
+  <PARAM id="mod6_velamt" value="0.2639478743076324" />
+  <PARAM id="mod7_acurve" value="0.4808890819549561" />
+  <PARAM id="mod7_att" value="131.3800201416016" />
+  <PARAM id="mod7_beats" value="10.10198307037354" />
+  <PARAM id="mod7_bipolar" value="1.0" />
+  <PARAM id="mod7_daw" value="1.0" />
+  <PARAM id="mod7_dcurve" value="0.2385668754577637" />
+  <PARAM id="mod7_dec" value="409.9734191894531" />
+  <PARAM id="mod7_delay" value="243.9342193603516" />
+  <PARAM id="mod7_div" value="9.0" />
+  <PARAM id="mod7_dur" value="2.502259731292725" />
+  <PARAM id="mod7_durmode" value="1.0" />
+  <PARAM id="mod7_fade" value="110.8611068725586" />
+  <PARAM id="mod7_level" value="0.9151637554168701" />
+  <PARAM id="mod7_mode" />
+  <PARAM id="mod7_phase" value="0.7935602068901062" />
+  <PARAM id="mod7_rate" value="4.721364498138428" />
+  <PARAM id="mod7_rcurve" value="-0.5837107300758362" />
+  <PARAM id="mod7_rel" value="754.7841796875" />
+  <PARAM id="mod7_shape" value="2.0" />
+  <PARAM id="mod7_speed" value="0.5868960022926331" />
+  <PARAM id="mod7_sus" value="0.09228029847145081" />
+  <PARAM id="mod7_sync" value="0.0" />
+  <PARAM id="mod7_type" />
+  <PARAM id="mod7_velamt" value="0.6950715184211731" />
+  <PARAM id="mod8_acurve" value="-0.4028676748275757" />
+  <PARAM id="mod8_att" value="4.538796901702881" />
+  <PARAM id="mod8_beats" value="7.486737251281738" />
+  <PARAM id="mod8_bipolar" value="1.0" />
+  <PARAM id="mod8_daw" value="1.0" />
+  <PARAM id="mod8_dcurve" value="-0.1180181503295898" />
+  <PARAM id="mod8_dec" value="1913.291381835938" />
+  <PARAM id="mod8_delay" value="121.2662811279297" />
+  <PARAM id="mod8_div" value="3.0" />
+  <PARAM id="mod8_dur" value="1.308089256286621" />
+  <PARAM id="mod8_durmode" value="1.0" />
+  <PARAM id="mod8_fade" value="975.5115966796875" />
+  <PARAM id="mod8_level" value="0.6635751724243164" />
+  <PARAM id="mod8_mode" />
+  <PARAM id="mod8_phase" value="0.5651493668556213" />
+  <PARAM id="mod8_rate" value="2.020793676376343" />
+  <PARAM id="mod8_rcurve" value="-0.5215616226196289" />
+  <PARAM id="mod8_rel" value="645.209228515625" />
+  <PARAM id="mod8_shape" value="3.0" />
+  <PARAM id="mod8_speed" value="1.881785273551941" />
+  <PARAM id="mod8_sus" value="0.5721979737281799" />
+  <PARAM id="mod8_sync" value="1.0" />
+  <PARAM id="mod8_type" />
+  <PARAM id="mod8_velamt" value="0.7121565341949463" />
+  <PARAM id="mod9_acurve" value="-0.3465533852577209" />
+  <PARAM id="mod9_att" value="176.9328918457031" />
+  <PARAM id="mod9_beats" value="12.84038257598877" />
+  <PARAM id="mod9_bipolar" value="0.0" />
+  <PARAM id="mod9_daw" value="0.0" />
+  <PARAM id="mod9_dcurve" value="-0.6379275321960449" />
+  <PARAM id="mod9_dec" value="84.78994750976562" />
+  <PARAM id="mod9_delay" value="66.32086181640625" />
+  <PARAM id="mod9_div" value="0.0" />
+  <PARAM id="mod9_dur" value="7.197528839111328" />
+  <PARAM id="mod9_durmode" value="1.0" />
+  <PARAM id="mod9_fade" value="188.3189544677734" />
+  <PARAM id="mod9_level" value="0.9971770048141479" />
+  <PARAM id="mod9_mode" />
+  <PARAM id="mod9_phase" value="0.9719791412353516" />
+  <PARAM id="mod9_rate" value="1.570567607879639" />
+  <PARAM id="mod9_rcurve" value="-0.3091439008712769" />
+  <PARAM id="mod9_rel" value="1302.3525390625" />
+  <PARAM id="mod9_shape" value="0.0" />
+  <PARAM id="mod9_speed" value="0.6964483857154846" />
+  <PARAM id="mod9_sus" value="0.5556730031967163" />
+  <PARAM id="mod9_sync" />
+  <PARAM id="mod9_type" />
+  <PARAM id="mod9_velamt" value="0.2172801345586777" />
+  <PARAM id="pb_range" />
+  <PARAM id="polymode" />
+  <PARAM id="r1_acurve" value="-0.636074960231781" />
+  <PARAM id="r1_att" value="0.08557124435901642" />
+  <PARAM id="r1_audible" />
+  <PARAM id="r1_coarse" value="0.0" />
+  <PARAM id="r1_cyl" value="2.0" />
+  <PARAM id="r1_dcurve" value="-0.7693166136741638" />
+  <PARAM id="r1_dec" value="972.3562622070312" />
+  <PARAM id="r1_detune" value="19.4495792388916" />
+  <PARAM id="r1_duration" value="432.8661499023438" />
+  <PARAM id="r1_f1_cutoff" value="5786.90966796875" />
+  <PARAM id="r1_f1_envamt" value="-0.4189955592155457" />
+  <PARAM id="r1_f1_gain" value="-1.379680633544922" />
+  <PARAM id="r1_f1_keytrk" value="0.120423436164856" />
+  <PARAM id="r1_f1_on" value="1.0" />
+  <PARAM id="r1_f1_res" value="0.4710700511932373" />
+  <PARAM id="r1_f1_type" value="1.0" />
+  <PARAM id="r1_f1_vowela" value="3.0" />
+  <PARAM id="r1_f1_vowelb" value="2.0" />
+  <PARAM id="r1_f1_vowelpos" value="0.02918771840631962" />
+  <PARAM id="r1_f2_cutoff" value="648.685546875" />
+  <PARAM id="r1_f2_envamt" value="0.3323479890823364" />
+  <PARAM id="r1_f2_gain" value="-8.872612953186035" />
+  <PARAM id="r1_f2_keytrk" value="0.1090412139892578" />
+  <PARAM id="r1_f2_on" value="0.0" />
+  <PARAM id="r1_f2_res" value="0.4510910511016846" />
+  <PARAM id="r1_f2_type" value="6.0" />
+  <PARAM id="r1_f2_vowela" value="4.0" />
+  <PARAM id="r1_f2_vowelb" value="1.0" />
+  <PARAM id="r1_f2_vowelpos" value="0.5391213893890381" />
+  <PARAM id="r1_fbal" value="0.1321977376937866" />
+  <PARAM id="r1_fine" value="-2.400001525878906" />
+  <PARAM id="r1_froute" value="1.0" />
+  <PARAM id="r1_opening" value="0.373190313577652" />
+  <PARAM id="r1_overlap" value="4.838285446166992" />
+  <PARAM id="r1_pan" value="-0.3461541533470154" />
+  <PARAM id="r1_randphase" />
+  <PARAM id="r1_rcurve" value="-0.4624512195587158" />
+  <PARAM id="r1_rel" value="133.6861724853516" />
+  <PARAM id="r1_send1" value="0.3391720652580261" />
+  <PARAM id="r1_send1_tap" />
+  <PARAM id="r1_send2" value="0.274854302406311" />
+  <PARAM id="r1_send2_tap" />
+  <PARAM id="r1_snap" value="2.0" />
+  <PARAM id="r1_spread" value="1.0" />
+  <PARAM id="r1_sus" value="0.9072571992874146" />
+  <PARAM id="r1_velamt" value="0.8186162114143372" />
+  <PARAM id="r1_volume" value="-3.957050323486328" />
+  <PARAM id="r1_xfshape" value="1.0" />
+  <PARAM id="r1_xm1_lift" value="0.2684918642044067" />
+  <PARAM id="r1_xm2_lift" value="0.1280000060796738" />
+  <PARAM id="r1_xm3_lift" value="0.3702684640884399" />
+  <PARAM id="r1_xm4_lift" value="0.2811532914638519" />
+  <PARAM id="r2_acurve" value="-0.2371206283569336" />
+  <PARAM id="r2_att" value="1.828626275062561" />
+  <PARAM id="r2_audible" value="1.0" />
+  <PARAM id="r2_coarse" value="-12.0" />
+  <PARAM id="r2_cyl" value="2.0" />
+  <PARAM id="r2_dcurve" value="-0.6187703013420105" />
+  <PARAM id="r2_dec" value="240.5994262695312" />
+  <PARAM id="r2_detune" value="0.0" />
+  <PARAM id="r2_duration" value="12145.2919921875" />
+  <PARAM id="r2_f1_cutoff" value="1093.6953125" />
+  <PARAM id="r2_f1_envamt" value="0.5250343084335327" />
+  <PARAM id="r2_f1_gain" value="1.789861679077148" />
+  <PARAM id="r2_f1_keytrk" value="0.2306605577468872" />
+  <PARAM id="r2_f1_on" value="0.0" />
+  <PARAM id="r2_f1_res" value="0.1902972012758255" />
+  <PARAM id="r2_f1_type" value="6.0" />
+  <PARAM id="r2_f1_vowela" value="1.0" />
+  <PARAM id="r2_f1_vowelb" value="4.0" />
+  <PARAM id="r2_f1_vowelpos" value="0.2967050671577454" />
+  <PARAM id="r2_f2_cutoff" value="277.1892395019531" />
+  <PARAM id="r2_f2_envamt" value="-0.3674273490905762" />
+  <PARAM id="r2_f2_gain" value="-0.2350368499755859" />
+  <PARAM id="r2_f2_keytrk" value="0.4135352373123169" />
+  <PARAM id="r2_f2_on" value="1.0" />
+  <PARAM id="r2_f2_res" value="0.455355703830719" />
+  <PARAM id="r2_f2_type" value="4.0" />
+  <PARAM id="r2_f2_vowela" value="1.0" />
+  <PARAM id="r2_f2_vowelb" value="3.0" />
+  <PARAM id="r2_f2_vowelpos" value="0.9538727998733521" />
+  <PARAM id="r2_fbal" value="-0.9947620630264282" />
+  <PARAM id="r2_fine" value="4.0" />
+  <PARAM id="r2_froute" value="1.0" />
+  <PARAM id="r2_opening" value="0.3279201090335846" />
+  <PARAM id="r2_overlap" value="0.1166334226727486" />
+  <PARAM id="r2_pan" value="0.2786593437194824" />
+  <PARAM id="r2_randphase" />
+  <PARAM id="r2_rcurve" value="-0.1125559210777283" />
+  <PARAM id="r2_rel" value="267.1310729980469" />
+  <PARAM id="r2_send1" value="0.01740844175219536" />
+  <PARAM id="r2_send1_tap" />
+  <PARAM id="r2_send2" value="0.3549950420856476" />
+  <PARAM id="r2_send2_tap" />
+  <PARAM id="r2_snap" />
+  <PARAM id="r2_spread" value="1.0" />
+  <PARAM id="r2_sus" value="0.503241240978241" />
+  <PARAM id="r2_velamt" value="0.6625423431396484" />
+  <PARAM id="r2_volume" value="-3.781753540039062" />
+  <PARAM id="r2_xfshape" value="1.0" />
+  <PARAM id="r2_xm1_lift" value="0.4373312592506409" />
+  <PARAM id="r2_xm2_lift" value="0.3360942006111145" />
+  <PARAM id="r2_xm3_lift" value="0.4759999513626099" />
+  <PARAM id="r2_xm4_lift" value="0.3470614552497864" />
+  <PARAM id="r3_acurve" value="-0.1027463674545288" />
+  <PARAM id="r3_att" value="9.492588996887207" />
+  <PARAM id="r3_audible" value="0.0" />
+  <PARAM id="r3_coarse" value="0.0" />
+  <PARAM id="r3_cyl" value="1.0" />
+  <PARAM id="r3_dcurve" value="-0.4627522230148315" />
+  <PARAM id="r3_dec" value="178.5518035888672" />
+  <PARAM id="r3_detune" value="5.786925315856934" />
+  <PARAM id="r3_duration" value="3487.543212890625" />
+  <PARAM id="r3_f1_cutoff" value="2289.923828125" />
+  <PARAM id="r3_f1_envamt" value="0.4522472620010376" />
+  <PARAM id="r3_f1_gain" value="3.078804016113281" />
+  <PARAM id="r3_f1_keytrk" value="0.923736572265625" />
+  <PARAM id="r3_f1_on" value="1.0" />
+  <PARAM id="r3_f1_res" value="0.6763762235641479" />
+  <PARAM id="r3_f1_type" value="1.0" />
+  <PARAM id="r3_f1_vowela" value="2.0" />
+  <PARAM id="r3_f1_vowelb" value="3.0" />
+  <PARAM id="r3_f1_vowelpos" value="0.6097459197044373" />
+  <PARAM id="r3_f2_cutoff" value="9295.7431640625" />
+  <PARAM id="r3_f2_envamt" value="0.6751390695571899" />
+  <PARAM id="r3_f2_gain" value="-3.296222686767578" />
+  <PARAM id="r3_f2_keytrk" value="0.2034816741943359" />
+  <PARAM id="r3_f2_on" />
+  <PARAM id="r3_f2_res" value="0.2932622730731964" />
+  <PARAM id="r3_f2_type" value="9.0" />
+  <PARAM id="r3_f2_vowela" value="2.0" />
+  <PARAM id="r3_f2_vowelb" value="4.0" />
+  <PARAM id="r3_f2_vowelpos" value="0.5124224424362183" />
+  <PARAM id="r3_fbal" value="0.4293637275695801" />
+  <PARAM id="r3_fine" value="0.0" />
+  <PARAM id="r3_froute" value="1.0" />
+  <PARAM id="r3_opening" value="0.268153041601181" />
+  <PARAM id="r3_overlap" value="21.57394218444824" />
+  <PARAM id="r3_pan" value="0.3176038265228271" />
+  <PARAM id="r3_randphase" />
+  <PARAM id="r3_rcurve" value="0.1337389945983887" />
+  <PARAM id="r3_rel" value="169.6378479003906" />
+  <PARAM id="r3_send1" value="0.1321995109319687" />
+  <PARAM id="r3_send1_tap" />
+  <PARAM id="r3_send2" value="0.02062154933810234" />
+  <PARAM id="r3_send2_tap" />
+  <PARAM id="r3_snap" value="2.0" />
+  <PARAM id="r3_spread" value="0.65656977891922" />
+  <PARAM id="r3_sus" value="0.4498099088668823" />
+  <PARAM id="r3_velamt" value="0.23969766497612" />
+  <PARAM id="r3_volume" value="-8.1427001953125" />
+  <PARAM id="r3_xfshape" />
+  <PARAM id="r3_xm1_lift" value="0.4977146685123444" />
+  <PARAM id="r3_xm2_lift" value="0.3174684941768646" />
+  <PARAM id="r3_xm3_lift" value="0.3734884858131409" />
+  <PARAM id="r3_xm4_lift" value="0.4503326117992401" />
+  <PARAM id="r4_acurve" value="-0.5145564079284668" />
+  <PARAM id="r4_att" value="215.2260894775391" />
+  <PARAM id="r4_audible" value="0.0" />
+  <PARAM id="r4_coarse" value="0.0" />
+  <PARAM id="r4_cyl" value="1.0" />
+  <PARAM id="r4_dcurve" value="-0.2116685509681702" />
+  <PARAM id="r4_dec" value="1483.303588867188" />
+  <PARAM id="r4_detune" value="26.48321151733398" />
+  <PARAM id="r4_duration" value="1209.828857421875" />
+  <PARAM id="r4_f1_cutoff" value="12325.1083984375" />
+  <PARAM id="r4_f1_envamt" value="0.2744262218475342" />
+  <PARAM id="r4_f1_gain" value="6.268398284912109" />
+  <PARAM id="r4_f1_keytrk" value="0.006623029708862305" />
+  <PARAM id="r4_f1_on" value="0.0" />
+  <PARAM id="r4_f1_res" value="0.5536919236183167" />
+  <PARAM id="r4_f1_type" value="2.0" />
+  <PARAM id="r4_f1_vowela" value="0.0" />
+  <PARAM id="r4_f1_vowelb" value="2.0" />
+  <PARAM id="r4_f1_vowelpos" value="0.5867398381233215" />
+  <PARAM id="r4_f2_cutoff" value="13404.3056640625" />
+  <PARAM id="r4_f2_envamt" value="-0.1243584156036377" />
+  <PARAM id="r4_f2_gain" value="-8.498642921447754" />
+  <PARAM id="r4_f2_keytrk" value="0.400444507598877" />
+  <PARAM id="r4_f2_on" />
+  <PARAM id="r4_f2_res" value="0.1057754531502724" />
+  <PARAM id="r4_f2_type" value="8.0" />
+  <PARAM id="r4_f2_vowela" value="3.0" />
+  <PARAM id="r4_f2_vowelb" value="0.0" />
+  <PARAM id="r4_f2_vowelpos" value="0.6790036559104919" />
+  <PARAM id="r4_fbal" value="-0.1917271018028259" />
+  <PARAM id="r4_fine" value="0.0" />
+  <PARAM id="r4_froute" value="0.0" />
+  <PARAM id="r4_opening" value="0.9324163198471069" />
+  <PARAM id="r4_overlap" value="3.975019693374634" />
+  <PARAM id="r4_pan" value="-0.203581690788269" />
+  <PARAM id="r4_randphase" />
+  <PARAM id="r4_rcurve" value="-0.3259140253067017" />
+  <PARAM id="r4_rel" value="1231.905029296875" />
+  <PARAM id="r4_send1" value="0.2807095646858215" />
+  <PARAM id="r4_send1_tap" />
+  <PARAM id="r4_send2" value="0.3953337967395782" />
+  <PARAM id="r4_send2_tap" />
+  <PARAM id="r4_snap" value="2.0" />
+  <PARAM id="r4_spread" value="0.717316746711731" />
+  <PARAM id="r4_sus" value="0.5454619526863098" />
+  <PARAM id="r4_velamt" value="0.8251412510871887" />
+  <PARAM id="r4_volume" value="-8.0150146484375" />
+  <PARAM id="r4_xfshape" value="1.0" />
+  <PARAM id="r4_xm1_lift" value="0.07816307246685028" />
+  <PARAM id="r4_xm2_lift" value="0.2002821117639542" />
+  <PARAM id="r4_xm3_lift" value="0.1929150372743607" />
+  <PARAM id="r4_xm4_lift" value="0.1988943070173264" />
+  <PARAM id="route10_depth" />
+  <PARAM id="route11_depth" />
+  <PARAM id="route12_depth" />
+  <PARAM id="route13_depth" />
+  <PARAM id="route14_depth" />
+  <PARAM id="route15_depth" />
+  <PARAM id="route16_depth" />
+  <PARAM id="route17_depth" />
+  <PARAM id="route18_depth" />
+  <PARAM id="route19_depth" />
+  <PARAM id="route1_depth" value="0.2999999523162842" />
+  <PARAM id="route20_depth" />
+  <PARAM id="route21_depth" />
+  <PARAM id="route22_depth" />
+  <PARAM id="route23_depth" />
+  <PARAM id="route24_depth" />
+  <PARAM id="route25_depth" />
+  <PARAM id="route26_depth" />
+  <PARAM id="route27_depth" />
+  <PARAM id="route28_depth" />
+  <PARAM id="route29_depth" />
+  <PARAM id="route2_depth" value="0.0" />
+  <PARAM id="route30_depth" />
+  <PARAM id="route31_depth" />
+  <PARAM id="route32_depth" />
+  <PARAM id="route33_depth" />
+  <PARAM id="route34_depth" />
+  <PARAM id="route35_depth" />
+  <PARAM id="route36_depth" />
+  <PARAM id="route37_depth" />
+  <PARAM id="route38_depth" />
+  <PARAM id="route39_depth" />
+  <PARAM id="route3_depth" value="0.0" />
+  <PARAM id="route40_depth" />
+  <PARAM id="route41_depth" />
+  <PARAM id="route42_depth" />
+  <PARAM id="route43_depth" />
+  <PARAM id="route44_depth" />
+  <PARAM id="route45_depth" />
+  <PARAM id="route46_depth" />
+  <PARAM id="route47_depth" />
+  <PARAM id="route48_depth" />
+  <PARAM id="route49_depth" />
+  <PARAM id="route4_depth" value="0.0" />
+  <PARAM id="route50_depth" />
+  <PARAM id="route51_depth" />
+  <PARAM id="route52_depth" />
+  <PARAM id="route53_depth" />
+  <PARAM id="route54_depth" />
+  <PARAM id="route55_depth" />
+  <PARAM id="route56_depth" />
+  <PARAM id="route57_depth" />
+  <PARAM id="route58_depth" />
+  <PARAM id="route59_depth" />
+  <PARAM id="route5_depth" value="0.0" />
+  <PARAM id="route60_depth" />
+  <PARAM id="route61_depth" />
+  <PARAM id="route62_depth" />
+  <PARAM id="route63_depth" />
+  <PARAM id="route64_depth" />
+  <PARAM id="route6_depth" value="0.0" />
+  <PARAM id="route7_depth" value="0.0" />
+  <PARAM id="route8_depth" />
+  <PARAM id="route9_depth" />
+  <PARAM id="voices" />
+  <SourceOptions />
+</Parameters>

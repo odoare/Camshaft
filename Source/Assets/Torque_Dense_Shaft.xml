@@ -14,8 +14,7 @@
     <Curves />
     <CcSources />
     <MidiLearn />
-    <Locks>
-      </Locks>
+    <Locks />
     <Settings />
     <Cams>
       <Cam index="0" mode="wavetable" attack="0" loopStart="0" loopEnd="0" release="0" rootKey="60" />
@@ -768,7 +767,7 @@
   <PARAM id="master_fx1_Tube_Tube_Tone" value="0.0" />
   <PARAM id="master_fx1_type" value="0.0" />
   <PARAM id="master_limiter" value="1.0" />
-  <PARAM id="master_out" value="-4.899997711181641" />
+  <PARAM id="master_out" value="-8.0" />
   <PARAM id="mod10_acurve" value="-0.300000011920929" />
   <PARAM id="mod10_att" value="10.0" />
   <PARAM id="mod10_beats" value="3.999999761581421" />

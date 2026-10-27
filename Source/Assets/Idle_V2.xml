@@ -642,7 +642,7 @@
   <PARAM id="master_fx1_Tube_Tube_Tone" value="0.0" />
   <PARAM id="master_fx1_type" value="5.0" />
   <PARAM id="master_limiter" value="1.0" />
-  <PARAM id="master_out" value="-3.0" />
+  <PARAM id="master_out" value="-18.0" />
   <PARAM id="mod10_acurve" value="-0.300000011920929" />
   <PARAM id="mod10_att" value="10.0" />
   <PARAM id="mod10_beats" value="3.999999761581421" />
@@ -1298,7 +1298,7 @@
   <PARAM id="route63_depth" value="0.0" />
   <PARAM id="route64_depth" value="0.0" />
   <PARAM id="route6_depth" value="0.2999999523162842" />
-  <PARAM id="route7_depth" value="0.1926605701446533" />
+  <PARAM id="route7_depth" value="0.0" />
   <PARAM id="route8_depth" value="0.0" />
   <PARAM id="route9_depth" value="0.0" />
   <PARAM id="voices" value="12.0" />
@@ -1310,7 +1310,6 @@
       <Route i="3" src="mod3" dst="r2_volume" via="none" />
       <Route i="4" src="mod3" dst="r4_volume" via="none" />
       <Route i="5" src="mod4" dst="r3_volume" via="none" />
-      <Route i="6" src="mod5" dst="master_fx0_EQ_EQ_HS_Freq" via="none" />
     </Routes>
     <Belt>
       <Link src="1" dst="0" type="FM" />
