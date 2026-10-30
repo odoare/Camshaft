@@ -100,7 +100,7 @@ CamshaftAudioProcessorEditor::CamshaftAudioProcessorEditor (CamshaftAudioProcess
 
     splash.setBounds (getLocalBounds());
     if (processor.takeFirstSplash())
-        splash.show (3000);
+        splash.show (1000);
 }
 
 CamshaftAudioProcessorEditor::~CamshaftAudioProcessorEditor()
