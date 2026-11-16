@@ -17,7 +17,7 @@ fxme_dependency(JUCE https://github.com/juce-framework/JUCE 9.0.4 SHALLOW)
 fxme_dependency(FxmeTools https://github.com/odoare/FxmeTools
     a2f76522918b31974b7618374f8a9478aa9a1450)
 fxme_dependency(FxmeFX https://github.com/odoare/FxmeFX
-    54ceb4e5c784f85254265881eb80e0a945d148c9)
+    110ffeba9be29df795f457ee387bfc044a73b5da)
 # CLAP format (fxmetools_add_clap). Its last tag predates JUCE 9 support:
 # pinned to a commit. Brings the clap and clap-helpers submodules along.
 fxme_dependency(ClapJuceExtensions https://github.com/free-audio/clap-juce-extensions

@@ -18,8 +18,19 @@ only their channel, MPE off ignoring channels, switching releasing notes.
 Departure from the plan: the switch is not a parameter. A preset load sets
 every parameter (`replaceState`), which would have turned MPE off or flipped it
 mid-load; it is a property of the session state's root instead, never in a
-preset, not automatable. FxmeTools pinned to `a2f7652` (it has `fxme::MpeIn`);
-FxmeFX stays at `54ceb4e`, built against it.
+preset, not automatable. FxmeTools pinned to `a2f7652` (it has `fxme::MpeIn`).
+
+## FxmeFX updated (2026-11-16)
+
+FxmeFX pinned to `110ffeb` (from `54ceb4e`), the commit validated with FxmeTools
+`a2f7652`. For the effects Camshaft uses, only additions, each off or neutral by
+default, so every preset sounds as before: Delay ping-pong, Tube oversampling
+(Off, 2x, 4x), EQ per-band stereo / mid / side, compressor side-chain filters,
+a Cab slot for the user's own IR (embedded in the state), logarithmic frequency
+knobs, and the guards against bad samples (Delay, Phaser, Chorus, Compressor).
+54 more host parameters (9 per effect slot). Tested with the sibling clones
+before the pin moved. Left open: the Tube's oversampling delays its path by a
+few samples, unreported, which in a Turbo chain shifts it against the dry mix.
 
 ## Bundled samples (2026-10-11)
 

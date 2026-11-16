@@ -282,7 +282,7 @@ none, and the audio can be kept ("Keep audio when loading presets", per
 instance).
 
 Parameter IDs: `<section><index>_<name>` (`ParamIDs.h`, `CamParams.h`), frozen
-once released. About 1300 host parameters, grouped per cam, modulator, routes,
+once released. About 1350 host parameters, grouped per cam, modulator, routes,
 voices and output, and per effect chain. Most are the effect slots: every slot
 holds every FxmeFX effect, as in MechanOdd.
 

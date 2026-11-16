@@ -35,7 +35,7 @@ Numbered for reference; numbers are never reused (finished items move to
    the opening, so a range moves right by half its width: the recording's
    length is not known when the state is read).
 
-7. **Parameter count** (decision, low; question asked 2026-10-10). About 1300 host parameters, most from the
+7. **Parameter count** (decision, low; question asked 2026-10-10). About 1350 host parameters (1300 before FxmeFX 110ffeb), most from the
    six effect slots each holding every effect (MechanOdd's design); nine
    effects since 2026-10-11 (thirteen before), which already took a share off.
    Fewer effect types per slot, or Turbo slots limited to the time-based effects,
