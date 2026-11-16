@@ -25,6 +25,12 @@
 using namespace camshaft;
 using namespace cam;
 
+namespace
+{
+    // The MPE switch, on the saved state's root: in sessions, never in presets.
+    const juce::Identifier mpeProperty { "mpe" };
+}
+
 //==============================================================================
 CamshaftAudioProcessor::CamshaftAudioProcessor()
     : AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
@@ -265,6 +271,7 @@ void CamshaftAudioProcessor::readParameters()
     settings.voiceMode = (int) pPolyMode->load();
     settings.glideLegatoOnly = (int) pGlideMode->load() == 1;
     settings.pitchBendRange = pPbRange->load();
+    settings.mpe = mpeOn.load (std::memory_order_relaxed);
     settings.interpolation = (int) pInterp->load();
     for (int a = 0; a < numAux; ++a)
         settings.auxDryMute[a] = pAuxDryMute[a]->load() > 0.5f;
@@ -288,6 +295,45 @@ void CamshaftAudioProcessor::readParameters()
 
 void CamshaftAudioProcessor::handleMidi (const juce::MidiMessage& m)
 {
+    // MPE: channel 1 is the zone's master and plays as without MPE (its
+    // bend, pressure and controllers are global); channels 2 to 16 carry
+    // one note each, with that note's own bend, pressure and timbre.
+    if (settings.mpe && ! m.isAllNotesOff() && ! m.isAllSoundOff())
+    {
+        const int channel = m.getChannel() - 1;     // 0-based, as the engine counts
+        if (m.isController())
+        {
+            // The zone's announcement (RPN 6 and RPN 0, the bend ranges) is
+            // never learned nor read as a CC source, whatever the channel.
+            const int cc = m.getControllerNumber();
+            if (cc == 100 || cc == 101 || cc == 6 || cc == 38)
+            {
+                engine.mpeController (channel, cc, m.getControllerValue());
+                return;
+            }
+            if (channel != 0)
+            {
+                if (cc == 74)
+                    engine.mpeTimbre (channel, (float) m.getControllerValue() / 127.0f);
+                return;                             // MPE keeps every other controller on the master
+            }
+        }
+        else if (channel != 0)
+        {
+            if (m.isNoteOn())
+                engine.noteOn (m.getNoteNumber(), m.getFloatVelocity(), channel);
+            else if (m.isNoteOff())
+                engine.noteOff (m.getNoteNumber(), m.getFloatVelocity(), channel);
+            else if (m.isPitchWheel())
+                engine.mpePitchBend (channel, m.getPitchWheelValue() - 8192);
+            else if (m.isChannelPressure())
+                engine.mpePressure (channel, (float) m.getChannelPressureValue() / 127.0f);
+            else if (m.isAftertouch())
+                engine.polyPressure (m.getNoteNumber(), (float) m.getAfterTouchValue() / 127.0f);
+            return;
+        }
+    }
+
     if (m.isNoteOn())
         engine.noteOn (m.getNoteNumber(), m.getFloatVelocity());
     else if (m.isNoteOff())
@@ -471,7 +517,9 @@ void CamshaftAudioProcessor::processChunk (juce::AudioBuffer<float>& buffer, juc
 void CamshaftAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     structure.stampVersion();
-    if (auto xml = apvts.copyState().createXml())
+    auto state = apvts.copyState();
+    state.setProperty (mpeProperty, getMpe(), nullptr);   // the session's, not in presets
+    if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
 }
 
@@ -500,6 +548,8 @@ void CamshaftAudioProcessor::setStateInformation (const void* data, int sizeInBy
                 tree.appendChild (param, nullptr);
             }
 
+    setMpe ((bool) tree.getProperty (mpeProperty, false));
+    tree.removeProperty (mpeProperty, nullptr);
     apvts.replaceState (tree);
     sources.reloadFromState();
 }

@@ -84,6 +84,13 @@ public:
 
     void randomize (camshaft::RandomSection section) { camshaft::randomize (section, apvts, structure); }
 
+    /** MPE input (off by default): each note on its own channel, with its
+        own pitch bend, pressure and timbre. A setting of the player's
+        controller, not of the patch: saved with the session, never in a
+        preset, and kept when one loads. Any thread. */
+    void setMpe (bool on) noexcept { mpeOn.store (on, std::memory_order_relaxed); }
+    bool getMpe() const noexcept   { return mpeOn.load (std::memory_order_relaxed); }
+
     /** Keep the current audio when a preset is loaded (per instance, not saved). */
     void setKeepAudioOnPresetLoad (bool keep) noexcept { keepAudioOnPresetLoad = keep; }
     bool getKeepAudioOnPresetLoad() const noexcept      { return keepAudioOnPresetLoad; }
@@ -189,6 +196,7 @@ private:
     float peakEnvelope = 0.0f;
 
     bool keepAudioOnPresetLoad = false;
+    std::atomic<bool> mpeOn { false };
     juce::ValueTree keptAudio, keptOptions, keptLearn, keptLocks;
     bool splashShown = false;
 

@@ -52,6 +52,16 @@
 namespace cam
 {
 
+/** What a note brings with it under MPE: its channel and that channel's
+    expression when the note starts. The default is a note without MPE. */
+struct NoteExpression
+{
+    int channel = 0;            // 0-based MIDI channel; 0 without MPE
+    float bend = 0.0f;          // semitones: the channel's own bend
+    float pressure = 0.0f;      // 0..1, the poly aftertouch source
+    float timbre = 0.5f;        // 0..1, CC 74
+};
+
 class CamVoice
 {
 public:
@@ -68,7 +78,7 @@ public:
     // Note control (from the engine's allocator actions)
 
     /** Fresh start. `glideFrom` is the pitch to glide from (negative: none). */
-    void start (int note, float velocity, float glideFrom);
+    void start (int note, float velocity, float glideFrom, const NoteExpression& expression = {});
 
     /** Same voice, new note: envelopes and per-voice modulators restart from
         where they are (mono), or only the pitch moves (legato glide). */
@@ -78,12 +88,20 @@ public:
     void release (float releaseVelocity);
 
     /** Fades out over a few milliseconds, then starts the pending note. */
-    void steal (int note, float velocity, float glideFrom);
+    void steal (int note, float velocity, float glideFrom, const NoteExpression& expression = {});
 
     void setPolyPressure (float pressure) noexcept { polyPressure = pressure; }
 
+    /** MPE: channel `channel`'s expression moved. The voice follows it if
+        it plays on that channel, or starts with it if it is about to (a
+        steal's pending note). The bend is smoothed per voice. */
+    void channelBend (int channel, float semitones) noexcept;
+    void channelPressure (int channel, float pressure) noexcept;
+    void channelTimbre (int channel, float timbre) noexcept;
+
     bool isActive() const noexcept { return active; }
     int getNote() const noexcept { return note; }
+    int getChannel() const noexcept { return channel; }
     float getPitch() const noexcept { return pitch; }
 
     /** True once silent: every amp envelope done, no curve release playing,
@@ -182,6 +200,11 @@ private:
     int note = 60;
     float velocity = 0.0f, releaseVelocity = 0.0f, polyPressure = 0.0f, randomValue = 0.0f;
 
+    // MPE: the note's channel, its own bend (smoothed towards the target
+    // once per control block) and its timbre.
+    int channel = 0;
+    float mpeBend = 0.0f, mpeBendTarget = 0.0f, mpeBendCoeff = 1.0f, mpeTimbre = 0.5f;
+
     // Glide.
     float pitch = 60.0f, glideFrom = 60.0f, glideTo = 60.0f, glidePos = 1.0f;
 
@@ -190,6 +213,7 @@ private:
     float stealLevel = 1.0f, stealStep = 0.0f;
     int pendingNote = 60;
     float pendingVelocity = 0.0f, pendingGlideFrom = -1.0f;
+    NoteExpression pendingExpression;
 
     bool snapNext = true;            // first control block after a start: no ramps
 

@@ -21,7 +21,8 @@
                     T1 T2  the Turbo chains are carrying signal
       gauges        FUEL   the voices still free (it drains as notes pile up)
                     TEMP   the DSP load
-      controls      the gear selector (P, M, L: poly, mono, legato), the rev
+      controls      the gear selector (P, M, L: poly, mono, legato; greyed on
+                    P while MPE input forces poly), the rev
                     limiter switch, and the hazard button (panic: every voice
                     silenced at once)
       throttle      the output level as an accelerator pedal: drag it down to
@@ -93,6 +94,7 @@ public:
     explicit GearSelector (CamshaftAudioProcessor& processor);
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;
+    void enablementChanged() override { repaint(); }
 
 private:
     int gearAt (juce::Point<float> p) const;

@@ -32,6 +32,13 @@ namespace
         "Interpolation: how the audio is read between its samples. Cubic is "
         "clean everywhere; sinc is the flattest for bright sounds, linear the "
         "cheapest.\n\n"
+        "MPE input: for an MPE controller or sequencer. Each note arrives on "
+        "its own channel (2 to 16) with its own pitch bend, pressure (the poly "
+        "aftertouch source) and timbre (CC 74, the MPE timbre source), so "
+        "notes bend and glide one by one, and microtonal pitches play exact. "
+        "Channel 1 bends (by the bend range) and controls every note. With it "
+        "on, Camshaft plays poly, without glide. Saved with the session, kept "
+        "when a preset loads.\n\n"
         "CC sources: the controller numbers of the four CC modulation sources.\n\n"
         "MIDI learn: right-click any knob, Learn MIDI, move a controller. The "
         "map is saved with the session and presets; saved as default, new "
@@ -111,6 +118,17 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
     theme::accentCombo (curveGrid, theme::accent);
     addAndMakeVisible (curveGrid);
 
+    mpeToggle.setToggleState (processor.getMpe(), juce::dontSendNotification);
+    mpeToggle.setTooltip (tips::global::mpe);
+    mpeToggle.onClick = [this]
+    {
+        processor.setMpe (mpeToggle.getToggleState());
+        updateMpe();
+    };
+    theme::accentToggle (mpeToggle, theme::accent);
+    addAndMakeVisible (mpeToggle);
+    updateMpe();
+
     keepAudio.setToggleState (processor.getKeepAudioOnPresetLoad(), juce::dontSendNotification);
     keepAudio.setTooltip (tips::global::keepAudio);
     keepAudio.onClick = [this] { processor.setKeepAudioOnPresetLoad (keepAudio.getToggleState()); };
@@ -129,6 +147,17 @@ GlobalPanel::GlobalPanel (CamshaftAudioProcessor& p)
     addAndMakeVisible (infoButton);
 
     setSize (440, 380);
+}
+
+void GlobalPanel::updateMpe()
+{
+    // MPE plays poly, without glide: what it overrides is greyed. Only this
+    // switch and a session load change it, and the panel is made anew each
+    // time it opens, so no polling.
+    const bool free = ! processor.getMpe();
+    for (juce::Component* c : { (juce::Component*) polyMode, (juce::Component*) glideMode, (juce::Component*) glideDiv,
+                                (juce::Component*) &glideSync, (juce::Component*) &glide })
+        c->setEnabled (free);
 }
 
 juce::ComboBox& GlobalPanel::combo (const juce::String& id, const char* tooltip)
@@ -182,6 +211,7 @@ void GlobalPanel::resized()
     r.removeFromTop (16);
     line = r.removeFromTop (24);
     interp->setBounds (line.removeFromLeft (line.getWidth() / 2).reduced (2, 1));
+    mpeToggle.setBounds (line.reduced (2, 1));     // under the bend range
     r.removeFromTop (6);
 
     r.removeFromTop (16);

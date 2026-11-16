@@ -131,7 +131,8 @@ the window, as above. Click it again to go back.
 Sixteen slots, each an **LFO**, an **ADSR** envelope or a drawn **curve**
 (or off), and the MIDI sources below them: velocity, release velocity, key
 track, mod wheel, pitch bend, aftertouch, poly aftertouch, a random value per
-note, four assignable controllers (CC A to D) and each cam's envelope.
+note, four assignable controllers (CC A to D), each cam's envelope, and the
+MPE timbre (CC 74 per note, with MPE input on).
 
 - Drag a slot (or a MIDI source) from the left onto any knob. The knob's
   outer ring shows the modulation, the dot its live value. Dragging onto a
@@ -184,6 +185,13 @@ has its own presets (the bar beside it), shared with its
   of the curve editor and its snap, hover help on or off, and the MIDI learn
   map. "Keep audio when loading presets" lets you try presets on your own
   sound.
+- **MPE input** (settings, off by default): for an MPE controller or sequencer.
+  Each note arrives on its own channel (2 to 16) with its own pitch bend,
+  pressure (the poly aftertouch source) and timbre (CC 74, the MPE timbre
+  source), so notes bend and glide one by one and microtonal pitches play
+  exact. Channel 1 bends and controls every note. Camshaft then plays poly,
+  without glide. The setting is saved with the session and kept when a preset
+  loads.
 - **Hover help:** every control has a tooltip, including the units of the
   values (a range's length is in samples).
 - **Performance:** a cam that is off, and a modulator that modulates nothing,

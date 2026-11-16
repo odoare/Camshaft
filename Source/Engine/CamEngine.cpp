@@ -30,6 +30,8 @@ CamEngine::CamEngine()
     for (int i = 0; i < numCcSources; ++i)
         ccNumbers[(size_t) i].store (20 + i);   // CC 20 .. 23 by default
 
+    mpeTimbres.fill (0.5f);                     // CC 74 at rest (64), as MPE starts it
+
     for (auto& m : display.curvePos)
         for (auto& v : m)
             v.store (-1.0f);
@@ -110,7 +112,22 @@ void CamEngine::setNumGlobalDests (int n)
 //==============================================================================
 void CamEngine::beginBlock (const BlockSettings& s)
 {
-    allocator.setMode ((fxme::VoiceAllocator::Mode) fxme::jlimit (0, 2, s.voiceMode));
+    // MPE switched: the held notes belong to the other scheme (their keys
+    // carry a channel or not), so they are released, and the channels'
+    // expression starts over.
+    if (s.mpe != mpe)
+    {
+        allNotesOff();
+        mpe = s.mpe;
+        mpeIn.clear();
+        mpePressures.fill (0.0f);
+        mpeTimbres.fill (0.5f);
+    }
+
+    // Each MPE note has its own pitch: one voice per note, no glide between
+    // them (a glide arrives as the channel's bend).
+    allocator.setMode (mpe ? fxme::VoiceAllocator::Mode::poly
+                           : (fxme::VoiceAllocator::Mode) fxme::jlimit (0, 2, s.voiceMode));
     allocator.setPolyphony (fxme::jlimit (1, maxVoices, s.polyphony));
 
     state.bpm = s.bpm > 1.0 ? s.bpm : 120.0;
@@ -120,7 +137,7 @@ void CamEngine::beginBlock (const BlockSettings& s)
     // samplesToControl samples into this block (control blocks do not line
     // up with the host's blocks).
     ppqNow = s.ppq + (double) samplesToControl * beatsPerSample();
-    state.glideSeconds = s.glideSeconds;
+    state.glideSeconds = mpe ? 0.0f : s.glideSeconds;
     state.glideLegatoOnly = s.glideLegatoOnly;
     state.pitchBendRange = s.pitchBendRange;
     state.interpolation = (fxme::WavetableReader::Interpolation) fxme::jlimit (0, 2, s.interpolation);
@@ -315,48 +332,97 @@ void CamEngine::updateGraph()
 }
 
 //==============================================================================
+namespace
+{
+    // The allocator matches notes by number only: with MPE the channel goes
+    // in the number, so the same key on two channels is two notes.
+    constexpr int noteKey (int note, int channel) noexcept { return (note & 127) + 128 * channel; }
+    constexpr int keyNote (int key) noexcept               { return key & 127; }
+    constexpr int keyChannel (int key) noexcept            { return (key >> 7) & 15; }
+}
+
 void CamEngine::applyAction (const fxme::VoiceAllocator::Action& a)
 {
     using T = fxme::VoiceAllocator::Action::Type;
     if (a.voice < 0 || a.voice >= maxVoices)
         return;
     auto& v = voices[(size_t) a.voice];
+    const int note = keyNote (a.note);
 
     const bool glideAllowed = state.glideSeconds > 0.0f && lastNote >= 0
                               && (! state.glideLegatoOnly || a.legato);
     const float glideFrom = glideAllowed ? (float) lastNote : -1.0f;
 
+    // A member channel's note starts with that channel's expression, as it
+    // stands now (a source sends the bend just before the note-on).
+    NoteExpression e;
+    e.channel = keyChannel (a.note);
+    if (e.channel != 0)
+    {
+        e.bend = mpeIn.own (e.channel);
+        e.pressure = mpePressures[(size_t) e.channel];
+        e.timbre = mpeTimbres[(size_t) e.channel];
+    }
+
     switch (a.type)
     {
-        case T::start:     v.start (a.note, a.velocity, glideFrom); lastNote = a.note; break;
-        case T::steal:     v.steal (a.note, a.velocity, glideFrom); lastNote = a.note;
+        case T::start:     v.start (note, a.velocity, glideFrom, e); lastNote = note; break;
+        case T::steal:     v.steal (note, a.velocity, glideFrom, e); lastNote = note;
                            display.steals.fetch_add (1, std::memory_order_relaxed); break;
-        case T::retrigger: v.retrigger (a.note, a.velocity, glideAllowed); lastNote = a.note; break;
-        case T::glide:     v.moveTo (a.note); lastNote = a.note; break;
+        case T::retrigger: v.retrigger (note, a.velocity, glideAllowed); lastNote = note; break;
+        case T::glide:     v.moveTo (note); lastNote = note; break;
         case T::release:   v.release (a.velocity); break;
     }
 }
 
-void CamEngine::noteOn (int note, float velocity)
+void CamEngine::noteOn (int note, float velocity, int channel)
 {
     if (velocity <= 0.0f)
     {
-        noteOff (note, 0.0f);
+        noteOff (note, 0.0f, channel);
         return;
     }
     display.noteOns.fetch_add (1, std::memory_order_relaxed);
     fxme::VoiceAllocator::Action actions[fxme::VoiceAllocator::maxActions];
-    const int n = allocator.noteOn (note, velocity, actions);
+    const int n = allocator.noteOn (noteKey (note, mpe ? channel & 15 : 0), velocity, actions);
     for (int i = 0; i < n; ++i)
         applyAction (actions[i]);
 }
 
-void CamEngine::noteOff (int note, float releaseVelocity)
+void CamEngine::noteOff (int note, float releaseVelocity, int channel)
 {
     fxme::VoiceAllocator::Action actions[fxme::VoiceAllocator::maxActions];
-    const int n = allocator.noteOff (note, releaseVelocity, actions);
+    const int n = allocator.noteOff (noteKey (note, mpe ? channel & 15 : 0), releaseVelocity, actions);
     for (int i = 0; i < n; ++i)
         applyAction (actions[i]);
+}
+
+void CamEngine::mpePitchBend (int channel, int value) noexcept
+{
+    if (! mpe || channel <= 0 || channel > 15)
+        return;
+    mpeIn.readPitchBend (channel, value);
+    const float semitones = mpeIn.own (channel);
+    for (auto& v : voices)
+        v.channelBend (channel, semitones);
+}
+
+void CamEngine::mpePressure (int channel, float value01) noexcept
+{
+    if (! mpe || channel <= 0 || channel > 15)
+        return;
+    mpePressures[(size_t) channel] = value01;
+    for (auto& v : voices)
+        v.channelPressure (channel, value01);
+}
+
+void CamEngine::mpeTimbre (int channel, float value01) noexcept
+{
+    if (! mpe || channel <= 0 || channel > 15)
+        return;
+    mpeTimbres[(size_t) channel] = value01;
+    for (auto& v : voices)
+        v.channelTimbre (channel, value01);
 }
 
 void CamEngine::polyPressure (int note, float value) noexcept
@@ -493,6 +559,7 @@ void CamEngine::controlUpdate()
     g[srcPitchBend] = pitchBendSmoothed;
     g[srcModWheel] = modWheel;
     g[srcAftertouch] = aftertouch;
+    g[srcMpeTimbre] = 0.5f;                     // per voice; at rest outside a note
     for (int i = 0; i < numCcSources; ++i)
         g[srcCcFirst + i] = ccValues[(size_t) i];
 

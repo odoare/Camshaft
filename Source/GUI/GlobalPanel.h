@@ -6,7 +6,8 @@
 
       Voices        polyphony, poly / mono / legato, glide (time or tempo
                     division, always or legato only), pitch bend range
-      Engine        interpolation quality
+      Engine        interpolation quality; MPE input (which forces poly
+                    and no glide: their controls are greyed while it is on)
       MIDI          the CC numbers of the four CC sources, the MIDI learn
                     default (save the current map, or clear it)
       Curves        snap curve points to the beat grid (curves timed in
@@ -42,6 +43,7 @@ public:
 
 private:
     juce::ComboBox& combo (const juce::String& id, const char* tooltip);
+    void updateMpe();
 
     CamshaftAudioProcessor& processor;
     fxme::FxmeLookAndFeel laf;   // a callout is its own window: no inherited look-and-feel
@@ -57,6 +59,7 @@ private:
     juce::ToggleButton curveSnap { "Snap curve points to the beat grid" };
     juce::ComboBox curveGrid;
     juce::ToggleButton keepAudio { "Keep audio when loading presets" };
+    juce::ToggleButton mpeToggle { "MPE input" };
     fxme::AccentToggle tooltipsButton;
     fxme::InfoButton infoButton;
 };

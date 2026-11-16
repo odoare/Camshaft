@@ -151,7 +151,10 @@ change once per block.
 
 Sources (`cam::ModSource`): the 16 slots, velocity, release velocity, key track,
 aftertouch (channel and poly), pitch bend, mod wheel, 4 assignable CCs (CC 20 to
-23 by default), the 4 cams' amp envelopes, a per-voice random value.
+23 by default), the 4 cams' amp envelopes, a per-voice random value, and the MPE
+timbre (CC 74 on the note's channel, per voice, 0.5 at rest and without MPE).
+Sources are stored by key (`ids::sourceKey`), so a new one goes at the end of
+the enum.
 
 Slots: LFO (per voice or global free-running, locked to the host while it
 plays: its phase is the host position, taken at the end of each control span
@@ -196,6 +199,25 @@ voice fades out over 5 ms before restarting. Mono retriggers envelopes from
 their current level, legato only moves the pitch. Glide: time in ms or a tempo
 division, always or legato only, from the last note played. A voice ends when
 every cam's amp envelope is idle and no curve release region is still playing.
+
+MPE (off by default; the settings' "MPE input"): channel 1 is the zone's
+master and plays as without MPE (its bend, by the bend range, moves every
+note; its controllers are the usual ones); channels 2 to 16 carry one note
+each. The allocator matches notes by number only, so the engine hands it
+`note + 128 x channel` and decodes it in `applyAction`: the same key on two
+channels is two notes. A note starts with its channel's expression as it
+stands (`cam::NoteExpression`: a source sends the bend just before the
+note-on, so the note starts at its pitch, no slide); after that the channel's
+bend (`fxme::MpeIn`, ranges from RPN 0, 48 by default), pressure (the poly
+aftertouch source) and CC 74 (the MPE timbre source) reach only that
+channel's voices, a steal's pending note included. Each voice smooths its own
+bend (`cam::mpeBendSmoothingSeconds`, 5 ms), which also moves its key
+tracking. MPE forces poly and no glide. Switching it releases the held notes.
+The shell swallows CCs 100, 101, 6 and 38 under MPE (the zone's announcement:
+never learned, never a CC source) and every other controller on a member
+channel. The switch is the player's, not the patch's: not a parameter, but a
+`mpe` property on the session state's root, absent from presets, so a preset
+load never changes it.
 
 Silent cams: per voice, a cam that cannot be heard (its amp envelope finished,
 or its volume off with no send that could carry it) and modulates no other cam
@@ -252,8 +274,9 @@ The APVTS state root ("Parameters") carries:
 - `schemaVersion` (1). `StructureState::migrate` is where upgrades go. Unknown
   children and parameters are left in place.
 
-Loading a state: parameters it does not mention take their defaults. Loading a
-preset: every parameter goes to its default first (factory presets list only
+Loading a state: parameters it does not mention take their defaults; the root's
+`mpe` property (the MPE switch, sessions only) is read, absent meaning off.
+Loading a preset: every parameter goes to its default first (factory presets list only
 what differs), the MIDI learn map and the locks are kept when the preset has
 none, and the audio can be kept ("Keep audio when loading presets", per
 instance).

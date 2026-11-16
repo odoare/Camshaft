@@ -586,11 +586,14 @@ ModulatorPanel::ModulatorPanel (CamshaftAudioProcessor& p) : processor (p)
         fixed.push_back (srcCcFirst + i);
     for (int c = 0; c < numCams; ++c)
         fixed.push_back (srcAmpEnvFirst + c);
+    fixed.push_back (srcMpeTimbre);
     for (int s : fixed)
     {
         const auto colour = (s >= srcAmpEnvFirst && s < srcAmpEnvFirst + numCams) ? theme::camColour (s - srcAmpEnvFirst)
                                                                                   : theme::dimText;
         auto chip = std::make_unique<SourceChip> (processor, s, colour);
+        if (s == srcMpeTimbre)
+            chip->setTooltip (tips::mods::mpeTimbre);
         addAndMakeVisible (*chip);
         fixedChips.push_back (std::move (chip));
     }

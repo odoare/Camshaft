@@ -65,6 +65,7 @@ namespace camshaft::ids
             case srcPitchBend:       return "pitchbend";
             case srcModWheel:        return "modwheel";
             case srcRandom:          return "random";
+            case srcMpeTimbre:       return "mpetimbre";
             default:                 return "none";
         }
     }
@@ -96,6 +97,7 @@ namespace camshaft::ids
             case srcPitchBend:       return "Pitch bend";
             case srcModWheel:        return "Mod wheel";
             case srcRandom:          return "Random";
+            case srcMpeTimbre:       return "MPE timbre";
             default:                 return "None";
         }
     }

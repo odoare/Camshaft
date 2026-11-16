@@ -3,7 +3,7 @@
     CamEngine.h
 
     Camshaft's sound engine, independent of any plugin framework: the voices,
-    the voice allocation (poly / mono / legato, glide), the modulation
+    the voice allocation (poly / mono / legato, glide, MPE), the modulation
     matrix and the global modulators, the cross-modulation graph, and the
     hand-over of the audio the cams read (EngineSource).
 
@@ -33,6 +33,7 @@
 #include "CamVoice.h"
 #include "EngineState.h"
 #include <FxmeTools/dsp/StereoTap.h>
+#include <FxmeTools/midi/Mpe.h>
 #include <FxmeTools/synth/BreakpointCurve.h>
 #include <FxmeTools/synth/ModulationLfo.h>
 #include <FxmeTools/synth/VoiceAllocator.h>
@@ -56,6 +57,7 @@ public:
         float glideSeconds = 0.0f;
         bool glideLegatoOnly = false;
         float pitchBendRange = 2.0f;
+        bool mpe = false;             // MPE input: forces poly, no glide
         int interpolation = 1;
         double bpm = 120.0, ppq = 0.0;
         bool playing = false;
@@ -106,13 +108,30 @@ public:
 
     void beginBlock (const BlockSettings& settings);
 
-    void noteOn (int note, float velocity);
-    void noteOff (int note, float releaseVelocity);
+    /** `channel`, 0-based, only counts with MPE on (BlockSettings::mpe):
+        each member channel's notes take that channel's expression, and the
+        same note number on two channels is two notes. Without MPE every
+        note is on channel 0. */
+    void noteOn (int note, float velocity, int channel = 0);
+    void noteOff (int note, float releaseVelocity, int channel = 0);
     void pitchBend (float value) noexcept          { pitchBendTarget = value; }      // -1 .. 1
     void channelPressure (float value) noexcept    { aftertouch = value; }
     void polyPressure (int note, float value) noexcept;
     void controller (int cc, float value01);
     void allNotesOff();
+
+    /** MPE (with BlockSettings::mpe on): the member channels' expression,
+        `channel` 0-based, 1..15. The master channel (0) goes through
+        pitchBend(), channelPressure() and controller(), as without MPE.
+        mpeController() reads the RPN 0 controllers (100, 101, 6, 38) that
+        set a channel's bend range; true if the controller belonged to it. */
+    void mpePitchBend (int channel, int value) noexcept;        // -8192 .. 8191
+    void mpePressure (int channel, float value01) noexcept;
+    void mpeTimbre (int channel, float value01) noexcept;       // CC 74
+    bool mpeController (int channel, int number, int value) noexcept
+    {
+        return mpeIn.readController (channel, number, value);
+    }
 
     /** Silences every voice at once (no release) and forgets the held
         notes and the pedal: the dashboard's hazard button. */
@@ -223,6 +242,9 @@ private:
 
     // MIDI state.
     float pitchBendTarget = 0.0f, pitchBendSmoothed = 0.0f;
+    bool mpe = false;
+    fxme::MpeIn mpeIn;                        // the member channels' bends and ranges
+    std::array<float, 16> mpePressures {}, mpeTimbres {};
     float aftertouch = 0.0f, modWheel = 0.0f;
     std::array<float, numCcSources> ccValues {};
     int lastNote = -1;

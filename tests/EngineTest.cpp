@@ -556,6 +556,159 @@ int main()
         std::printf ("  sync: correlation at the driver's period %.3f (unsynced %.3f)\n", cSync, cFree);
     }
 
+    {
+        // MPE: each member channel's notes follow that channel's bend,
+        // pressure and timbre; the master channel's bend moves everything.
+        // Pitch is measured as in the sync test: a note an octave up repeats
+        // at half the period.
+        auto correlation = [] (const std::vector<float>& x, double lag)
+        {
+            double xy = 0.0, xx = 0.0, yy = 0.0;
+            const int whole = (int) lag;
+            const double frac = lag - whole;
+            for (size_t i = 0; i + (size_t) whole + 1 < x.size(); ++i)
+            {
+                const double a = x[i], b = x[i + (size_t) whole] * (1.0 - frac) + x[i + (size_t) whole + 1] * frac;
+                xy += a * b; xx += a * a; yy += b * b;
+            }
+            return xy / std::sqrt (xx * yy + 1.0e-30);
+        };
+        const double halfPeriod = 0.5 * 48000.0 / 220.0;     // note 57 an octave up
+        constexpr int octaveUp = 2048;                         // +12 of the default +/-48
+
+        auto makeRig = [] (Rig& rig)
+        {
+            rig.settings.mpe = true;
+            rig.camVals[0][cfRandomPhase] = 0.0f;
+            rig.camVals[0][cfOverlap] = 0.0f;
+            rig.camVals[0][cfAttack] = 0.0f;
+            for (int c = 0; c < numCams; ++c)
+                rig.camVals[c][cfRelease] = 5.0f;              // ms: a voice ends with its last cam
+            bool finite = true;
+            rig.run (finite);
+        };
+        // Renders `blocks` blocks after `skip`, into `out`.
+        auto record = [] (Rig& rig, int skip, int blocks, std::vector<float>& out)
+        {
+            bool finite = true;
+            out.clear();
+            for (int b = 0; b < skip + blocks; ++b)
+            {
+                rig.run (finite);
+                if (b >= skip)
+                    out.insert (out.end(), rig.buf[0].begin(), rig.buf[0].end());
+            }
+            return finite;
+        };
+
+        std::vector<float> plain, bent, early, master;
+        {
+            Rig rig;
+            makeRig (rig);
+            rig.engine.noteOn (57, 0.8f, 1);
+            record (rig, 4, 8, plain);
+        }
+        {
+            Rig rig;
+            makeRig (rig);
+            rig.engine.mpePitchBend (1, octaveUp);           // the bend comes first
+            rig.engine.noteOn (57, 0.8f, 1);
+            record (rig, 0, 1, early);                        // the note's first block
+            record (rig, 4, 8, bent);
+        }
+        {
+            Rig rig;
+            makeRig (rig);
+            rig.settings.pitchBendRange = 12.0f;
+            rig.engine.pitchBend (1.0f);                      // channel 1: every note
+            rig.engine.noteOn (57, 0.8f, 3);
+            record (rig, 4, 8, master);
+        }
+        const double cPlain = correlation (plain, halfPeriod), cBent = correlation (bent, halfPeriod);
+        const double cEarly = correlation (early, halfPeriod), cMaster = correlation (master, halfPeriod);
+        check (cBent > 0.95 && cPlain < 0.8, "a member channel's bend of +12 plays an octave up");
+        check (cEarly > 0.95, "a bend sent before the note-on: the note starts there, no slide");
+        check (cMaster > 0.95, "the master channel's bend moves member channels' notes");
+        std::printf ("  MPE: correlation at the octave's period %.3f bent, %.3f plain\n", cBent, cPlain);
+
+        // Two notes on the same key, on two channels: two voices. Bend one,
+        // release the other: what remains is the bent one, an octave up.
+        // Then the reverse: the unbent one remains.
+        auto twoNotes = [&] (int bendChannel, int releaseChannel, std::vector<float>& out, int& voices)
+        {
+            Rig rig;
+            makeRig (rig);
+            rig.engine.noteOn (57, 0.8f, 1);
+            rig.engine.noteOn (57, 0.8f, 2);
+            bool finite = true;
+            rig.run (finite);
+            voices = rig.engine.getDisplay().voicesActive.load();
+            rig.engine.mpePitchBend (bendChannel, octaveUp);
+            rig.engine.noteOff (57, 0.0f, releaseChannel);
+            record (rig, 6, 8, out);
+            return rig.engine.getDisplay().voicesActive.load();
+        };
+        std::vector<float> keptBent, keptPlain;
+        int voicesA = 0, voicesB = 0;
+        const int leftA = twoNotes (2, 1, keptBent, voicesA);
+        const int leftB = twoNotes (1, 1, keptPlain, voicesB);
+        check (voicesA == 2 && voicesB == 2 && leftA == 1 && leftB == 1,
+               "the same key on two channels is two notes; a note-off ends only its own");
+        check (correlation (keptBent, halfPeriod) > 0.95 && correlation (keptPlain, halfPeriod) < 0.8,
+               "a channel's bend moves only that channel's notes");
+
+        // Pressure and timbre reach their channel's voices only (the
+        // newest voice's sources are on display).
+        {
+            Rig rig;
+            makeRig (rig);
+            rig.depths[0] = 0.1f;
+            rig.engine.setRoute (0, srcMpeTimbre, camDest (0, cfPan), 0);
+            rig.engine.noteOn (57, 0.8f, 1);
+            rig.engine.noteOn (60, 0.8f, 2);                  // the newest
+            rig.engine.mpePressure (1, 1.0f);
+            rig.engine.mpeTimbre (1, 1.0f);
+            bool finite = true;
+            rig.run (finite);
+            const auto& d = rig.engine.getDisplay();
+            const bool othersUntouched = isZero (d.source[(size_t) srcPolyAftertouch].load())
+                                      && std::abs (d.source[(size_t) srcMpeTimbre].load() - 0.5f) < 1.0e-6f;
+            rig.engine.mpePressure (2, 0.7f);
+            rig.engine.mpeTimbre (2, 0.25f);
+            rig.run (finite);
+            check (othersUntouched && std::abs (d.source[(size_t) srcPolyAftertouch].load() - 0.7f) < 1.0e-6f
+                       && std::abs (d.source[(size_t) srcMpeTimbre].load() - 0.25f) < 1.0e-6f,
+                   "pressure and timbre reach only their channel's voices");
+        }
+
+        // MPE off: the channel is ignored (a note-off on another channel
+        // still ends the note), and member-channel expression does nothing.
+        {
+            Rig rig;
+            bool finite = true;
+            for (int c = 0; c < numCams; ++c)
+                rig.camVals[c][cfRelease] = 5.0f;
+            rig.run (finite);
+            rig.engine.noteOn (60, 0.8f, 4);
+            rig.engine.mpePitchBend (4, octaveUp);
+            rig.run (finite);
+            const int playing = rig.engine.getDisplay().voicesActive.load();
+            rig.engine.noteOff (60, 0.0f, 0);
+            for (int b = 0; b < 6; ++b)
+                rig.run (finite);
+            check (playing == 1 && rig.engine.getDisplay().voicesActive.load() == 0,
+                   "MPE off: notes ignore their channel");
+
+            // Switching MPE on releases what was held.
+            rig.engine.noteOn (60, 0.8f);
+            rig.run (finite);
+            rig.settings.mpe = true;
+            for (int b = 0; b < 6; ++b)
+                rig.run (finite);
+            check (rig.engine.getDisplay().voicesActive.load() == 0, "switching MPE releases the held notes");
+        }
+    }
+
     std::printf (failures == 0 ? "All engine tests passed\n" : "%d engine test(s) FAILED\n", failures);
     return failures == 0 ? 0 : 1;
 }

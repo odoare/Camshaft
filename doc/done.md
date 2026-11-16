@@ -2,6 +2,25 @@
 
 Newest first. Items that came from `todo.md` keep their number.
 
+## MPE input (26; 2026-11-16)
+
+An option, off by default (the settings' "MPE input", under the bend range):
+each note on its own channel, 2 to 16, with its own pitch bend, pressure and
+timbre, so notes bend and glide one by one and microtonal pitches play exact
+(Otomatotamoto, TeAr, MPE keyboards). Channel 1 bends and controls every note.
+A new modulation source, MPE timbre (CC 74 per note). MPE forces poly, without
+glide (their controls are greyed, the dashboard's gears too). How it works:
+`architecture.md`, Voices. Tested in `CamshaftEngineTest`: a bent note an octave
+up, starting there when the bend comes first, the master's bend on member notes,
+the same key on two channels as two notes, a bend, pressure and timbre reaching
+only their channel, MPE off ignoring channels, switching releasing notes.
+
+Departure from the plan: the switch is not a parameter. A preset load sets
+every parameter (`replaceState`), which would have turned MPE off or flipped it
+mid-load; it is a property of the session state's root instead, never in a
+preset, not automatable. FxmeTools pinned to `a2f7652` (it has `fxme::MpeIn`);
+FxmeFX stays at `54ceb4e`, built against it.
+
 ## Bundled samples (2026-10-11)
 
 - Two samples come with Camshaft, Camshaft and Absurde (the WAV files of

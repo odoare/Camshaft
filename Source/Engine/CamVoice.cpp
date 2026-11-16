@@ -46,6 +46,10 @@ void CamVoice::prepare (const EngineState& s, int voiceIndex)
     index = voiceIndex;
     active = gated = stealing = false;
 
+    // The MPE bend's smoothing, per control block: a glide arrives as a
+    // bend every few milliseconds, which would step the pitch.
+    mpeBendCoeff = 1.0f - (float) std::exp (-(double) controlBlock / (mpeBendSmoothingSeconds * s.sampleRate));
+
     for (auto& k : cams)
     {
         k.env.setSampleRate (s.sampleRate);
@@ -68,7 +72,7 @@ void CamVoice::prepare (const EngineState& s, int voiceIndex)
 }
 
 //==============================================================================
-void CamVoice::start (int newNote, float newVelocity, float glideFromPitch)
+void CamVoice::start (int newNote, float newVelocity, float glideFromPitch, const NoteExpression& e)
 {
     active = true;
     gated = true;
@@ -76,8 +80,13 @@ void CamVoice::start (int newNote, float newVelocity, float glideFromPitch)
     note = newNote;
     velocity = newVelocity;
     releaseVelocity = 0.0f;
-    polyPressure = 0.0f;
     randomValue = random.nextBipolar();
+
+    // MPE: the note starts at its channel's bend, without sliding to it.
+    channel = e.channel;
+    mpeBend = mpeBendTarget = e.bend;
+    polyPressure = e.pressure;
+    mpeTimbre = e.timbre;
 
     glideTo = (float) newNote;
     if (glideFromPitch >= 0.0f && state->glideSeconds > 0.0f)
@@ -171,11 +180,11 @@ void CamVoice::release (float relVelocity)
     }
 }
 
-void CamVoice::steal (int newNote, float newVelocity, float glideFromPitch)
+void CamVoice::steal (int newNote, float newVelocity, float glideFromPitch, const NoteExpression& e)
 {
     if (! active)
     {
-        start (newNote, newVelocity, glideFromPitch);
+        start (newNote, newVelocity, glideFromPitch, e);
         return;
     }
     stealing = true;
@@ -184,6 +193,31 @@ void CamVoice::steal (int newNote, float newVelocity, float glideFromPitch)
     pendingNote = newNote;
     pendingVelocity = newVelocity;
     pendingGlideFrom = glideFromPitch;
+    pendingExpression = e;
+}
+
+void CamVoice::channelBend (int ch, float semitones) noexcept
+{
+    if (active && channel == ch)
+        mpeBendTarget = semitones;
+    if (stealing && pendingExpression.channel == ch)
+        pendingExpression.bend = semitones;
+}
+
+void CamVoice::channelPressure (int ch, float pressure) noexcept
+{
+    if (active && channel == ch)
+        polyPressure = pressure;
+    if (stealing && pendingExpression.channel == ch)
+        pendingExpression.pressure = pressure;
+}
+
+void CamVoice::channelTimbre (int ch, float timbre) noexcept
+{
+    if (active && channel == ch)
+        mpeTimbre = timbre;
+    if (stealing && pendingExpression.channel == ch)
+        pendingExpression.timbre = timbre;
 }
 
 bool CamVoice::hasFinished() const noexcept
@@ -256,8 +290,9 @@ void CamVoice::updateModulators()
     std::memcpy (src, state->globalSources, sizeof (src));
     src[srcVelocity] = velocity;
     src[srcReleaseVelocity] = releaseVelocity;
-    src[srcKeyTrack] = ((float) note - 60.0f) / 60.0f;
+    src[srcKeyTrack] = ((float) note + mpeBend - 60.0f) / 60.0f;
     src[srcPolyAftertouch] = polyPressure;
+    src[srcMpeTimbre] = mpeTimbre;
     for (int c = 0; c < numCams; ++c)
         src[srcAmpEnvFirst + c] = cams[c].env.getValue();
     src[srcRandom] = randomValue;
@@ -374,6 +409,7 @@ void CamVoice::control()
             glidePos = 1.0f;
         pitch = glideFrom + (glideTo - glideFrom) * glidePos;
     }
+    mpeBend += (mpeBendTarget - mpeBend) * mpeBendCoeff;
 
     updateModulators();
     applyCamModulation();
@@ -404,7 +440,7 @@ void CamVoice::updateCam (int c, bool snap)
         return;
 
     // Pitch and cylinders.
-    const float semis = pitch + v[cfCoarse] + v[cfFine] * 0.01f + src[srcPitchBend] * state->pitchBendRange;
+    const float semis = pitch + mpeBend + v[cfCoarse] + v[cfFine] * 0.01f + src[srcPitchBend] * state->pitchBendRange;
     // Synced by another cam: the belt's lift sweeps this one up to three
     // octaves (the classic sync sweep: the pitch stays the driver's, the
     // timbre moves).
@@ -520,7 +556,7 @@ void CamVoice::updateCam (int c, bool snap)
 
         fxme::MultiModeFilter::Parameters p;
         p.type = (fxme::MultiModeFilter::Type) fxme::jlimit (0, fxme::MultiModeFilter::numTypes - 1, (int) v[cfF1Type + o]);
-        const float octaves = v[cfF1KeyTrack + o] * ((float) note - 60.0f) / 12.0f
+        const float octaves = v[cfF1KeyTrack + o] * ((float) note + mpeBend - 60.0f) / 12.0f
                             + v[cfF1EnvAmount + o] * 6.0f * envValue;
         p.cutoffHz = fxme::jlimit (20.0f, 20000.0f, v[cfF1Cutoff + o] * std::pow (2.0f, octaves));
         p.resonance = v[cfF1Res + o];
@@ -647,7 +683,7 @@ void CamVoice::render (const Buses& out, int offset, int n, float* const* displa
     // it, the new one starts on it (silent there, the fade's last sample).
     renderSpan (out, offset, faded - 1, display, steal);
     stealing = false;
-    start (pendingNote, pendingVelocity, pendingGlideFrom);
+    start (pendingNote, pendingVelocity, pendingGlideFrom, pendingExpression);
     float gate[controlBlock];
     const int rest = n - (faded - 1);
     gate[0] = 0.0f;

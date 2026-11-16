@@ -16,6 +16,14 @@ Numbered for reference; numbers are never reused (finished items move to
    is adapted from Dede's and untested: run it by hand (workflow_dispatch) once,
    check the macOS universal verification can fail, add the README links.
 
+## Features
+
+26. **MPE: to test by ear** (done.md, 2026-11-16). From Otomatotamoto (`steps` or
+   `tear`) or TeAr with MPE on, or an MPE keyboard: a microtonal scale plays exact; a
+   glide (`1~5 . .`) is smooth, no zipper (else tune `cam::mpeBendSmoothingSeconds`);
+   chords glide voice by voice (`{135}~{246}`); a long glide's reach (up to 48
+   semitones) does not alias. Plan: `doc/mpe-plan.md`.
+
 ## Decisions to confirm
 
 25. **Ranges by opening and duration** (decision, made 2026-10-10 on request;

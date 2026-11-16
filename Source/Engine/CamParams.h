@@ -47,6 +47,12 @@ constexpr int numCcSources  = 4;     // assignable MIDI CC sources
 constexpr int numAux        = 2;
 constexpr int controlBlock  = 32;    // samples between modulation updates
 
+/** MPE: the time constant smoothing each voice's own pitch bend. A glide
+    arrives as a bend every few milliseconds (every 1/64 beat from
+    Otomatotamoto), which would otherwise step the pitch; longer lags a
+    fast glide behind. */
+constexpr double mpeBendSmoothingSeconds = 0.005;
+
 //==============================================================================
 // Value <-> normalised mappings
 
@@ -271,6 +277,7 @@ enum ModSource
     srcCcFirst,                                        // CC A .. D
     srcAmpEnvFirst = srcCcFirst + numCcSources,        // amp envelopes of cams 1 .. 4
     srcRandom = srcAmpEnvFirst + numCams,
+    srcMpeTimbre,                                      // CC 74 on the note's MPE channel
     numSources
 };
 
@@ -279,7 +286,7 @@ inline bool isPerVoiceSource (int s, const bool* globalModulator) noexcept
     if (s >= srcModFirst && s < srcModFirst + numModulators)
         return ! globalModulator[s - srcModFirst];
     return s == srcVelocity || s == srcReleaseVelocity || s == srcKeyTrack || s == srcPolyAftertouch
-        || (s >= srcAmpEnvFirst && s < srcAmpEnvFirst + numCams) || s == srcRandom;
+        || (s >= srcAmpEnvFirst && s < srcAmpEnvFirst + numCams) || s == srcRandom || s == srcMpeTimbre;
 }
 
 //==============================================================================

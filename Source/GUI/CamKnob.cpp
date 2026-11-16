@@ -49,7 +49,7 @@ juce::PopupMenu sourcesMenu (juce::AudioProcessorValueTreeState& apvts, int tick
     for (int m = 0; m < numModulators; ++m)
         mods.addItem (1 + srcModFirst + m, sourceName (apvts, srcModFirst + m), true, ticked == srcModFirst + m);
     for (int s : { (int) srcVelocity, (int) srcReleaseVelocity, (int) srcKeyTrack, (int) srcAftertouch,
-                   (int) srcPolyAftertouch, (int) srcPitchBend, (int) srcModWheel, (int) srcRandom })
+                   (int) srcPolyAftertouch, (int) srcPitchBend, (int) srcModWheel, (int) srcRandom, (int) srcMpeTimbre })
         midi.addItem (1 + s, ids::fixedSourceName (s), true, ticked == s);
     for (int i = 0; i < numCcSources; ++i)
         midi.addItem (1 + srcCcFirst + i, ids::fixedSourceName (srcCcFirst + i), true, ticked == srcCcFirst + i);

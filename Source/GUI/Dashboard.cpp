@@ -126,8 +126,11 @@ void GearSelector::mouseDown (const juce::MouseEvent& e)
 
 void GearSelector::paint (juce::Graphics& g)
 {
-    // A shift gate: three letters stacked, the engaged one lit.
+    // A shift gate: three letters stacked, the engaged one lit. Disabled
+    // (MPE input forces poly): P engaged, faded.
     auto b = getLocalBounds().toFloat();
+    const int engaged = isEnabled() ? gear : 0;
+    const float alpha = isEnabled() ? 1.0f : 0.4f;
     g.setColour (theme::plotBack);
     g.fillRoundedRectangle (b, 4.0f);
     g.setColour (theme::panelLine);
@@ -139,12 +142,12 @@ void GearSelector::paint (juce::Graphics& g)
     for (int i = 0; i < 3; ++i)
     {
         const auto cell = juce::Rectangle<float> (b.getX(), b.getY() + (float) i * h, b.getWidth(), h);
-        if (i == gear)
+        if (i == engaged)
         {
-            g.setColour (theme::accent.withAlpha (0.25f));
+            g.setColour (theme::accent.withAlpha (0.25f * alpha));
             g.fillRoundedRectangle (cell.reduced (2.0f, 1.0f), 3.0f);
         }
-        g.setColour (i == gear ? theme::accent : theme::engraved);
+        g.setColour ((i == engaged ? theme::accent : theme::engraved).withMultipliedAlpha (alpha));
         g.drawText (letters[i], cell, juce::Justification::centred, false);
     }
 }
@@ -377,6 +380,7 @@ void Dashboard::timerCallback()
     if (load > 0.9)
         checkUntil = now + 1000.0;
 
+    gears.setEnabled (! processor.getMpe());     // MPE plays poly
     rev.setOn (processor.getLimiterReductionDb() > 0.1f);
     check.setOn (now < checkUntil);
     steal.setOn (now < stealUntil);

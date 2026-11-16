@@ -94,6 +94,7 @@ namespace camshaft::tips::mods
 {
     inline constexpr auto slotChip      = "A modulator slot: click to edit it, drag it onto a knob to modulate that knob. The bar shows its live output; dimmed, the slot is off or modulates nothing, and is not computed.";
     inline constexpr auto fixedChip     = "A MIDI or voice source: drag it onto a knob to modulate that knob.";
+    inline constexpr auto mpeTimbre     = "MPE timbre: CC 74 on each note's own channel (the slide of an MPE controller), 0 to 1, at rest in the middle. Per note, with MPE input on in the settings; without it, it stays in the middle.";
     inline constexpr auto type          = "LFO, ADSR envelope, a drawn curve, or Off (the slot is not used).";
     inline constexpr auto shapeView     = "The modulator's shape (one LFO cycle, or the envelope), the dot where the newest note is on it. Random shapes are drawn as an example; the dot shows the real value.";
     inline constexpr auto level         = "Output level of this modulator (a modulation destination itself).";
@@ -185,7 +186,7 @@ namespace camshaft::tips::dash
     inline constexpr auto turbo    = "Turbo chain carrying signal.";
     inline constexpr auto fuel     = "FUEL: the voices still free.";
     inline constexpr auto temp     = "TEMP: the DSP load (time spent processing over the time available).";
-    inline constexpr auto gears    = "Voice mode: P poly, M mono (each note restarts the envelopes), L legato (notes played legato only move the pitch).";
+    inline constexpr auto gears    = "Voice mode: P poly, M mono (each note restarts the envelopes), L legato (notes played legato only move the pitch). Greyed on P while MPE input is on (settings): MPE plays poly.";
     inline constexpr auto limiter  = "Rev limiter on or off (a safety limiter at -0.3 dBFS, always last).";
     inline constexpr auto hazard   = "Hazard: silences every voice at once (panic).";
     inline constexpr auto expand   = "Full view: the dashboard over the whole lower half (the cam controls and the bottom tabs hidden). Click again to go back.";
@@ -200,7 +201,8 @@ namespace camshaft::tips::global
     inline constexpr auto glideSync     = "Glide time in a tempo division instead of milliseconds.";
     inline constexpr auto glideDivision = "Glide time as a note length at the host tempo.";
     inline constexpr auto glideMode     = "Glide always, or only between notes played legato.";
-    inline constexpr auto pitchBend     = "Pitch bend range in semitones.";
+    inline constexpr auto pitchBend     = "Pitch bend range in semitones. With MPE input on, the range of channel 1's bend only (each note's own bend has the range its source announces, 48 by default).";
+    inline constexpr auto mpe           = "MPE input: each note arrives on its own channel (2 to 16) with its own pitch bend, pressure (the poly aftertouch source) and timbre (CC 74, the MPE timbre source); channel 1 bends and controls every note. Plays poly, without glide. Saved with the session, kept when a preset loads.";
     inline constexpr auto interpolation = "How the audio is read between its samples: linear (cheapest), cubic, or sinc (flattest).";
     inline constexpr auto ccNumber      = "Controller number of this CC source.";
     inline constexpr auto saveLearn     = "New instances will start with the current MIDI learn map.";
